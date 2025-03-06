@@ -45,7 +45,7 @@ interface Produto {
 
 export default function DetalhesEventoPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [evento, setEvento] = useState<Evento | null>(null);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
