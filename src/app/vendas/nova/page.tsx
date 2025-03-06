@@ -417,7 +417,7 @@ export default function NovaVendaPage() {
             </div>
           )}
           <div className="space-y-4 mb-4">
-            {itens.map((item, index) => (
+            {itens.map((item) => (
               <div key={item.id} className="flex flex-wrap items-end gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
                 <div className="flex-1 min-w-[200px]">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
