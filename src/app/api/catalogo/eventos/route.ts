@@ -110,7 +110,7 @@ export async function GET(request: Request) {
           return false;
         }
       })
-      .map(config => config.userId);
+      .map((config: SystemConfig) => config.userId);
     
     logs.push(`Usuários correspondentes encontrados: ${usuariosIds.join(', ')}`);
     
