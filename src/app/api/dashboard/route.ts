@@ -51,26 +51,26 @@ export async function GET(request: Request) {
       const totalVendasMes = vendas.reduce((total: number, venda: {total: number}) => total + venda.total, 0);
       
       // Calcular número de vendas por status
-      const vendasPendentes = vendas.filter(v => v.status === 'PENDENTE').length;
-      const vendasFinalizadas = vendas.filter(v => v.status === 'FINALIZADA').length;
+      const vendasPendentes = vendas.filter((v: {status: string}) => v.status === 'PENDENTE').length;
+      const vendasFinalizadas = vendas.filter((v: {status: string}) => v.status === 'FINALIZADA').length;
       
       // Atividades recentes (combinação de eventos, produtos e vendas)
       const atividades = [
-        ...eventos.map(e => ({
+        ...eventos.map((e: any) => ({
           id: e.id,
           tipo: 'evento' as const,
           nome: e.nome,
           data: e.createdAt,
           descricao: `Novo evento criado: ${e.nome}`
         })),
-        ...produtos.map(p => ({
+        ...produtos.map((p: any) => ({
           id: p.id,
           tipo: 'produto' as const,
           nome: p.nome,
           data: p.createdAt,
           descricao: `Novo produto adicionado: ${p.nome}`
         })),
-        ...vendas.map(v => ({
+        ...vendas.map((v: any) => ({
           id: v.id,
           tipo: 'venda' as const,
           nome: `Venda para ${v.cliente}`,
