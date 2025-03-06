@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
 
 // Função para obter os detalhes de um evento específico
 export async function GET(
-  req: Request,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
