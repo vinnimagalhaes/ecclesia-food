@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import fs from 'fs';
-import path from 'path';
 import { Prisma, SaleStatus } from '@prisma/client';
 import { withUserAuth } from '@/utils/api-helpers';
-
-// Caminho para o arquivo de backup (garantir que seja acessível) - Usado apenas como fallback
-const DATA_FILE_PATH = path.join(process.cwd(), 'vendas-backup.json');
 
 // Tipo para dados recebidos da requisição
 interface NovaVendaInput {
