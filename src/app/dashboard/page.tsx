@@ -106,8 +106,6 @@ export default function DashboardPage() {
   }
   
   // Calcular estatísticas
-  const totalVendas = vendas.reduce((total, venda) => total + venda.total, 0);
-  
   const vendasEsteMes = vendas
     .filter(venda => {
       const dataVenda = new Date(venda.createdAt);
