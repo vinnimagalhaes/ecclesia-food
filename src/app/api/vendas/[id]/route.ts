@@ -10,7 +10,7 @@ const DATA_FILE_PATH = path.join(process.cwd(), 'vendas-backup.json');
 
 // GET /api/vendas/[id] - Obter uma venda específica
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -75,7 +75,7 @@ export async function GET(
 
 // PATCH /api/vendas/[id] - Atualizar status de uma venda
 export async function PATCH(
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -93,7 +93,7 @@ export async function PATCH(
       );
     }
     
-    const dados = await request.json();
+    const dados = await _request.json();
     console.log('Dados recebidos:', dados);
     
     // Verificar se a venda existe
@@ -164,7 +164,7 @@ export async function PATCH(
 
 // DELETE /api/vendas/[id] - Excluir uma venda
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
