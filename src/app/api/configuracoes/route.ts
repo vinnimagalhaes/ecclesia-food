@@ -36,7 +36,7 @@ function isPerfilCompleto(perfil: PerfilIgreja): boolean {
 
 // GET: Obter as configurações
 export async function GET(request: Request) {
-  return withUserAuth(request, async (userId, req) => {
+  return withUserAuth(request, async (userId) => {
     try {
       console.log(`GET /api/configuracoes - userId: ${userId}`);
 
