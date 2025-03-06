@@ -8,10 +8,22 @@ import UserActivationToggle from './UserActivationToggle';
 import DeleteUserDialog from './DeleteUserDialog';
 import { toast } from 'sonner';
 
+interface User {
+  id: string;
+  name?: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  isActive: boolean;
+  church?: {
+    name?: string;
+  };
+}
+
 export default function UsuariosPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
