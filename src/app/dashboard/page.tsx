@@ -105,28 +105,6 @@ export default function DashboardPage() {
     });
   }
   
-  // Calcular estatísticas
-  const vendasEsteMes = vendas
-    .filter(venda => {
-      const dataVenda = new Date(venda.createdAt);
-      const hoje = new Date();
-      return dataVenda.getMonth() === hoje.getMonth() && 
-             dataVenda.getFullYear() === hoje.getFullYear();
-    })
-    .reduce((total, venda) => total + venda.total, 0);
-  
-  // Calcular crescimento de vendas (comparando com mês anterior)
-  const vendasMesAnterior = vendas
-    .filter(venda => {
-      const dataVenda = new Date(venda.createdAt);
-      const hoje = new Date();
-      const mesAnterior = hoje.getMonth() === 0 ? 11 : hoje.getMonth() - 1;
-      const anoMesAnterior = hoje.getMonth() === 0 ? hoje.getFullYear() - 1 : hoje.getFullYear();
-      return dataVenda.getMonth() === mesAnterior && 
-             dataVenda.getFullYear() === anoMesAnterior;
-    })
-    .reduce((total, venda) => total + venda.total, 0);
-
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -304,4 +282,4 @@ export default function DashboardPage() {
       )}
     </div>
   );
-} 
+} // Guarantee vendasEsteMes is removed
