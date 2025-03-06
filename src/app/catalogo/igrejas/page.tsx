@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Search, MapPin, Church } from 'lucide-react';
 import Link from 'next/link';
 
@@ -18,7 +17,6 @@ export default function CatalogoIgrejasPage() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredIgrejas, setFilteredIgrejas] = useState<PerfilIgreja[]>([]);
-  const router = useRouter();
 
   useEffect(() => {
     async function fetchIgrejas() {
