@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MapPin, Church } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
 interface PerfilIgreja {
