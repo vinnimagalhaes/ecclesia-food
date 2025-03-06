@@ -42,7 +42,8 @@ export default function UserActivationToggle({ userId, isActive: initialIsActive
         throw new Error(data.message || 'Erro ao alterar status do usuário');
       }
 
-      const data = await response.json();
+      // Consumir o response body
+      await response.json();
       toast.success(newState 
         ? 'Usuário ativado com sucesso!' 
         : 'Usuário desativado com sucesso!');
