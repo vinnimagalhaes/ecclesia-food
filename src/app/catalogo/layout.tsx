@@ -2,8 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingCart } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 
 export default function CatalogoLayout({
   children,
