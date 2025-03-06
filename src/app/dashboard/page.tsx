@@ -45,7 +45,6 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [vendas, setVendas] = useState<Venda[]>([]);
   const [atividades, setAtividades] = useState<AtividadeRecente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,7 +71,6 @@ export default function DashboardPage() {
         // Atualizar todos os estados com os dados recebidos
         setEventos(dashboardData.eventosRecentes || []);
         setProdutos(dashboardData.produtosRecentes || []);
-        setVendas(dashboardData.vendasRecentes || []);
         setTotalVendasMes(dashboardData.totalVendasMes || 0);
         setVendasPendentes(dashboardData.vendasPendentes || 0);
         setVendasFinalizadas(dashboardData.vendasFinalizadas || 0);
