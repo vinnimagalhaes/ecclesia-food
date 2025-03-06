@@ -45,7 +45,7 @@ export async function GET() {
     logs.push(`Configurações de igreja encontradas: ${configs.length}`);
     
     // Log detalhado de cada configuração
-    configs.forEach((config: SystemConfig, index) => {
+    configs.forEach((config: SystemConfig, index: number) => {
       logs.push(`\n--- Detalhes da Configuração ${index + 1} ---`);
       logs.push(`UserId: ${config.userId}`);
       logs.push(`Email verificado: ${config.user?.emailVerified}`);
