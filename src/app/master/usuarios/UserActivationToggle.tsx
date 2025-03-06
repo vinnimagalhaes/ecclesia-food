@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/ui/Switch';
 
 interface UserActivationToggleProps {
   userId: string;
