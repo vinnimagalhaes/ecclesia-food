@@ -56,7 +56,7 @@ export async function GET(
 
 // Função para atualizar um evento
 export async function PUT(
-  req: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -87,7 +87,7 @@ export async function PUT(
       );
     }
     
-    const body = await req.json();
+    const body = await request.json();
     console.log('Dados recebidos:', body);
     
     // Atualizar o evento
@@ -119,7 +119,7 @@ export async function PUT(
 
 // Função para excluir um evento
 export async function DELETE(
-  req: Request,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
