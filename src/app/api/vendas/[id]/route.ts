@@ -8,15 +8,6 @@ import path from 'path';
 // Caminho para o arquivo de backup
 const DATA_FILE_PATH = path.join(process.cwd(), 'vendas-backup.json');
 
-// Função para salvar vendas no arquivo de backup
-function salvarVendasNoBackup(vendas: any[]) {
-  try {
-    fs.writeFileSync(DATA_FILE_PATH, JSON.stringify(vendas, null, 2), 'utf8');
-  } catch (error) {
-    console.error('Erro ao salvar backup de vendas:', error);
-  }
-}
-
 // GET /api/vendas/[id] - Obter uma venda específica
 export async function GET(
   request: Request,
