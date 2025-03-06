@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { Prisma, SaleStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { withUserAuth } from '@/utils/api-helpers';
 
 // GET: Obter vendas do usuário atual
