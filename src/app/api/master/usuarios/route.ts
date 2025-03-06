@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
 
+const SUPER_ADMIN = 'SUPER_ADMIN';
+
 export async function GET(_request: NextRequest) {
   try {
     // Validar a sessão do usuário
@@ -16,7 +18,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Verificar se o usuário é SUPER_ADMIN
-    if (session.user.role !== 'SUPER_ADMIN') {
+    if (session.user.role !== SUPER_ADMIN) {
       return NextResponse.json(
         { 
           error: "Permissão negada", 
