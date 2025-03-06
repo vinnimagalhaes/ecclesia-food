@@ -86,7 +86,7 @@ export async function GET(request: Request) {
       };
       
       // Atualizar com valores do banco de dados
-      configs.forEach((config: SystemConfig) => {
+      (configs as any[]).forEach((config) => {
         try {
           const valor = JSON.parse(config.value);
           if (config.key === 'perfilIgreja') {
