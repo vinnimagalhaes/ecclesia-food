@@ -11,6 +11,22 @@ interface SystemConfig {
   } | null;
 }
 
+interface Evento {
+  id: string;
+  nome: string;
+  local: string;
+  data: Date;
+  hora: string | null;
+  capacidade: number | null;
+  descricao: string | null;
+  status: string;
+  creator: {
+    name: string | null;
+    image: string | null;
+    id: string;
+  };
+}
+
 // Função para normalizar texto para comparação
 function normalizeText(text: string) {
   return text
@@ -151,7 +167,7 @@ export async function GET(request: Request) {
     logs.push(`${eventos.length} eventos encontrados`);
     if (eventos.length > 0) {
       logs.push('Eventos encontrados:');
-      eventos.forEach(evento => {
+      eventos.forEach((evento: Evento) => {
         logs.push(`- ${evento.nome} (${evento.data.toISOString()}, ${evento.status})`);
       });
     }
