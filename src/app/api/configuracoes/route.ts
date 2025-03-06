@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import { withUserAuth } from '@/utils/api-helpers';
 import { db } from '@/lib/db';
 
+interface SystemConfig {
+  id: string;
+  key: string;
+  value: string;
+  userId: string | null;
+}
+
 interface PerfilIgreja {
   nome: string;
   endereco: string;
@@ -79,7 +86,7 @@ export async function GET(request: Request) {
       };
       
       // Atualizar com valores do banco de dados
-      configs.forEach((config) => {
+      configs.forEach((config: SystemConfig) => {
         try {
           const valor = JSON.parse(config.value);
           if (config.key === 'perfilIgreja') {
