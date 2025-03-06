@@ -17,7 +17,7 @@ interface Evento {
 
 export default function EditarEventoPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
