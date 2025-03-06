@@ -105,14 +105,6 @@ export default function DashboardPage() {
     });
   }
   
-  // Calcular estatísticas
-  const eventosEsteMes = eventos.filter(evento => {
-    const dataEvento = new Date(evento.createdAt);
-    const hoje = new Date();
-    return dataEvento.getMonth() === hoje.getMonth() && 
-           dataEvento.getFullYear() === hoje.getFullYear();
-  }).length;
-  
   const totalVendas = vendas.reduce((total, venda) => total + venda.total, 0);
   
   const vendasEsteMes = vendas
