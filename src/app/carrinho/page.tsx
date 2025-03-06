@@ -16,14 +16,8 @@ type ItemCarrinho = {
   eventId: string;
 };
 
-type Evento = {
-  id: string;
-  nome: string;
-};
-
 export default function CarrinhoPage() {
   const [itens, setItens] = useState<ItemCarrinho[]>([]);
-  const [eventos, setEventos] = useState<Record<string, Evento>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -36,34 +30,7 @@ export default function CarrinhoPage() {
       if (carrinhoSalvo) {
         const carrinhoParseado = JSON.parse(carrinhoSalvo);
         setItens(carrinhoParseado);
-        
-        // Extrair IDs de eventos únicos
-        const eventosIds = [...new Set(carrinhoParseado.map((item: ItemCarrinho) => item.eventId))];
-        
-        // Buscar informações dos eventos
-        Promise.all(
-          eventosIds.map(async (id) => {
-            try {
-              const response = await fetch(`/api/catalogo/eventos/${id}`);
-              if (response.ok) {
-                return await response.json();
-              }
-              return null;
-            } catch (err) {
-              console.error(`Erro ao buscar evento ${id}:`, err);
-              return null;
-            }
-          })
-        ).then((eventosData) => {
-          const eventosMap: Record<string, Evento> = {};
-          eventosData.forEach((evento) => {
-            if (evento) {
-              eventosMap[evento.id] = evento;
-            }
-          });
-          setEventos(eventosMap);
-          setLoading(false);
-        });
+        setLoading(false);
       } else {
         setItens([]);
         setLoading(false);
@@ -249,19 +216,21 @@ export default function CarrinhoPage() {
           </div>
         ))}
       </div>
-
-      {/* Rodapé fixo com resumo e botão de finalizar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="container-app py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div className="flex items-center gap-2 text-gray-900">
-              <span className="text-sm sm:text-base">Total:</span>
-              <span className="text-lg sm:text-xl font-bold text-primary-500">{formatarPreco(total)}</span>
+      
+      {/* Total e botão de finalizar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total</p>
+              <p className="text-2xl font-bold text-primary-500">{formatarPreco(total)}</p>
             </div>
             
-            <Button variant="primary" className="w-full sm:w-auto">
-              Finalizar Pedido
-            </Button>
+            <Link href="/checkout">
+              <Button variant="primary" size="lg">
+                Finalizar Compra
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
