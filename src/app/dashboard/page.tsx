@@ -26,13 +26,6 @@ type Produto = {
   createdAt: Date;
 };
 
-type Venda = {
-  id: string;
-  total: number;
-  status: string;
-  createdAt: Date;
-};
-
 type AtividadeRecente = {
   id: string;
   tipo: 'evento' | 'produto' | 'venda';
