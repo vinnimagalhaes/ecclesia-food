@@ -1,5 +1,18 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
+
+interface SystemConfig {
+  key: string;
+  value: string;
+  userId: string | null;
+  user: {
+    id: string;
+    name: string | null;
+    emailVerified: Date | null;
+  } | null;
+}
 
 interface IgrejaPerfil {
   id: string;
@@ -34,7 +47,7 @@ export async function GET() {
     logs.push(`Configurações de igreja encontradas: ${configs.length}`);
     
     // Log detalhado de cada configuração
-    configs.forEach((config, index) => {
+    configs.forEach((config: SystemConfig, index) => {
       logs.push(`\n--- Detalhes da Configuração ${index + 1} ---`);
       logs.push(`UserId: ${config.userId}`);
       logs.push(`Email verificado: ${config.user?.emailVerified}`);
