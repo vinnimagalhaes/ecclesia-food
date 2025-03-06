@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withUserAuth } from '@/utils/api-helpers';
 import { db } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/auth';
 
 export interface SystemConfig {
   id: string;
