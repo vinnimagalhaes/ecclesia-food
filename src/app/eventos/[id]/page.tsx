@@ -6,7 +6,6 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, MapPin, Clock, ArrowLeft, Edit, PlusCircle, Package, Link2 } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface Evento {
   id: string;
