@@ -12,6 +12,13 @@ interface SystemConfig {
   } | null;
 }
 
+interface IgrejaPerfilParcial {
+  id: string | null;
+  nome: string;
+  cidade: string;
+  estado: string;
+}
+
 interface IgrejaPerfil {
   id: string;
   nome: string;
@@ -69,7 +76,7 @@ export async function GET() {
         }
         return isVerified;
       })
-      .map((config: SystemConfig) => {
+      .map((config: SystemConfig): IgrejaPerfilParcial | null => {
         try {
           const perfil = JSON.parse(config.value);
           
@@ -88,7 +95,7 @@ export async function GET() {
         }
       })
       .filter((igreja): igreja is IgrejaPerfil => {
-        if (!igreja) {
+        if (!igreja || !igreja.id) {
           return false;
         }
         const isValid = Boolean(igreja.nome && igreja.cidade);
