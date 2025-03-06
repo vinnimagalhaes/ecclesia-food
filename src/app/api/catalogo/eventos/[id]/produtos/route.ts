@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
 export async function GET(
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   console.log(`GET /api/catalogo/eventos/${params.id}/produtos - Iniciando`);
