@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 
 // Função para obter um produto específico
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -185,7 +185,7 @@ export async function PUT(
 
 // Função para excluir um produto
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
