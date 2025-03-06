@@ -98,7 +98,7 @@ export async function PUT(
     }
     
     // Atualizar o produto
-    const produtoAtualizado = await db.product.update({
+    await db.product.update({
       where: { id: productId },
       data: {
         nome: productData.nome,
