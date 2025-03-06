@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
-import { UserRole } from '@prisma/client';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Validar a sessão do usuário
     const session = await getServerSession(authOptions);
@@ -17,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verificar se o usuário é SUPER_ADMIN
-    if (session.user.role !== UserRole.SUPER_ADMIN) {
+    if (session.user.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { 
           error: "Permissão negada", 
@@ -37,13 +36,7 @@ export async function GET(request: NextRequest) {
         name: true,
         email: true,
         role: true,
-        isActive: true,
-        createdAt: true,
-        church: {
-          select: {
-            name: true
-          }
-        }
+        createdAt: true
       }
     });
 
