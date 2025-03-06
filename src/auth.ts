@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { compare } from 'bcrypt';
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -7,6 +7,8 @@ import { db } from '@/lib/db';
 declare module 'next-auth' {
   interface User {
     id: string;
+    name: string | null;
+    email: string;
     role: UserRole;
     isActive: boolean;
   }
@@ -34,53 +36,44 @@ declare module 'next-auth/jwt' {
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: 'Credentials',
+      name: 'credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Senha', type: 'password' }
+        email: { label: 'Email', type: 'text' },
+        password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
-          return null;
+          throw new Error('Email e senha são obrigatórios');
         }
 
-        try {
-          // Buscar usuário pelo email
-          const user = await db.user.findUnique({
-            where: { email: credentials.email }
-          });
+        const user: any = await db.user.findUnique({
+          where: { email: credentials.email }
+        });
 
-          // Verificar se o usuário existe e tem senha
-          if (!user || !user.password) {
-            console.log(`[Auth] Usuário não encontrado ou sem senha: ${credentials.email}`);
-            return null;
-          }
-
-          // Verificar se a senha é válida
-          const passwordMatch = await compare(credentials.password, user.password);
-          if (!passwordMatch) {
-            console.log(`[Auth] Senha inválida para usuário: ${user.email}`);
-            return null;
-          }
-
-          // Verificar se o usuário está ativo
-          if (user.isActive === false) {
-            console.log(`[Auth] Usuário inativo: ${user.email}`);
-            return null;
-          }
-
-          // Retornar os dados do usuário para o token
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            isActive: user.isActive
-          };
-        } catch (error) {
-          console.error('[Auth Error]', error);
-          return null;
+        if (!user || !user.password) {
+          throw new Error('Usuário não encontrado ou sem senha');
         }
+
+        const isPasswordValid = await compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          throw new Error('Senha inválida');
+        }
+
+        if (user.isActive === false) {
+          throw new Error('Usuário inativo');
+        }
+
+        return {
+          id: user.id,
+          name: user.name || '',
+          email: user.email,
+          role: user.role,
+          isActive: user.isActive || true
+        };
       }
     })
   ],
