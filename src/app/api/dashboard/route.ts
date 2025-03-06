@@ -48,7 +48,7 @@ export async function GET(request: Request) {
       });
       
       // Calcular total de vendas do mês
-      const totalVendasMes = vendas.reduce((total: number, venda) => total + venda.total, 0);
+      const totalVendasMes = vendas.reduce((total: number, venda: {total: number}) => total + venda.total, 0);
       
       // Calcular número de vendas por status
       const vendasPendentes = vendas.filter(v => v.status === 'PENDENTE').length;
