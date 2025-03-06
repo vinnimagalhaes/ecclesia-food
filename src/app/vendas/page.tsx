@@ -91,34 +91,6 @@ export default function VendasPage() {
     carregarEventos();
   }, []);
 
-  // Verificar estado da sessão
-  const verificarSessao = () => {
-    try {
-      console.log('Verificando estado da sessão...');
-      
-      // Verificar cookies
-      console.log('Cookies disponíveis:', document.cookie);
-      
-      // Verificar localStorage
-      console.log('Session em localStorage:', localStorage.getItem('next-auth.session-token'));
-      console.log('Callback URL em localStorage:', localStorage.getItem('next-auth.callback-url'));
-      
-      // Tentar buscar session do NextAuth
-      fetch('/api/auth/session')
-        .then(res => res.json())
-        .then(data => {
-          console.log('Dados da sessão NextAuth:', data);
-          alert(`Estado da sessão: ${data?.user ? 'Autenticado como ' + data.user.email : 'Não autenticado'}`);
-        })
-        .catch(err => {
-          console.error('Erro ao verificar sessão:', err);
-          alert('Erro ao verificar sessão. Veja o console para detalhes.');
-        });
-    } catch (error) {
-      console.error('Erro ao verificar sessão:', error);
-    }
-  };
-
   // Buscar dados do banco de dados
   const carregarVendas = async () => {
     setLoading(true);

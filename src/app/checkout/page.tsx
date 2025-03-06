@@ -32,7 +32,6 @@ type FormularioCheckout = {
 export default function CheckoutPage() {
   const router = useRouter();
   const [itens, setItens] = useState<ItemCarrinho[]>([]);
-  const [eventos, setEventos] = useState<Record<string, Evento>>({});
   const [loading, setLoading] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
@@ -82,7 +81,6 @@ export default function CheckoutPage() {
             eventosMap[evento.id] = evento;
           }
         });
-        setEventos(eventosMap);
         setLoading(false);
       });
     } catch (err) {
@@ -147,7 +145,7 @@ export default function CheckoutPage() {
           precoUnitario: item.preco,
           productId: item.produtoId
         })),
-        evento: eventos[itens[0]?.eventId] ? { 
+        evento: itens[0]?.eventId ? { 
           id: itens[0]?.eventId 
         } : undefined,
         observacoes: formulario.observacoes
@@ -369,25 +367,14 @@ export default function CheckoutPage() {
             <h2 className="text-lg font-medium text-gray-900 mb-4">Resumo do Pedido</h2>
             
             <div className="space-y-4 mb-6">
-              {Object.entries(eventos).map(([eventId, evento]) => (
-                <div key={eventId}>
-                  <h3 className="font-medium text-gray-900 mb-2">{evento.nome}</h3>
-                  
-                  <div className="space-y-2">
-                    {itens
-                      .filter(item => item.eventId === eventId)
-                      .map(item => (
-                        <div key={item.produtoId} className="flex justify-between text-sm">
-                          <span className="text-gray-600">
-                            {item.quantidade}x {item.nome}
-                          </span>
-                          <span className="font-medium">
-                            {formatarPreco(item.preco * item.quantidade)}
-                          </span>
-                        </div>
-                      ))
-                    }
-                  </div>
+              {itens.map(item => (
+                <div key={item.produtoId} className="flex justify-between text-sm">
+                  <span className="text-gray-600">
+                    {item.quantidade}x {item.nome}
+                  </span>
+                  <span className="font-medium">
+                    {formatarPreco(item.preco * item.quantidade)}
+                  </span>
                 </div>
               ))}
             </div>
