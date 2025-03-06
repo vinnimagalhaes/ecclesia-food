@@ -94,7 +94,7 @@ export async function GET() {
           return null;
         }
       })
-      .filter((igreja): igreja is IgrejaPerfil => {
+      .filter((igreja: IgrejaPerfilParcial | null): igreja is IgrejaPerfil => {
         if (!igreja || !igreja.id) {
           return false;
         }
