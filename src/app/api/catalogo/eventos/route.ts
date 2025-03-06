@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+interface SystemConfig {
+  userId: string | null;
+  value: string;
+  user: {
+    id: string;
+    name: string | null;
+    emailVerified: Date | null;
+  } | null;
+}
+
 // Função para normalizar texto para comparação
 function normalizeText(text: string) {
   return text
@@ -78,7 +88,7 @@ export async function GET(request: Request) {
     
     // Filtrar configurações que correspondam à cidade e igreja
     const usuariosIds = configs
-      .filter(config => {
+      .filter((config: SystemConfig) => {
         try {
           const perfil = JSON.parse(config.value);
           const perfilCidade = normalizeText(perfil.cidade || '');
