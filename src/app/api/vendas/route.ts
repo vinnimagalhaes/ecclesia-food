@@ -3,25 +3,6 @@ import { db } from '@/lib/db';
 import { Prisma, SaleStatus } from '@prisma/client';
 import { withUserAuth } from '@/utils/api-helpers';
 
-// Tipo para dados recebidos da requisição
-interface NovaVendaInput {
-  cliente: string;
-  email?: string;
-  telefone?: string;
-  tipo: string;
-  total: number;
-  itens: Array<{
-    nome: string;
-    quantidade: number;
-    precoUnitario: number;
-    productId?: string; // ID do produto associado (opcional)
-  }>;
-  eventId?: string;
-  status?: SaleStatus;
-  formaPagamento?: string;
-  origem?: string;
-}
-
 // GET: Obter vendas do usuário atual
 export async function GET(request: Request) {
   return withUserAuth(request, async (userId) => {
