@@ -51,7 +51,6 @@ export default function NovaVendaPage() {
   const [eventoSelecionado, setEventoSelecionado] = useState('');
   const [loading, setLoading] = useState(false);
   const [produtosDoEvento, setProdutosDoEvento] = useState<Produto[]>([]);
-  const [todosProdutos, setTodosProdutos] = useState<Produto[]>([]);
 
   // Carregar eventos disponíveis
   useEffect(() => {
@@ -64,17 +63,7 @@ export default function NovaVendaPage() {
       }
     }
 
-    async function carregarTodosProdutos() {
-      try {
-        const response = await api.get('/produtos');
-        setTodosProdutos(response.data);
-      } catch (err) {
-        console.error('Erro ao carregar produtos:', err);
-      }
-    }
-
     carregarEventos();
-    carregarTodosProdutos();
   }, []);
 
   // Carregar produtos do evento selecionado
