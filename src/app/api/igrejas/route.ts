@@ -62,14 +62,14 @@ export async function GET() {
     
     // Processar e filtrar os perfis
     const igrejas = configs
-      .filter(config => {
+      .filter((config: SystemConfig) => {
         const isVerified = config.user?.emailVerified;
         if (!isVerified) {
           logs.push(`Usuário ${config.userId} foi filtrado por não estar verificado`);
         }
         return isVerified;
       })
-      .map(config => {
+      .map((config: SystemConfig) => {
         try {
           const perfil = JSON.parse(config.value);
           
@@ -97,7 +97,7 @@ export async function GET() {
         }
         return isValid;
       })
-      .sort((a, b) => a.nome.localeCompare(b.nome));
+      .sort((a: IgrejaPerfil, b: IgrejaPerfil) => a.nome.localeCompare(b.nome));
     
     logs.push(`\nTotal de igrejas após processamento: ${igrejas.length}`);
     
