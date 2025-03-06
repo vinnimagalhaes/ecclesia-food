@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Calendar, ShoppingBag, DollarSign, Users, Clock, CheckCircle, Shield } from 'lucide-react';
+import { Calendar, DollarSign, Users, Clock, CheckCircle, Shield } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useSession } from 'next-auth/react';
