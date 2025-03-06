@@ -1,0 +1,216 @@
+[
+  {
+    "cliente": "Vinicius",
+    "email": "viniciusmagalhaes.vsm@gmail.com",
+    "telefone": "16996295222",
+    "tipo": "evento",
+    "total": 15,
+    "itens": [
+      {
+        "nome": "Cachorro Frio",
+        "quantidade": 1,
+        "precoUnitario": 15,
+        "productId": "cm7ui6bsx0001uanb3h4vmcnp"
+      }
+    ],
+    "evento": {
+      "id": "cm7u1qi5m0001ua6ka6gfy4e1"
+    },
+    "formaPagamento": "dinheiro",
+    "status": "PENDENTE",
+    "origem": "admin",
+    "id": "venda-1741139089438",
+    "data": "2025-03-05T01:44:49.438Z"
+  },
+  {
+    "cliente": "Vinicius",
+    "email": "viniciusmagalhaes.vsm@gmail.com",
+    "telefone": "16996295222",
+    "tipo": "evento",
+    "total": 30,
+    "itens": [
+      {
+        "nome": "Cachorro Quente",
+        "quantidade": 3,
+        "precoUnitario": 10,
+        "productId": "cm7u1tre20007ua6kx8azizs6"
+      }
+    ],
+    "evento": {
+      "id": "cm7u1qi5m0001ua6ka6gfy4e1"
+    },
+    "formaPagamento": "dinheiro",
+    "status": "PENDENTE",
+    "origem": "admin",
+    "id": "venda-1741139410295",
+    "data": "2025-03-05T01:50:10.295Z"
+  },
+  {
+    "cliente": "Vinicius",
+    "email": "viniciusmagalhaes.vsm@gmail.com",
+    "telefone": "16996295222",
+    "tipo": "evento",
+    "total": 45,
+    "itens": [
+      {
+        "nome": "Cachorro Frio",
+        "quantidade": 3,
+        "precoUnitario": 15,
+        "productId": "cm7ui6bsx0001uanb3h4vmcnp"
+      }
+    ],
+    "evento": {
+      "id": "cm7u1qi5m0001ua6ka6gfy4e1"
+    },
+    "formaPagamento": "dinheiro",
+    "status": "PENDENTE",
+    "origem": "admin",
+    "id": "venda-1741139819841",
+    "data": "2025-03-05T01:56:59.841Z"
+  },
+  {
+    "cliente": "Lais",
+    "email": "viniciusmagalhaes.vsm@gmail.com",
+    "telefone": "16996295222",
+    "tipo": "evento",
+    "total": 15,
+    "itens": [
+      {
+        "nome": "Coca Cola",
+        "quantidade": 3,
+        "precoUnitario": 5,
+        "productId": "cm7u1sb7w0003ua6krzmg5lvl"
+      }
+    ],
+    "evento": {
+      "id": "cm7u1qi5m0001ua6ka6gfy4e1"
+    },
+    "formaPagamento": "dinheiro",
+    "status": "PENDENTE",
+    "origem": "admin",
+    "id": "venda-1741139915933",
+    "data": "2025-03-05T01:58:35.933Z"
+  },
+  {
+    "cliente": "Vinicius",
+    "email": "viniciusmagalhaes.vsm@gmail.com",
+    "telefone": "16996295222",
+    "tipo": "evento",
+    "total": 45,
+    "itens": [
+      {
+        "nome": "Cachorro Frio",
+        "quantidade": 3,
+        "precoUnitario": 15,
+        "productId": "cm7ui6bsx0001uanb3h4vmcnp"
+      }
+    ],
+    "evento": {
+      "id": "cm7u1qi5m0001ua6ka6gfy4e1"
+    },
+    "formaPagamento": "dinheiro",
+    "status": "FINALIZADA",
+    "origem": "admin",
+    "id": "cm7vh7m5n0008uasvmjkarthm",
+    "data": "2025-03-05T05:27:26.699Z",
+    "dataFinalizacao": "2025-03-05T05:28:02.650Z"
+  },
+  {
+    "cliente": "Lais",
+    "email": "viniciusmagalhaes.vsm@gmail.com",
+    "telefone": "16996295222",
+    "tipo": "evento",
+    "total": 10,
+    "formaPagamento": "pix",
+    "origem": "usuario_final",
+    "status": "FINALIZADA",
+    "itens": [
+      {
+        "nome": "Coca Cola",
+        "quantidade": 2,
+        "precoUnitario": 5,
+        "productId": "cm7u1sb7w0003ua6krzmg5lvl"
+      }
+    ],
+    "evento": {
+      "id": "cm7u1qi5m0001ua6ka6gfy4e1"
+    },
+    "observacoes": "",
+    "id": "cm7vhhnci000auasvq4s3zjnr",
+    "data": "2025-03-05T05:35:14.802Z",
+    "dataFinalizacao": "2025-03-05T13:10:46.749Z"
+  },
+  {
+    "cliente": "Vinicius Magalhães",
+    "email": "viniciusmagalhaes.vsm@gmail.com",
+    "telefone": "16996295222",
+    "tipo": "evento",
+    "total": 50,
+    "itens": [
+      {
+        "nome": "Pizza de Calabresa",
+        "quantidade": 2,
+        "precoUnitario": 25,
+        "productId": "cm7vxpm5v0001uaffqpwj59cj"
+      }
+    ],
+    "evento": {
+      "id": "cm7vx0a6s000duasvucuspqnn"
+    },
+    "formaPagamento": "cartao",
+    "status": "FINALIZADA",
+    "origem": "admin",
+    "id": "cm7vxrakd0004uaff1sqpsc62",
+    "data": "2025-03-05T13:10:38.653Z",
+    "dataFinalizacao": "2025-03-05T13:10:47.938Z"
+  },
+  {
+    "cliente": "Acenir",
+    "email": "majmagalhaes@gmail.com",
+    "telefone": "16997725222",
+    "tipo": "evento",
+    "total": 60,
+    "formaPagamento": "pix",
+    "origem": "usuario_final",
+    "status": "FINALIZADA",
+    "itens": [
+      {
+        "nome": "Pizza de Calabresa",
+        "quantidade": 4,
+        "precoUnitario": 15,
+        "productId": "cm7w6avl500098at3r6x6w57o"
+      }
+    ],
+    "evento": {
+      "id": "cm7w69m4t00078at3f8k6870j"
+    },
+    "observacoes": "",
+    "id": "cm7w6d358000c8at315s5uqam",
+    "data": "2025-03-05T17:11:32.396Z",
+    "dataFinalizacao": "2025-03-05T17:16:17.600Z"
+  },
+  {
+    "cliente": "Cida",
+    "email": "sememail@gmail.com",
+    "telefone": "16996292522",
+    "tipo": "evento",
+    "total": 30,
+    "itens": [
+      {
+        "nome": "Pizza de Calabresa",
+        "quantidade": 2,
+        "precoUnitario": 15,
+        "productId": "cm7w6avl500098at3r6x6w57o"
+      }
+    ],
+    "evento": {
+      "id": "cm7w69m4t00078at3f8k6870j"
+    },
+    "formaPagamento": "dinheiro",
+    "status": "FINALIZADA",
+    "origem": "admin",
+    "id": "cm7w6iqxy000e8at3tgqkx1za",
+    "data": "2025-03-05T17:15:56.519Z",
+    "dataFinalizacao": "2025-03-05T17:16:17.086Z"
+  }
+]
