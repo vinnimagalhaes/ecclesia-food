@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 
 // Função para obter um produto específico
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -66,7 +66,7 @@ export async function GET(
 
 // Função para atualizar um produto
 export async function PUT(
-  req: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -83,7 +83,7 @@ export async function PUT(
     }
     
     // Obter dados do corpo da requisição
-    const body = await req.json();
+    const body = await request.json();
     console.log('Dados recebidos:', body);
     
     // Verificar se o produto existe
@@ -185,7 +185,7 @@ export async function PUT(
 
 // Função para excluir um produto
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
