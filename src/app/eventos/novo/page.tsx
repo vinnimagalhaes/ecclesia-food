@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 export default function NovoEventoPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
