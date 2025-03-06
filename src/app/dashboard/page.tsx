@@ -126,10 +126,6 @@ export default function DashboardPage() {
              dataVenda.getFullYear() === anoMesAnterior;
     })
     .reduce((total, venda) => total + venda.total, 0);
-  
-  const crescimentoVendas = vendasMesAnterior === 0 
-    ? 100 
-    : Math.round((vendasEsteMes - vendasMesAnterior) / vendasMesAnterior * 100);
 
   if (loading) {
     return (
