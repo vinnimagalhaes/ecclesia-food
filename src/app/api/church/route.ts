@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
-import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
 
 export async function POST(req: Request) {
   try {
@@ -56,12 +56,12 @@ export async function POST(req: Request) {
     console.error('[CHURCH_POST] Error:', error);
     
     if (error instanceof Error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error instanceof PrismaClientKnownRequestError) {
         console.error('[CHURCH_POST] Prisma error code:', error.code);
         return new NextResponse(`Database error: ${error.message}`, { status: 500 });
       }
       
-      if (error instanceof Prisma.PrismaClientValidationError) {
+      if (error instanceof PrismaClientValidationError) {
         console.error('[CHURCH_POST] Prisma validation error');
         return new NextResponse(`Validation error: ${error.message}`, { status: 400 });
       }
