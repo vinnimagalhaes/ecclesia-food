@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   console.log('Obtendo produtos do evento:', params.id);
@@ -55,7 +55,7 @@ export async function GET(
 
 // Endpoint para atualizar um produto específico do evento
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   console.log('Atualizando produto do evento:', params.id);
@@ -167,7 +167,7 @@ export async function PUT(
 
 // Endpoint para excluir um produto específico do evento
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   console.log('Excluindo produto do evento:', params.id);
