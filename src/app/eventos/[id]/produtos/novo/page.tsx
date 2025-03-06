@@ -161,7 +161,8 @@ export default function NovoProdutoPage({ params }: { params: { id: string } }) 
         throw new Error(error.message || 'Erro ao criar produto');
       }
       
-      const produto = await response.json();
+      // Consumir o response body
+      await response.json();
       
       toast.success('Produto criado com sucesso!');
       router.push(`/eventos/${params.id}`);
