@@ -30,7 +30,7 @@ export default function DetalhesProdutoPage({
   params: { id: string; produtoId: string } 
 }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [produto, setProduto] = useState<Produto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
