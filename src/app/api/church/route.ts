@@ -55,17 +55,35 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('[CHURCH_POST] Error:', error);
     
-    // Verificar se é um erro do Prisma
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error('[CHURCH_POST] Prisma error code:', error.code);
-      return new NextResponse(`Database error: ${error.message}`, { status: 500 });
+    if (error instanceof Error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error('[CHURCH_POST] Prisma error code:', error.code);
+        return new NextResponse(`Database error: ${error.message}`, { status: 500 });
+      }
+      
+      if (error instanceof Prisma.PrismaClientValidationError) {
+        console.error('[CHURCH_POST] Prisma validation error');
+        return new NextResponse(`Validation error: ${error.message}`, { status: 400 });
+      }
+      
+      return new NextResponse(
+        JSON.stringify({ 
+          error: 'Internal Server Error', 
+          message: error.message
+        }), 
+        { 
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
     }
 
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new NextResponse(
       JSON.stringify({ 
         error: 'Internal Server Error', 
-        message: errorMessage
+        message: 'Unknown error'
       }), 
       { 
         status: 500,
