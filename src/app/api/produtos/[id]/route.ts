@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 
 // Função para obter um produto específico
 export async function GET(
-  req: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -114,7 +114,7 @@ export async function PUT(
     }
     
     // Atualizar o produto
-    const produtoAtualizado = await db.product.update({
+    await db.product.update({
       where: {
         id: params.id
       },
@@ -185,7 +185,7 @@ export async function PUT(
 
 // Função para excluir um produto
 export async function DELETE(
-  req: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   try {

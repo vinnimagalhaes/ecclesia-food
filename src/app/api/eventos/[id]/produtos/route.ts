@@ -4,6 +4,7 @@ import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
 
 export async function GET(
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   console.log('Obtendo produtos do evento:', params.id);
