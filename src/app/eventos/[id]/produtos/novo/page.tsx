@@ -4,13 +4,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { ArrowLeft, Save, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Save, X, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 
 export default function NovoProdutoPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [eventoNome, setEventoNome] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
