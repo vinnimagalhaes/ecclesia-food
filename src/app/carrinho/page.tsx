@@ -134,7 +134,7 @@ export default function CarrinhoPage() {
         {Object.entries(itensPorEvento).map(([eventId, itensDoEvento]) => (
           <div key={eventId} className="border-b border-gray-200 last:border-b-0">
             <div className="divide-y divide-gray-100">
-              {itensDoEvento.map((item, index) => {
+              {itensDoEvento.map((item) => {
                 const itemIndex = itens.findIndex(i => 
                   i.produtoId === item.produtoId && i.eventId === item.eventId
                 );
