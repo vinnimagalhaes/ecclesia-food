@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 import { Prisma, SaleStatus } from '@prisma/client';
-import { withUserAuth, multitenancy } from '@/utils/api-helpers';
+import { withUserAuth } from '@/utils/api-helpers';
 
 // Caminho para o arquivo de backup (garantir que seja acessível) - Usado apenas como fallback
 const DATA_FILE_PATH = path.join(process.cwd(), 'vendas-backup.json');
