@@ -10,6 +10,7 @@ interface AppHeaderProps {
   showHomeButton?: boolean;
   children?: ReactNode;
   gradient?: boolean;
+  sticky?: boolean;
 }
 
 export function AppHeader({
@@ -20,13 +21,18 @@ export function AppHeader({
   showHomeButton = false,
   children,
   gradient = true,
+  sticky = false,
 }: AppHeaderProps) {
   const backgroundClass = gradient 
     ? 'bg-gradient-to-r from-primary-600 to-primary-500' 
     : 'bg-primary-500';
+    
+  const positionClass = sticky
+    ? 'sticky top-0 z-50'
+    : '';
 
   return (
-    <div className={`${backgroundClass} text-white p-4 pt-6 pb-6 rounded-b-3xl shadow-md`}>
+    <div className={`${backgroundClass} ${positionClass} text-white p-4 pt-6 pb-6 rounded-b-3xl shadow-md`}>
       <div className="flex items-center mb-2">
         {showBackButton && (
           <Link href={backUrl} className="mr-3">

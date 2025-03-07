@@ -6,8 +6,8 @@ export default function EventosIgrejaLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="container-app py-6">
+    <>
       {children}
-    </div>
+    </>
   );
 } 

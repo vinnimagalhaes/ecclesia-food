@@ -147,6 +147,7 @@ export default function CatalogoIgrejasPage() {
         title="Catálogo de Igrejas"
         subtitle="Encontre eventos e produtos das igrejas participantes"
         showHomeButton
+        sticky={true}
       >
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, MapPin, Clock, Users, Church, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, Users, Church, RefreshCw, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { AppHeader } from '@/components/ui/AppHeader';
+import { AppIconLocation } from '@/components/ui/AppIconLocation';
 
 // Tipo para os eventos
 type Evento = {
@@ -142,100 +144,124 @@ export default function CatalogoEventosIgrejaPage({
     ).join(' ');
   }
 
-  return (
-    <div className="px-2 sm:container-app py-3 sm:py-8 space-y-3 sm:space-y-6">
-      <div className="px-2 sm:px-0 flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-2 text-primary-500 mb-1 sm:mb-2">
-            <Church size={20} />
-            <h2 className="text-base sm:text-lg font-medium">{nomeIgreja}</h2>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Eventos em {formatarCidade(cidade)}</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Confira os próximos eventos e faça suas compras</p>
-        </div>
-        <Button
-          onClick={() => fetchEventos(false)}
-          variant="secondary"
-          disabled={isRefreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-          <span className="hidden sm:inline">{isRefreshing ? 'Atualizando...' : 'Atualizar'}</span>
-        </Button>
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="w-16 h-16 border-t-4 border-primary-500 border-solid rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-600 font-medium">Carregando eventos...</p>
       </div>
+    );
+  }
 
-      {/* Exibe erro se houver */}
-      {error && (
-        <div className="mx-2 sm:mx-0 bg-red-50 border border-red-200 text-red-700 p-3 sm:p-4 rounded-md text-sm sm:text-base">
-          {error}
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* Header com informações da igreja */}
+      <AppHeader
+        title={nomeIgreja}
+        subtitle={`Eventos em ${formatarCidade(cidade)}`}
+        showBackButton={true}
+        backUrl="/catalogo/igrejas"
+        sticky={true}
+      />
+
+      {/* Conteúdo principal */}
+      <div className="flex-1 p-4 -mt-2">
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-gray-600 font-medium">
+            {eventos.length} {eventos.length === 1 ? 'evento disponível' : 'eventos disponíveis'}
+          </p>
           <Button
-            onClick={() => fetchEventos()}
-            variant="secondary"
-            className="mt-2 sm:mt-3"
+            onClick={() => fetchEventos(false)}
+            variant="outline"
+            size="sm"
+            disabled={isRefreshing}
+            className="flex items-center gap-1"
           >
-            Tentar novamente
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+            <span className="text-xs">{isRefreshing ? 'Atualizando' : 'Atualizar'}</span>
           </Button>
         </div>
-      )}
 
-      {/* Lista de eventos */}
-      {loading ? (
-        <div className="flex justify-center py-6 sm:py-12">
-          <div className="animate-pulse text-gray-500 text-sm sm:text-base">Carregando eventos...</div>
-        </div>
-      ) : eventos.length === 0 ? (
-        <div className="mx-2 sm:mx-0 bg-white rounded-xl shadow-sm p-6 sm:p-8 text-center">
-          <Calendar className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Nenhum evento disponível no momento</h3>
-          <p className="text-sm sm:text-base text-gray-600">Fique de olho! Novos eventos serão adicionados em breve.</p>
-        </div>
-      ) : (
-        <div className="space-y-3 sm:space-y-4">
-          {eventos.map((evento) => (
-            <Link 
-              key={evento.id} 
-              href={`/catalogo/igrejas/${params.cidade}/${params.igreja}/eventos/${evento.id}`}
-              className="block bg-white rounded-xl shadow-sm overflow-hidden active:shadow-inner transition-all"
+        {/* Exibe erro se houver */}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mb-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => fetchEventos()}
+              variant="primary"
+              className="mt-4 w-full"
             >
-              <div className="p-4 sm:p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">{evento.nome}</h3>
-                
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3 text-sm sm:text-base">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Calendar size={16} className="flex-shrink-0" />
-                    <span>{formatarData(evento.data.toString())}</span>
+              Tentar novamente
+            </Button>
+          </div>
+        )}
+
+        {/* Lista de eventos */}
+        {eventos.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm p-8 text-center mt-4">
+            <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum evento disponível no momento</h3>
+            <p className="text-gray-600">Fique de olho! Novos eventos serão adicionados em breve.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {eventos.map((evento) => (
+              <div 
+                key={evento.id} 
+                className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"
+              >
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">{evento.nome}</h3>
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Calendar size={16} className="flex-shrink-0 text-primary-500" />
+                      <span>{formatarData(evento.data.toString())}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Clock size={16} className="flex-shrink-0 text-primary-500" />
+                      <span>{evento.hora}</span>
+                    </div>
+                    
+                    <AppIconLocation 
+                      location={evento.local}
+                      iconSize={16}
+                      className="text-gray-600"
+                    />
+                    
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Users size={16} className="flex-shrink-0 text-primary-500" />
+                      <span>Capacidade: {evento.capacidade} pessoas</span>
+                    </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Clock size={16} className="flex-shrink-0" />
-                    <span>{evento.hora}</span>
-                  </div>
+                  {evento.descricao && (
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{evento.descricao}</p>
+                  )}
                   
-                  <div className="flex items-center gap-2 text-gray-600 col-span-2">
-                    <MapPin size={16} className="flex-shrink-0" />
-                    <span className="truncate">{evento.local}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-gray-600 col-span-2">
-                    <Users size={16} className="flex-shrink-0" />
-                    <span>Capacidade: {evento.capacidade} pessoas</span>
-                  </div>
-                </div>
-                
-                {evento.descricao && (
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{evento.descricao}</p>
-                )}
-                
-                <div className="flex justify-end">
-                  <Button variant="primary" className="w-full sm:w-auto">
-                    Ver Produtos
-                  </Button>
+                  <Link 
+                    href={`/catalogo/igrejas/${params.cidade}/${params.igreja}/eventos/${evento.id}`}
+                    className="flex items-center justify-between w-full p-3 mt-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <span className="font-medium text-primary-600">Ver Produtos</span>
+                    <ArrowRight size={18} className="text-primary-500" />
+                  </Link>
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 } 
