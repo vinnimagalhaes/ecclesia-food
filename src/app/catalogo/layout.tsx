@@ -21,7 +21,7 @@ export default function CatalogoLayout({
       </header>
 
       {/* Conteúdo principal */}
-      <main className="container-app py-6">
+      <main className="w-full">
         {children}
       </main>
 

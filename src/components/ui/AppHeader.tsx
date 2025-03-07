@@ -32,8 +32,17 @@ export function AppHeader({
     : '';
 
   return (
-    <header className={`${backgroundClass} ${positionClass} text-white w-full shadow-md`} style={{ maxWidth: '100vw', margin: 0, width: '100%' }}>
-      <div className="px-4 pt-6 pb-6 w-full max-w-full">
+    <div 
+      className={`${backgroundClass} ${positionClass} text-white shadow-md`}
+      style={{
+        width: '100vw',
+        marginLeft: 'calc(50% - 50vw)',
+        marginRight: 'calc(50% - 50vw)',
+        boxSizing: 'border-box',
+        display: 'block'
+      }}
+    >
+      <div className="px-4 pt-6 pb-6">
         <div className="flex items-center mb-2">
           {showBackButton && (
             <Link href={backUrl} className="mr-3">
@@ -54,6 +63,6 @@ export function AppHeader({
         
         {children}
       </div>
-    </header>
+    </div>
   );
 } 
