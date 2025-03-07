@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Church, RefreshCw } from 'lucide-react';
+import { Search, Church, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AppHeader } from '@/components/ui/AppHeader';
 import { AppListItem } from '@/components/ui/AppListItem';
