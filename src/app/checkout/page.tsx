@@ -145,9 +145,7 @@ export default function CheckoutPage() {
           precoUnitario: item.preco,
           productId: item.produtoId
         })),
-        evento: itens[0]?.eventId ? { 
-          id: itens[0]?.eventId 
-        } : undefined,
+        eventId: itens[0]?.eventId || undefined,
         observacoes: formulario.observacoes
       };
       
