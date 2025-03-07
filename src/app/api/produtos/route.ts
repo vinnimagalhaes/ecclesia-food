@@ -62,12 +62,27 @@ export async function POST(req: Request) {
         creatorId: session.user.id,
         eventId: body.eventId,
       },
+      include: {
+        images: true
+      }
     });
     
     console.log('Produto criado com sucesso:', produto);
     
     // Se houver uma URL de imagem, adicionar a imagem
     if (body.imageUrl) {
+      // Primeiro, remover qualquer imagem principal existente
+      await db.productImage.updateMany({
+        where: {
+          productId: produto.id,
+          principal: true
+        },
+        data: {
+          principal: false
+        }
+      });
+
+      // Criar a nova imagem como principal
       const imagem = await db.productImage.create({
         data: {
           url: body.imageUrl,
@@ -77,6 +92,14 @@ export async function POST(req: Request) {
         },
       });
       console.log('Imagem adicionada:', imagem);
+
+      // Buscar o produto atualizado com a imagem
+      const produtoAtualizado = await db.product.findUnique({
+        where: { id: produto.id },
+        include: { images: true }
+      });
+
+      return NextResponse.json(produtoAtualizado, { status: 201 });
     }
     
     return NextResponse.json(produto, { status: 201 });
