@@ -154,7 +154,7 @@ export default function CatalogoEventosIgrejaPage({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden">
       {/* Header com informações da igreja */}
       <AppHeader
         title={nomeIgreja}

@@ -141,7 +141,7 @@ export default function CatalogoIgrejasPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden">
       {/* Header com barra de pesquisa */}
       <AppHeader 
         title="Catálogo de Igrejas"
