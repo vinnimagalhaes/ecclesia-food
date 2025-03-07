@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { ShoppingBag, CreditCard, Smartphone } from 'lucide-react';
+import { AppHeader } from '@/components/ui/AppHeader';
 
 // Tipos
 type ItemCarrinho = {
@@ -113,7 +114,8 @@ export default function CheckoutPage() {
   async function enviarPedido(e: React.FormEvent) {
     e.preventDefault();
     
-    if (!formulario.nome || !formulario.email || !formulario.telefone) {
+    // Validar apenas nome e telefone como obrigatórios
+    if (!formulario.nome || !formulario.telefone) {
       setError('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -132,7 +134,7 @@ export default function CheckoutPage() {
       // Preparar os dados para a API no formato correto
       const dadosVenda = {
         cliente: formulario.nome,
-        email: formulario.email,
+        email: formulario.email || '', // Pode estar vazio
         telefone: formulario.telefone,
         tipo: 'evento', // Padrão para vendas de catálogo
         total: total,
@@ -193,212 +195,221 @@ export default function CheckoutPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="animate-pulse text-gray-500">Carregando checkout...</div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="w-16 h-16 border-t-4 border-primary-500 border-solid rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-600 font-medium">Carregando checkout...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-md">
-        <h2 className="text-lg font-medium mb-2">Erro</h2>
-        <p>{error}</p>
-        <div className="mt-4 flex gap-4">
-          <Link href="/carrinho">
-            <Button variant="secondary">
-              Voltar para o Carrinho
-            </Button>
-          </Link>
-          <Button variant="primary" onClick={() => setError('')}>
-            Tentar Novamente
-          </Button>
+      <div className="p-4">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+          <div className="mt-4 flex gap-4">
+            <Link href="/carrinho" className="w-full">
+              <Button variant="primary" className="w-full">
+                Voltar para o Carrinho
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Finalizar Pedido</h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Formulário de checkout */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Seus Dados</h2>
-            
-            <form onSubmit={enviarPedido} className="space-y-4">
-              <div>
-                <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome Completo *
-                </label>
-                <input
-                  type="text"
-                  id="nome"
-                  value={formulario.nome}
-                  onChange={(e) => atualizarFormulario('nome', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  required
-                />
-              </div>
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* Cabeçalho */}
+      <AppHeader
+        title="Finalizar Pedido"
+        showBackButton={true}
+        backUrl="/carrinho"
+        sticky={true}
+      />
+
+      {/* Formulário e resumo */}
+      <div className="flex-1 p-4">
+        <div className="space-y-4">
+          {/* Formulário de checkout */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Seus Dados</h2>
               
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  E-mail *
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={formulario.email}
-                  onChange={(e) => atualizarFormulario('email', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Telefone *
-                </label>
-                <input
-                  type="tel"
-                  id="telefone"
-                  value={formulario.telefone}
-                  onChange={(e) => atualizarFormulario('telefone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Método de Pagamento *
-                </label>
+              <form onSubmit={enviarPedido} className="space-y-4">
+                <div>
+                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome Completo *
+                  </label>
+                  <input
+                    type="text"
+                    id="nome"
+                    value={formulario.nome}
+                    onChange={(e) => atualizarFormulario('nome', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                  />
+                </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <label className={`
-                    flex items-center p-3 border rounded-md cursor-pointer
-                    ${formulario.metodoPagamento === 'dinheiro' ? 'border-primary-500 bg-primary-50' : 'border-gray-300'}
-                  `}>
-                    <input
-                      type="radio"
-                      name="metodoPagamento"
-                      value="dinheiro"
-                      checked={formulario.metodoPagamento === 'dinheiro'}
-                      onChange={() => atualizarFormulario('metodoPagamento', 'dinheiro')}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center">
-                      <span className="text-gray-900 ml-2">Dinheiro</span>
-                    </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    E-mail
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={formulario.email}
+                    onChange={(e) => atualizarFormulario('email', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Telefone *
+                  </label>
+                  <input
+                    type="tel"
+                    id="telefone"
+                    value={formulario.telefone}
+                    onChange={(e) => atualizarFormulario('telefone', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Método de Pagamento *
                   </label>
                   
-                  <label className={`
-                    flex items-center p-3 border rounded-md cursor-pointer
-                    ${formulario.metodoPagamento === 'cartao' ? 'border-primary-500 bg-primary-50' : 'border-gray-300'}
-                  `}>
-                    <input
-                      type="radio"
-                      name="metodoPagamento"
-                      value="cartao"
-                      checked={formulario.metodoPagamento === 'cartao'}
-                      onChange={() => atualizarFormulario('metodoPagamento', 'cartao')}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center">
-                      <CreditCard size={18} className="text-gray-500" />
-                      <span className="text-gray-900 ml-2">Cartão</span>
-                    </div>
-                  </label>
-                  
-                  <label className={`
-                    flex items-center p-3 border rounded-md cursor-pointer
-                    ${formulario.metodoPagamento === 'pix' ? 'border-primary-500 bg-primary-50' : 'border-gray-300'}
-                  `}>
-                    <input
-                      type="radio"
-                      name="metodoPagamento"
-                      value="pix"
-                      checked={formulario.metodoPagamento === 'pix'}
-                      onChange={() => atualizarFormulario('metodoPagamento', 'pix')}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center">
-                      <Smartphone size={18} className="text-gray-500" />
-                      <span className="text-gray-900 ml-2">PIX</span>
-                    </div>
-                  </label>
+                  <div className="grid grid-cols-1 gap-2">
+                    <label className={`
+                      relative flex items-center p-3 rounded-md border cursor-pointer
+                      ${formulario.metodoPagamento === 'dinheiro' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:bg-gray-50'}
+                    `}>
+                      <input
+                        type="radio"
+                        name="metodoPagamento"
+                        value="dinheiro"
+                        checked={formulario.metodoPagamento === 'dinheiro'}
+                        onChange={() => atualizarFormulario('metodoPagamento', 'dinheiro')}
+                        className="sr-only"
+                      />
+                      <div className="flex items-center">
+                        <span className={`w-4 h-4 mr-2 rounded-full border flex-shrink-0 ${formulario.metodoPagamento === 'dinheiro' ? 'border-4 border-primary-500' : 'border border-gray-400'}`}></span>
+                        <span className="font-medium text-gray-700">Dinheiro</span>
+                      </div>
+                    </label>
+                    
+                    <label className={`
+                      relative flex items-center p-3 rounded-md border cursor-pointer
+                      ${formulario.metodoPagamento === 'cartao' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:bg-gray-50'}
+                    `}>
+                      <input
+                        type="radio"
+                        name="metodoPagamento"
+                        value="cartao"
+                        checked={formulario.metodoPagamento === 'cartao'}
+                        onChange={() => atualizarFormulario('metodoPagamento', 'cartao')}
+                        className="sr-only"
+                      />
+                      <div className="flex items-center">
+                        <span className={`w-4 h-4 mr-2 rounded-full border flex-shrink-0 ${formulario.metodoPagamento === 'cartao' ? 'border-4 border-primary-500' : 'border border-gray-400'}`}></span>
+                        <span className="font-medium text-gray-700">Cartão</span>
+                      </div>
+                    </label>
+                    
+                    <label className={`
+                      relative flex items-center p-3 rounded-md border cursor-pointer
+                      ${formulario.metodoPagamento === 'pix' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:bg-gray-50'}
+                    `}>
+                      <input
+                        type="radio"
+                        name="metodoPagamento"
+                        value="pix"
+                        checked={formulario.metodoPagamento === 'pix'}
+                        onChange={() => atualizarFormulario('metodoPagamento', 'pix')}
+                        className="sr-only"
+                      />
+                      <div className="flex items-center">
+                        <span className={`w-4 h-4 mr-2 rounded-full border flex-shrink-0 ${formulario.metodoPagamento === 'pix' ? 'border-4 border-primary-500' : 'border border-gray-400'}`}></span>
+                        <span className="font-medium text-gray-700">Pix</span>
+                      </div>
+                    </label>
+                  </div>
                 </div>
-              </div>
-              
-              <div>
-                <label htmlFor="observacoes" className="block text-sm font-medium text-gray-700 mb-1">
-                  Observações
-                </label>
-                <textarea
-                  id="observacoes"
-                  value={formulario.observacoes}
-                  onChange={(e) => atualizarFormulario('observacoes', e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                ></textarea>
-              </div>
-              
-              <div className="pt-4">
-                <Button 
-                  type="submit" 
-                  variant="primary" 
-                  className="w-full"
-                  disabled={enviando}
-                >
-                  {enviando ? 'Processando...' : 'Finalizar Pedido'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-        
-        {/* Resumo do pedido */}
-        <div>
-          <div className="bg-white rounded-xl shadow-sm p-6 sticky top-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Resumo do Pedido</h2>
-            
-            <div className="space-y-4 mb-6">
-              {itens.map(item => (
-                <div key={item.produtoId} className="flex justify-between text-sm">
-                  <span className="text-gray-600">
-                    {item.quantidade}x {item.nome}
-                  </span>
-                  <span className="font-medium">
-                    {formatarPreco(item.preco * item.quantidade)}
-                  </span>
+                
+                <div>
+                  <label htmlFor="observacoes" className="block text-sm font-medium text-gray-700 mb-1">
+                    Observações
+                  </label>
+                  <textarea
+                    id="observacoes"
+                    rows={3}
+                    value={formulario.observacoes}
+                    onChange={(e) => atualizarFormulario('observacoes', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="Alguma informação adicional para seu pedido?"
+                  ></textarea>
                 </div>
-              ))}
-            </div>
-            
-            <div className="border-t border-gray-200 pt-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">{formatarPreco(total)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center font-bold text-lg mt-4">
-                <span>Total</span>
-                <span className="text-primary-500">{formatarPreco(total)}</span>
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <Link href="/carrinho">
-                <Button variant="secondary" className="w-full flex items-center justify-center gap-2">
-                  <ShoppingBag size={18} />
-                  <span>Voltar ao Carrinho</span>
-                </Button>
-              </Link>
+              </form>
             </div>
           </div>
+
+          {/* Resumo do pedido */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumo do Pedido</h2>
+              
+              <div className="space-y-3 mb-4">
+                {itens.map((item) => (
+                  <div key={item.produtoId} className="flex justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-700">
+                        {item.quantidade}x {item.nome}
+                      </p>
+                    </div>
+                    <div className="ml-4 text-right">
+                      <p className="font-medium text-gray-900">
+                        {formatarPreco(item.preco * item.quantidade)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="border-t border-gray-200 pt-3">
+                <div className="flex justify-between items-center">
+                  <p className="font-semibold text-gray-900">Total</p>
+                  <p className="font-bold text-xl text-primary-500">{formatarPreco(total)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+      
+      {/* Botão de finalizar fixo na parte inferior */}
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 shadow-lg">
+        <Button
+          variant="primary"
+          className="w-full py-3"
+          onClick={enviarPedido}
+          disabled={enviando}
+        >
+          {enviando ? 'Processando...' : 'Finalizar Pedido'}
+        </Button>
       </div>
     </div>
   );
