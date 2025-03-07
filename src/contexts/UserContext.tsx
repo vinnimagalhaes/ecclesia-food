@@ -41,7 +41,7 @@ export function UserProvider({ children }: UserProviderProps) {
     if (session?.user) {
       console.log('[UserContext] Usuário autenticado:', session.user);
       setUserId(session.user.id as string);
-      setUserEmail(session.user.email);
+      setUserEmail(session.user.email || null);
       setUserName(session.user.name || 'Usuário');
       setIsAdmin(session.user.role === 'ADMIN');
     } else {
