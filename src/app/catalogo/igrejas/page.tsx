@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Church } from 'lucide-react';
+import { Search, MapPin, Church, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
 
 interface PerfilIgreja {
   id: string;
@@ -17,71 +18,69 @@ export default function CatalogoIgrejasPage() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredIgrejas, setFilteredIgrejas] = useState<PerfilIgreja[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function fetchIgrejas() {
-      try {
-        console.log('Iniciando busca de igrejas...');
+  // Função para buscar igrejas
+  const fetchIgrejas = async (showLoadingState = true) => {
+    try {
+      if (showLoadingState) {
         setLoading(true);
-        setError('');
-
-        // Usar URL completa
-        const apiUrl = `${window.location.origin}/api/igrejas`;
-        console.log('Chamando API:', apiUrl);
-        
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          },
-          cache: 'no-store'
-        });
-        
-        console.log('Status da resposta:', response.status);
-        console.log('Headers:', Object.fromEntries(response.headers.entries()));
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Erro da API:', errorData);
-          if (errorData.logs) {
-            console.log('Logs da API:', errorData.logs.join('\n'));
-          }
-          throw new Error(`Falha ao carregar igrejas: ${response.status} ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log('Resposta completa:', data);
-        
-        if (data.logs) {
-          console.log('Logs da API:', data.logs.join('\n'));
-        }
-        
-        if (!Array.isArray(data.igrejas)) {
-          console.error('Resposta inválida:', data);
-          throw new Error('Formato de resposta inválido');
-        }
-        
-        setIgrejas(data.igrejas);
-        setFilteredIgrejas(data.igrejas);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Não foi possível carregar a lista de igrejas.';
-        console.error('Erro detalhado:', {
-          message: errorMessage,
-          error: err,
-          stack: err instanceof Error ? err.stack : undefined
-        });
-        setError(errorMessage);
-        setIgrejas([]);
-        setFilteredIgrejas([]);
-      } finally {
-        setLoading(false);
+      } else {
+        setIsRefreshing(true);
       }
-    }
+      setError('');
 
-    // Adicionar um pequeno delay para garantir que a página está totalmente carregada
-    setTimeout(fetchIgrejas, 100);
+      // Usar URL completa com timestamp para evitar cache
+      const timestamp = new Date().getTime();
+      const apiUrl = `${window.location.origin}/api/igrejas?_t=${timestamp}`;
+      console.log('Chamando API:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Erro da API:', errorData);
+        if (errorData.logs) {
+          console.log('Logs da API:', errorData.logs.join('\n'));
+        }
+        throw new Error(`Falha ao carregar igrejas: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!Array.isArray(data.igrejas)) {
+        console.error('Resposta inválida:', data);
+        throw new Error('Formato de resposta inválido');
+      }
+      
+      setIgrejas(data.igrejas);
+      setFilteredIgrejas(data.igrejas);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Não foi possível carregar a lista de igrejas.';
+      console.error('Erro detalhado:', {
+        message: errorMessage,
+        error: err,
+        stack: err instanceof Error ? err.stack : undefined
+      });
+      setError(errorMessage);
+      setIgrejas([]);
+      setFilteredIgrejas([]);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  // Carregar dados iniciais
+  useEffect(() => {
+    fetchIgrejas();
   }, []);
 
   // Função para filtrar igrejas
@@ -120,6 +119,13 @@ export default function CatalogoIgrejasPage() {
       <div className="container-app py-8">
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
           {error}
+          <Button
+            onClick={() => fetchIgrejas()}
+            variant="secondary"
+            className="mt-4"
+          >
+            Tentar novamente
+          </Button>
         </div>
       </div>
     );
@@ -127,9 +133,20 @@ export default function CatalogoIgrejasPage() {
 
   return (
     <div className="container-app py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Catálogo de Igrejas</h1>
-        <p className="text-gray-600">Encontre eventos e produtos das igrejas participantes</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Catálogo de Igrejas</h1>
+          <p className="text-gray-600">Encontre eventos e produtos das igrejas participantes</p>
+        </div>
+        <Button
+          onClick={() => fetchIgrejas(false)}
+          variant="secondary"
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+          <span>{isRefreshing ? 'Atualizando...' : 'Atualizar'}</span>
+        </Button>
       </div>
 
       {/* Barra de pesquisa */}
