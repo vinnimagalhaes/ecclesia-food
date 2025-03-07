@@ -27,6 +27,8 @@ export default function ConfiguracoesPage() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [perfilSalvoComSucesso, setPerfilSalvoComSucesso] = useState(false);
 
   // Carregar configurações da API ao iniciar
   useEffect(() => {
@@ -80,6 +82,8 @@ export default function ConfiguracoesPage() {
   const salvarConfiguracoes = async (tipo: string) => {
     try {
       let dados;
+      setSalvando(true);
+      setPerfilSalvoComSucesso(false);
       
       if (tipo === 'perfil da igreja') {
         dados = perfilIgreja;
@@ -87,6 +91,7 @@ export default function ConfiguracoesPage() {
         dados = configPagamento;
       } else {
         toast.info('Funcionalidade não implementada completamente');
+        setSalvando(false);
         return;
       }
       
@@ -107,6 +112,10 @@ export default function ConfiguracoesPage() {
         const result = await response.json();
         console.log('Resposta do servidor:', result);
         toast.success(`Configurações de ${tipo} salvas com sucesso!`);
+        
+        if (tipo === 'perfil da igreja') {
+          setPerfilSalvoComSucesso(true);
+        }
       } else {
         const error = await response.json();
         console.error('Erro ao salvar configurações:', error);
@@ -115,6 +124,8 @@ export default function ConfiguracoesPage() {
     } catch (error) {
       console.error(`Erro ao salvar configurações de ${tipo}:`, error);
       toast.error('Erro ao salvar configurações');
+    } finally {
+      setSalvando(false);
     }
   };
 
@@ -136,9 +147,40 @@ export default function ConfiguracoesPage() {
       <div className="grid grid-cols-1 gap-6">
         {/* Perfil da Igreja */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <Church className="h-5 w-5 text-primary-500" />
-            <h2 className="text-xl font-semibold">Perfil da Igreja</h2>
+          <div className="flex flex-wrap justify-between items-center mb-6">
+            <div className="flex items-center gap-2 mb-2 sm:mb-0">
+              <Church className="h-5 w-5 text-gray-700" />
+              <h2 className="text-lg font-semibold">Perfil da Igreja</h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button 
+                onClick={() => salvarConfiguracoes('perfil da igreja')}
+                disabled={salvando}
+                className="flex items-center gap-2"
+              >
+                {salvando ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Salvando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    <span>Salvar Perfil</span>
+                  </>
+                )}
+              </Button>
+              
+              {perfilSalvoComSucesso && (
+                <Button 
+                  variant="secondary"
+                  className="flex items-center gap-2"
+                  onClick={() => window.location.href = '/catalogo/igrejas'}
+                >
+                  <span>Ver no Catálogo</span>
+                </Button>
+              )}
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -239,20 +281,6 @@ export default function ConfiguracoesPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Button
-              variant="primary"
-              className="flex items-center gap-2"
-              onClick={() => salvarConfiguracoes('perfil da igreja')}
-            >
-              <Save size={16} />
-              <span>Salvar Perfil</span>
-            </Button>
-            <p className="text-gray-700 text-sm">
-              *Preencha todos os campos e clique no botão "Salvar Perfil" para que sua igreja seja localizada na página de eventos
-            </p>
           </div>
         </div>
         

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// Configuração para tornar a rota dinâmica
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface IgrejaPerfil {
   id: string;
   nome: string;
@@ -59,15 +63,25 @@ export async function GET() {
     
     logs.push(`\nTotal de igrejas após processamento: ${igrejasProcessadas.length}`);
     
+    // Adicionar cabeçalhos para evitar cache em todas as camadas
+    const headers = new Headers();
+    headers.append('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    headers.append('Pragma', 'no-cache');
+    headers.append('Expires', '0');
+    
     // Retornar os logs junto com os dados para debug
-    return NextResponse.json({
-      logs,
-      igrejas: igrejasProcessadas,
-      debug: {
-        igrejasEncontradas: igrejas.length,
-        igrejasProcessadas: igrejasProcessadas.length
-      }
-    });
+    return NextResponse.json(
+      {
+        logs,
+        igrejas: igrejasProcessadas,
+        debug: {
+          igrejasEncontradas: igrejas.length,
+          igrejasProcessadas: igrejasProcessadas.length,
+          timestamp: new Date().toISOString()
+        }
+      },
+      { headers }
+    );
   } catch (error) {
     logs.push(`Erro ao buscar igrejas: ${error}`);
     return NextResponse.json(
