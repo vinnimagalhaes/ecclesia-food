@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-interface SystemConfig {
-  userId: string | null;
-  value: string;
+interface Church {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+  userId: string;
   user: {
     id: string;
     name: string | null;
@@ -82,14 +85,14 @@ export async function GET(request: Request) {
     
     logs.push(`Buscando eventos com status ATIVO e data >= hoje`);
     
-    // Buscar todas as configurações de igreja
-    const configs = await db.systemConfig.findMany({
-      where: {
-        key: 'perfilIgreja'
-      },
+    // Buscar igrejas diretamente do modelo Church
+    const churches = await db.church.findMany({
       select: {
+        id: true,
+        name: true,
+        city: true,
+        state: true,
         userId: true,
-        value: true,
         user: {
           select: {
             id: true,
@@ -100,35 +103,30 @@ export async function GET(request: Request) {
       }
     });
     
-    logs.push(`Total de configurações encontradas: ${configs.length}`);
+    logs.push(`Total de igrejas encontradas: ${churches.length}`);
     
-    // Filtrar configurações que correspondam à cidade e igreja
-    const usuariosIds = configs
-      .filter((config: SystemConfig) => {
-        try {
-          const perfil = JSON.parse(config.value);
-          const perfilCidade = normalizeText(perfil.cidade || '');
-          const perfilNome = normalizeText(perfil.nome || '');
-          
-          logs.push(`Comparando: "${perfilCidade}" com "${cidadeNormalizada}"`);
-          logs.push(`Comparando: "${perfilNome}" com "${nomeIgrejaNormalizado}"`);
-          
-          const cidadeMatch = perfilCidade === cidadeNormalizada;
-          const nomeMatch = perfilNome === nomeIgrejaNormalizado;
-          
-          if (cidadeMatch && nomeMatch) {
-            logs.push(`Encontrada correspondência para usuário ${config.userId}`);
-          }
-          
-          return cidadeMatch && nomeMatch && config.user?.emailVerified;
-        } catch (e) {
-          logs.push(`Erro ao parsear perfil: ${e}`);
-          return false;
+    // Filtrar igrejas que correspondam à cidade e nome da igreja
+    const usuariosIds = churches
+      .filter((church: Church) => {
+        // Normalizar dados da igreja para comparação
+        const churchCity = normalizeText(church.city || '');
+        const churchName = normalizeText(church.name || '');
+        
+        logs.push(`Comparando: "${churchCity}" com "${cidadeNormalizada}"`);
+        logs.push(`Comparando: "${churchName}" com "${nomeIgrejaNormalizado}"`);
+        
+        const cidadeMatch = churchCity === cidadeNormalizada;
+        const nomeMatch = churchName === nomeIgrejaNormalizado;
+        
+        if (cidadeMatch && nomeMatch) {
+          logs.push(`Encontrada correspondência para igreja: ${church.name}, usuário: ${church.userId}`);
         }
+        
+        return cidadeMatch && nomeMatch && church.user?.emailVerified;
       })
-      .map((config: SystemConfig) => config.userId);
+      .map((church: Church) => church.userId);
     
-    logs.push(`Usuários correspondentes encontrados: ${usuariosIds.join(', ')}`);
+    logs.push(`Usuários correspondentes encontrados: ${usuariosIds.length > 0 ? usuariosIds.join(', ') : 'nenhum'}`);
     
     if (usuariosIds.length === 0) {
       logs.push('Nenhum usuário correspondente encontrado, retornando array vazio');

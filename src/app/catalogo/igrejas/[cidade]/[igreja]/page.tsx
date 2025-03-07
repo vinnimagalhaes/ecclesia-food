@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, MapPin, Clock, Users, Church } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Church, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 // Tipo para os eventos
@@ -31,85 +31,97 @@ export default function CatalogoEventosIgrejaPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [nomeIgreja, setNomeIgreja] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Decodificar parâmetros da URL
   const cidade = decodeURIComponent(params.cidade);
   const igreja = decodeURIComponent(params.igreja);
 
-  // Efeito para carregar os eventos
-  useEffect(() => {
-    async function fetchEventos() {
-      try {
-        console.log('Iniciando busca de eventos...');
+  // Função para carregar os eventos
+  const fetchEventos = async (showLoadingState = true) => {
+    try {
+      console.log('Iniciando busca de eventos...');
+      
+      if (showLoadingState) {
         setLoading(true);
-        setError('');
-        
-        // Buscar eventos da API com filtros de cidade e igreja
-        const response = await fetch(`/api/catalogo/eventos?cidade=${encodeURIComponent(cidade)}&igreja=${encodeURIComponent(igreja)}`);
-        
-        console.log('Status da resposta:', response.status);
-        console.log('Headers:', Object.fromEntries(response.headers.entries()));
-        
-        const data = await response.json();
-        console.log('Resposta completa:', data);
-        
-        if (data.logs) {
-          console.log('Logs da API:', data.logs.join('\n'));
+      } else {
+        setIsRefreshing(true);
+      }
+      
+      setError('');
+      
+      // Adicionar timestamp para evitar cache
+      const timestamp = new Date().getTime();
+      // Buscar eventos da API com filtros de cidade e igreja
+      const response = await fetch(`/api/catalogo/eventos?cidade=${encodeURIComponent(cidade)}&igreja=${encodeURIComponent(igreja)}&_t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         }
-        
-        if (!response.ok) {
-          throw new Error(`Falha ao carregar eventos: ${response.status} ${response.statusText}`);
-        }
-        
-        // Verificar se eventos é um array
-        if (!Array.isArray(data.eventos)) {
-          console.error('Resposta inválida:', data);
-          throw new Error('Formato de resposta inválido');
-        }
-        
-        // Filtrar apenas eventos ativos
-        const eventosAtivos = data.eventos.filter((evento: Evento) => evento.status === 'ATIVO');
-        setEventos(eventosAtivos);
-        
-        // Buscar perfil da igreja se tiver eventos
-        if (eventosAtivos.length > 0 && eventosAtivos[0].creator?.id) {
-          try {
-            // Buscar perfil da igreja do criador do primeiro evento
-            const configResponse = await fetch(`/api/usuarios/${eventosAtivos[0].creator.id}/config?key=perfilIgreja`);
-            const configData = await configResponse.json();
-            
-            if (configResponse.ok && configData.value) {
-              const perfilParsed = JSON.parse(configData.value);
-              if (perfilParsed.nome) {
-                // Usar o nome da igreja do perfil
-                setNomeIgreja(perfilParsed.nome);
-              } else {
-                // Fallback para o nome do criador se não encontrar nome da igreja
-                setNomeIgreja(eventosAtivos[0].creator.name);
-              }
-            } else {
-              // Fallback para o nome do criador se não encontrar configuração
-              setNomeIgreja(eventosAtivos[0].creator.name);
-            }
-          } catch (configError) {
-            console.error('Erro ao carregar perfil da igreja:', configError);
-            // Fallback para o nome do criador se ocorrer erro
+      });
+      
+      console.log('Status da resposta:', response.status);
+      
+      const data = await response.json();
+      console.log('Resposta completa:', data);
+      
+      if (data.logs) {
+        console.log('Logs da API:', data.logs.join('\n'));
+      }
+      
+      if (!response.ok) {
+        throw new Error(`Falha ao carregar eventos: ${response.status} ${response.statusText}`);
+      }
+      
+      // Verificar se eventos é um array
+      if (!Array.isArray(data.eventos)) {
+        console.error('Resposta inválida:', data);
+        throw new Error('Formato de resposta inválido');
+      }
+      
+      // Filtrar apenas eventos ativos
+      const eventosAtivos = data.eventos.filter((evento: Evento) => evento.status === 'ATIVO');
+      setEventos(eventosAtivos);
+      
+      // Formatar o nome da igreja a partir do parâmetro da URL se não houver eventos
+      if (eventosAtivos.length === 0) {
+        setNomeIgreja(igreja.split('-').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' '));
+        return;
+      }
+      
+      // Buscar perfil da igreja se tiver eventos
+      if (eventosAtivos.length > 0 && eventosAtivos[0].creator?.id) {
+        try {
+          // Buscar perfil da igreja com o userId do criador do primeiro evento
+          const churchResponse = await fetch(`/api/igrejas/${eventosAtivos[0].creator.id}`);
+          const churchData = await churchResponse.json();
+          
+          if (churchResponse.ok && churchData.igreja) {
+            // Usar o nome da igreja do perfil
+            setNomeIgreja(churchData.igreja.nome);
+          } else {
+            // Fallback para o nome do criador se não encontrar a igreja
             setNomeIgreja(eventosAtivos[0].creator.name);
           }
-        } else {
-          // Formatar o nome da igreja a partir do parâmetro da URL
-          setNomeIgreja(igreja.split('-').map(word => 
-            word.charAt(0).toUpperCase() + word.slice(1)
-          ).join(' '));
+        } catch (configError) {
+          console.error('Erro ao carregar perfil da igreja:', configError);
+          // Fallback para o nome do criador se ocorrer erro
+          setNomeIgreja(eventosAtivos[0].creator.name);
         }
-      } catch (err) {
-        console.error('Erro ao carregar eventos:', err);
-        setError('Não foi possível carregar os eventos. Tente novamente.');
-      } finally {
-        setLoading(false);
       }
+    } catch (err) {
+      console.error('Erro ao carregar eventos:', err);
+      setError('Não foi possível carregar os eventos. Tente novamente.');
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
     }
-    
+  };
+  
+  // Efeito para carregar os eventos na inicialização
+  useEffect(() => {
     fetchEventos();
   }, [cidade, igreja]);
 
@@ -132,19 +144,37 @@ export default function CatalogoEventosIgrejaPage({
 
   return (
     <div className="px-2 sm:container-app py-3 sm:py-8 space-y-3 sm:space-y-6">
-      <div className="px-2 sm:px-0">
-        <div className="flex items-center gap-2 text-primary-500 mb-1 sm:mb-2">
-          <Church size={20} />
-          <h2 className="text-base sm:text-lg font-medium">{nomeIgreja}</h2>
+      <div className="px-2 sm:px-0 flex justify-between items-start">
+        <div>
+          <div className="flex items-center gap-2 text-primary-500 mb-1 sm:mb-2">
+            <Church size={20} />
+            <h2 className="text-base sm:text-lg font-medium">{nomeIgreja}</h2>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Eventos em {formatarCidade(cidade)}</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Confira os próximos eventos e faça suas compras</p>
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Eventos em {formatarCidade(cidade)}</h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-1">Confira os próximos eventos e faça suas compras</p>
+        <Button
+          onClick={() => fetchEventos(false)}
+          variant="secondary"
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+          <span className="hidden sm:inline">{isRefreshing ? 'Atualizando...' : 'Atualizar'}</span>
+        </Button>
       </div>
 
       {/* Exibe erro se houver */}
       {error && (
         <div className="mx-2 sm:mx-0 bg-red-50 border border-red-200 text-red-700 p-3 sm:p-4 rounded-md text-sm sm:text-base">
           {error}
+          <Button
+            onClick={() => fetchEventos()}
+            variant="secondary"
+            className="mt-2 sm:mt-3"
+          >
+            Tentar novamente
+          </Button>
         </div>
       )}
 
