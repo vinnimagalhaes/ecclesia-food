@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -272,6 +272,10 @@ export default function EventoDetalhesPage({
                         alt={imagemPrincipal.alt || produto.nome}
                         fill
                         className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority={true}
+                        quality={75}
+                        loading="eager"
                       />
                     </div>
                   )}
@@ -286,25 +290,20 @@ export default function EventoDetalhesPage({
                       <p className="text-gray-600 text-sm mb-4">{produto.descricao}</p>
                     )}
                     
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between border-2 border-gray-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
                         <button 
                           onClick={() => alterarQuantidade(produto.id, produto, -1)}
-                          className="px-4 py-1.5 flex-1 text-gray-700 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center justify-center"
-                          disabled={quantidades[produto.id] <= 0}
+                          className="px-3 py-1 bg-gray-100 hover:bg-gray-200 transition"
                         >
-                          <Minus size={20} className="stroke-[2.5]" />
+                          <Minus size={16} />
                         </button>
-                        
-                        <span className="px-3 py-1.5 min-w-[60px] text-center font-medium text-base border-x-2 border-gray-200">
-                          {quantidades[produto.id] || 0}
-                        </span>
-                        
+                        <span className="px-4 py-1">{quantidades[produto.id] || 0}</span>
                         <button 
                           onClick={() => alterarQuantidade(produto.id, produto, 1)}
-                          className="px-4 py-1.5 flex-1 text-gray-700 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center justify-center"
+                          className="px-3 py-1 bg-gray-100 hover:bg-gray-200 transition"
                         >
-                          <Plus size={20} className="stroke-[2.5]" />
+                          <Plus size={16} />
                         </button>
                       </div>
                     </div>
