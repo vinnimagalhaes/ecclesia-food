@@ -17,6 +17,11 @@ cloudinary.config({
 export async function POST(req: Request) {
   try {
     console.log('POST /api/upload - Iniciando');
+    console.log('Configurações Cloudinary:', {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY ? '***' : 'não definido',
+      api_secret: process.env.CLOUDINARY_API_SECRET ? '***' : 'não definido'
+    });
     
     // Verificar autenticação
     const session = await getServerSession(authOptions);
@@ -50,12 +55,19 @@ export async function POST(req: Request) {
     }
 
     try {
+      console.log('Iniciando processamento do arquivo:', {
+        tipo: file.type,
+        tamanho: file.size
+      });
+
       // Converter o arquivo para base64
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const base64Data = buffer.toString('base64');
       const mimeType = file.type;
       const dataURI = `data:${mimeType};base64,${base64Data}`;
+
+      console.log('Arquivo convertido para base64, iniciando upload para Cloudinary');
 
       // Upload para o Cloudinary
       const result = await cloudinary.uploader.upload(dataURI, {
@@ -71,16 +83,32 @@ export async function POST(req: Request) {
         { status: 201 }
       );
     } catch (error) {
-      console.error('Erro no upload para Cloudinary:', error);
+      console.error('Erro detalhado no upload para Cloudinary:', {
+        mensagem: error instanceof Error ? error.message : 'Erro desconhecido',
+        stack: error instanceof Error ? error.stack : undefined,
+        erro: error
+      });
+      
       return NextResponse.json(
-        { message: 'Erro ao fazer upload da imagem' },
+        { 
+          message: 'Erro ao fazer upload da imagem',
+          details: error instanceof Error ? error.message : String(error)
+        },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Erro no upload de imagem:', error);
+    console.error('Erro no processamento da requisição:', {
+      mensagem: error instanceof Error ? error.message : 'Erro desconhecido',
+      stack: error instanceof Error ? error.stack : undefined,
+      erro: error
+    });
+    
     return NextResponse.json(
-      { message: 'Erro interno do servidor', error: error instanceof Error ? error.message : String(error) },
+      { 
+        message: 'Erro interno do servidor',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
