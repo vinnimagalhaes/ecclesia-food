@@ -441,7 +441,7 @@ export default function NovaVendaPage() {
                     <p className="mt-1 text-xs text-red-500">Selecione um produto</p>
                   )}
                 </div>
-                <div className="w-24">
+                <div className="w-32">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Qtd*
                   </label>

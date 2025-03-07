@@ -50,18 +50,57 @@ export async function GET(request: Request) {
     try {
       console.log(`GET /api/configuracoes - userId: ${userId}`);
 
-      // Buscar configurações do usuário atual
-      const configs = await db.systemConfig.findMany({
+      // Verificar se existe configuração antiga no SystemConfig e migrar para Church
+      const oldPerfilConfig = await db.systemConfig.findFirst({
         where: { 
           userId: userId,
-          key: {
-            in: ['perfilIgreja', 'configPagamento']
-          }
+          key: 'perfilIgreja'
         }
       });
       
-      console.log(`Configurações encontradas: ${configs.length}`);
-      
+      // Se encontrar configuração antiga, verificar se precisa migrar
+      if (oldPerfilConfig) {
+        try {
+          const churchProfile = await db.church.findUnique({
+            where: { userId }
+          });
+          
+          // Se não existir perfil de igreja ou se for mais antigo que a configuração
+          if (!churchProfile || 
+              (churchProfile.updatedAt < oldPerfilConfig.updatedAt)) {
+            console.log('Migrando dados antigos do SystemConfig para o modelo Church');
+            
+            const perfilData = JSON.parse(oldPerfilConfig.value);
+            const churchData = {
+              name: perfilData.nome || '',
+              address: perfilData.endereco || '',
+              city: perfilData.cidade || '',
+              state: perfilData.estado || '',
+              phone: perfilData.telefone || '',
+              description: perfilData.responsavel || '',
+            };
+            
+            if (churchProfile) {
+              // Atualizar perfil existente
+              await db.church.update({
+                where: { userId },
+                data: churchData
+              });
+            } else {
+              // Criar novo perfil
+              await db.church.create({
+                data: {
+                  ...churchData,
+                  userId
+                }
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Erro ao migrar dados antigos:', e);
+        }
+      }
+
       // Valores padrão
       const defaultPerfilIgreja: PerfilIgreja = {
         nome: '',
@@ -88,21 +127,25 @@ export async function GET(request: Request) {
         configPagamento: { ...defaultConfigPagamento }
       };
       
-      // Atualizar com valores do banco de dados
-      (configs as any[]).forEach((config) => {
-        try {
-          const valor = JSON.parse(config.value);
-          if (config.key === 'perfilIgreja') {
-            configuracoes.perfilIgreja = { ...defaultPerfilIgreja, ...valor };
-          } else if (config.key === 'configPagamento') {
-            configuracoes.configPagamento = { ...defaultConfigPagamento, ...valor };
-          }
-        } catch (e) {
-          console.error(`Erro ao processar configuração ${config.key}:`, e);
+      // Buscar configurações de pagamento do SystemConfig
+      const configPagamento = await db.systemConfig.findFirst({
+        where: { 
+          userId: userId,
+          key: 'configPagamento'
         }
       });
       
-      // Buscar os dados do perfil da igreja do modelo Church
+      // Atualizar configurações de pagamento se encontradas
+      if (configPagamento) {
+        try {
+          const valor = JSON.parse(configPagamento.value);
+          configuracoes.configPagamento = { ...defaultConfigPagamento, ...valor };
+        } catch (e) {
+          console.error(`Erro ao processar configuração de pagamento:`, e);
+        }
+      }
+      
+      // Buscar os dados do perfil da igreja diretamente do modelo Church
       const churchProfile = await db.church.findUnique({
         where: { userId }
       });
@@ -118,6 +161,7 @@ export async function GET(request: Request) {
           cidade: churchProfile.city || configuracoes.perfilIgreja.cidade,
           estado: churchProfile.state || configuracoes.perfilIgreja.estado,
           telefone: churchProfile.phone || configuracoes.perfilIgreja.telefone,
+          responsavel: churchProfile.description || configuracoes.perfilIgreja.responsavel,
         };
       }
       
@@ -148,53 +192,28 @@ export async function POST(request: Request) {
         );
       }
       
-      // Salvar configuração como um único objeto
       try {
-        // Verificar se a configuração já existe
-        const existingConfig = await db.systemConfig.findFirst({
-          where: {
-            userId: userId,
-            key: tipo
+        // Tratamento específico para perfil da igreja
+        if (tipo === 'perfilIgreja') {
+          // Verificar se o perfil está completo para marcar o email como verificado
+          if (isPerfilCompleto(dados)) {
+            console.log('Perfil completo, verificando email automaticamente');
+            await db.user.update({
+              where: { id: userId },
+              data: {
+                emailVerified: new Date()
+              }
+            });
           }
-        });
-        
-        if (existingConfig) {
-          // Atualizar configuração existente
-          console.log(`Atualizando configuração existente: ${existingConfig.id}`);
-          await db.systemConfig.update({
-            where: { id: existingConfig.id },
-            data: { value: JSON.stringify(dados) }
-          });
-        } else {
-          // Criar nova configuração
-          console.log(`Criando nova configuração para usuário: ${userId}`);
-          await db.systemConfig.create({
-            data: {
-              key: tipo,
-              value: JSON.stringify(dados),
-              userId: userId
-            }
-          });
-        }
-
-        // Se for perfil da igreja e estiver completo, verificar o email automaticamente
-        if (tipo === 'perfilIgreja' && isPerfilCompleto(dados)) {
-          console.log('Perfil completo, verificando email automaticamente');
-          await db.user.update({
-            where: { id: userId },
-            data: {
-              emailVerified: new Date()
-            }
-          });
           
-          // Atualizar também o modelo Church
+          // Preparar dados para o modelo Church
           const churchData = {
             name: dados.nome,
             address: dados.endereco,
             city: dados.cidade,
             state: dados.estado,
             phone: dados.telefone,
-            description: '',
+            description: dados.responsavel || '',
           };
           
           // Verificar se já existe um perfil de igreja
@@ -204,16 +223,46 @@ export async function POST(request: Request) {
           
           if (existingChurch) {
             // Atualizar o perfil da igreja existente
+            console.log(`Atualizando perfil da igreja existente para usuário: ${userId}`);
             await db.church.update({
               where: { userId },
               data: churchData
             });
           } else {
             // Criar um novo perfil de igreja
+            console.log(`Criando novo perfil de igreja para usuário: ${userId}`);
             await db.church.create({
               data: {
                 ...churchData,
                 userId
+              }
+            });
+          }
+        } else {
+          // Para outros tipos de configuração, continuar usando SystemConfig
+          // Verificar se a configuração já existe
+          const existingConfig = await db.systemConfig.findFirst({
+            where: {
+              userId: userId,
+              key: tipo
+            }
+          });
+          
+          if (existingConfig) {
+            // Atualizar configuração existente
+            console.log(`Atualizando configuração existente: ${existingConfig.id}`);
+            await db.systemConfig.update({
+              where: { id: existingConfig.id },
+              data: { value: JSON.stringify(dados) }
+            });
+          } else {
+            // Criar nova configuração
+            console.log(`Criando nova configuração para usuário: ${userId}`);
+            await db.systemConfig.create({
+              data: {
+                key: tipo,
+                value: JSON.stringify(dados),
+                userId: userId
               }
             });
           }

@@ -1,24 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-interface SystemConfig {
-  key: string;
-  value: string;
-  userId: string | null;
-  user: {
-    id: string;
-    name: string | null;
-    emailVerified: Date | null;
-  } | null;
-}
-
-interface IgrejaPerfilParcial {
-  id: string | null;
-  nome: string;
-  cidade: string;
-  estado: string;
-}
-
 interface IgrejaPerfil {
   id: string;
   nome: string;
@@ -30,91 +12,60 @@ export async function GET() {
   const logs: string[] = ['GET /api/igrejas - Iniciando'];
   
   try {
-    // Buscar especificamente as configurações de perfil de igreja
-    const configs = await db.systemConfig.findMany({
-      where: {
-        key: 'perfilIgreja'
-      },
+    // Buscar diretamente do modelo Church em vez de SystemConfig
+    const igrejas = await db.church.findMany({
       select: {
+        id: true,
+        name: true,
+        city: true,
+        state: true,
         userId: true,
-        key: true,
-        value: true,
         user: {
           select: {
             id: true,
-            name: true,
             emailVerified: true
           }
         }
       }
     });
     
-    logs.push(`Configurações de igreja encontradas: ${configs.length}`);
-    
-    // Log detalhado de cada configuração
-    configs.forEach((config: SystemConfig, index: number) => {
-      logs.push(`\n--- Detalhes da Configuração ${index + 1} ---`);
-      logs.push(`UserId: ${config.userId}`);
-      logs.push(`Email verificado: ${config.user?.emailVerified}`);
-      logs.push(`Nome do usuário: ${config.user?.name}`);
-      logs.push(`Valor da configuração: ${config.value}`);
-      try {
-        const parsedValue = JSON.parse(config.value);
-        logs.push(`Valor parseado: ${JSON.stringify(parsedValue, null, 2)}`);
-      } catch (e) {
-        logs.push(`Erro ao parsear valor: ${e}`);
-      }
-      logs.push('-----------------------------------');
-    });
+    logs.push(`Igrejas encontradas: ${igrejas.length}`);
     
     // Processar e filtrar os perfis
-    const igrejas = configs
-      .filter((config: SystemConfig) => {
-        const isVerified = config.user?.emailVerified;
+    const igrejasProcessadas = igrejas
+      .filter((igreja) => {
+        const isVerified = igreja.user?.emailVerified;
         if (!isVerified) {
-          logs.push(`Usuário ${config.userId} foi filtrado por não estar verificado`);
+          logs.push(`Igreja ${igreja.id} foi filtrada por não estar verificada`);
         }
         return isVerified;
       })
-      .map((config: SystemConfig): IgrejaPerfilParcial | null => {
-        try {
-          const perfil = JSON.parse(config.value);
-          
-          const igreja = {
-            id: config.userId,
-            nome: perfil.nome || config.user?.name || '',
-            cidade: perfil.cidade || '',
-            estado: perfil.estado || ''
-          };
-          
-          logs.push(`Igreja processada com sucesso: ${JSON.stringify(igreja)}`);
-          return igreja;
-        } catch (e) {
-          logs.push(`Erro ao processar perfil do usuário ${config.userId}: ${e}`);
-          return null;
-        }
+      .map((igreja): IgrejaPerfil => {
+        return {
+          id: igreja.userId,
+          nome: igreja.name,
+          cidade: igreja.city,
+          estado: igreja.state
+        };
       })
-      .filter((igreja: IgrejaPerfilParcial | null): igreja is IgrejaPerfil => {
-        if (!igreja || !igreja.id) {
-          return false;
-        }
+      .filter((igreja): igreja is IgrejaPerfil => {
         const isValid = Boolean(igreja.nome && igreja.cidade);
         if (!isValid) {
           logs.push(`Igreja removida por dados inválidos: ${JSON.stringify(igreja)}`);
         }
         return isValid;
       })
-      .sort((a: IgrejaPerfil, b: IgrejaPerfil) => a.nome.localeCompare(b.nome));
+      .sort((a, b) => a.nome.localeCompare(b.nome));
     
-    logs.push(`\nTotal de igrejas após processamento: ${igrejas.length}`);
+    logs.push(`\nTotal de igrejas após processamento: ${igrejasProcessadas.length}`);
     
     // Retornar os logs junto com os dados para debug
     return NextResponse.json({
       logs,
-      igrejas,
+      igrejas: igrejasProcessadas,
       debug: {
-        configsEncontradas: configs.length,
-        igrejasProcessadas: igrejas.length
+        igrejasEncontradas: igrejas.length,
+        igrejasProcessadas: igrejasProcessadas.length
       }
     });
   } catch (error) {
