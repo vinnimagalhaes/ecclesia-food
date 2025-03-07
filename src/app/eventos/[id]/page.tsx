@@ -31,6 +31,7 @@ interface Imagem {
   id: string;
   url: string;
   productId: string;
+  principal?: boolean;
 }
 
 interface Produto {
@@ -254,10 +255,9 @@ export default function DetalhesEventoPage({ params }: { params: { id: string } 
               <div className="relative h-40 bg-gray-200">
                 {produto.images && produto.images.length > 0 ? (
                   <Image 
-                    src={produto.images[0].url} 
+                    src={produto.images.find(img => img.principal)?.url || produto.images[0].url} 
                     alt={produto.nome}
                     fill
-                    style={{ objectFit: 'cover' }}
                     className="object-cover"
                   />
                 ) : (

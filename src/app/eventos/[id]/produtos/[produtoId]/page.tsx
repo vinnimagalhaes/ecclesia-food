@@ -21,6 +21,7 @@ interface Produto {
     id: string;
     url: string;
     alt?: string;
+    principal: boolean;
   }[];
 }
 
@@ -153,7 +154,7 @@ export default function DetalhesProdutoPage({
         <div className="relative h-64 bg-gray-100">
           {produto.images && produto.images.length > 0 ? (
             <Image 
-              src={produto.images[0].url} 
+              src={produto.images.find(img => img.principal)?.url || produto.images[0].url} 
               alt={produto.nome}
               fill
               className="object-cover"
