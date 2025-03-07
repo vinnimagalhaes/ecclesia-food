@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, Users, Church, RefreshCw, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, Users, RefreshCw, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AppHeader } from '@/components/ui/AppHeader';
 import { AppIconLocation } from '@/components/ui/AppIconLocation';
