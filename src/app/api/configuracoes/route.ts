@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { withUserAuth } from '@/utils/api-helpers';
 import { db } from '@/lib/db';
 
+// Configuração para tornar a rota dinâmica
+export const dynamic = 'force-dynamic';
+
 export interface SystemConfig {
   id: string;
   key: string;

@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
 
+// Configuração para tornar a rota dinâmica
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   try {
     // Obter URL de retorno

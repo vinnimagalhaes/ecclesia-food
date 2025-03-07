@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { db } from '@/lib/db';
 
+// Configuração para tornar a rota dinâmica
+export const dynamic = 'force-dynamic';
+
 const SUPER_ADMIN = 'SUPER_ADMIN';
 
 export async function GET(_request: NextRequest) {
