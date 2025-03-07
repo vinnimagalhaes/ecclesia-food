@@ -71,9 +71,31 @@ export default function CatalogoEventosIgrejaPage({
         const eventosAtivos = data.eventos.filter((evento: Evento) => evento.status === 'ATIVO');
         setEventos(eventosAtivos);
         
-        // Definir o nome da igreja a partir do primeiro evento (se houver)
-        if (eventosAtivos.length > 0 && eventosAtivos[0].creator?.name) {
-          setNomeIgreja(eventosAtivos[0].creator.name);
+        // Buscar perfil da igreja se tiver eventos
+        if (eventosAtivos.length > 0 && eventosAtivos[0].creator?.id) {
+          try {
+            // Buscar perfil da igreja do criador do primeiro evento
+            const configResponse = await fetch(`/api/usuarios/${eventosAtivos[0].creator.id}/config?key=perfilIgreja`);
+            const configData = await configResponse.json();
+            
+            if (configResponse.ok && configData.value) {
+              const perfilParsed = JSON.parse(configData.value);
+              if (perfilParsed.nome) {
+                // Usar o nome da igreja do perfil
+                setNomeIgreja(perfilParsed.nome);
+              } else {
+                // Fallback para o nome do criador se não encontrar nome da igreja
+                setNomeIgreja(eventosAtivos[0].creator.name);
+              }
+            } else {
+              // Fallback para o nome do criador se não encontrar configuração
+              setNomeIgreja(eventosAtivos[0].creator.name);
+            }
+          } catch (configError) {
+            console.error('Erro ao carregar perfil da igreja:', configError);
+            // Fallback para o nome do criador se ocorrer erro
+            setNomeIgreja(eventosAtivos[0].creator.name);
+          }
         } else {
           // Formatar o nome da igreja a partir do parâmetro da URL
           setNomeIgreja(igreja.split('-').map(word => 
