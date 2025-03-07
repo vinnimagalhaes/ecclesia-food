@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, CSSProperties } from 'react';
 import { ChevronLeft, Home } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,32 +26,57 @@ export function AppHeader({
   const backgroundClass = gradient 
     ? 'bg-gradient-to-r from-primary-600 to-primary-500' 
     : 'bg-primary-500';
+
+  // Aplicar sticky usando posição fixed
+  const positionStyle: CSSProperties = sticky
+    ? {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        width: '100%'
+      }
+    : {};
     
-  const positionClass = sticky
-    ? 'sticky top-0 z-50'
-    : '';
+  // Adicionar padding ao body quando sticky para compensar o espaço do header
+  React.useEffect(() => {
+    if (sticky) {
+      // Obter a altura do header após renderização
+      const headerHeight = document.getElementById('app-header')?.offsetHeight || 0;
+      document.body.style.paddingTop = `${headerHeight}px`;
+      
+      return () => {
+        document.body.style.paddingTop = '0px';
+      };
+    }
+  }, [sticky]);
+
+  const headerStyle: CSSProperties = {
+    width: '100vw',
+    marginLeft: 'calc(50% - 50vw)',
+    marginRight: 'calc(50% - 50vw)',
+    boxSizing: 'border-box',
+    display: 'block',
+    ...positionStyle
+  };
 
   return (
     <div 
-      className={`${backgroundClass} ${positionClass} text-white shadow-md`}
-      style={{
-        width: '100vw',
-        marginLeft: 'calc(50% - 50vw)',
-        marginRight: 'calc(50% - 50vw)',
-        boxSizing: 'border-box',
-        display: 'block'
-      }}
+      id="app-header"
+      className={`${backgroundClass} text-white shadow-md`}
+      style={headerStyle}
     >
       <div className="px-4 pt-6 pb-6">
         <div className="flex items-center mb-2">
           {showBackButton && (
-            <Link href={backUrl} className="mr-3">
+            <Link href={backUrl} className="mr-3 flex-shrink-0">
               <ChevronLeft className="h-6 w-6" />
             </Link>
           )}
-          <h1 className="text-2xl font-bold flex-1 truncate">{title}</h1>
+          <h1 className="text-2xl font-bold flex-1 overflow-ellipsis min-w-0" style={{ color: 'white' }}>{title}</h1>
           {showHomeButton && (
-            <Link href="/" className="ml-auto">
+            <Link href="/" className="ml-3 flex-shrink-0">
               <Home className="h-5 w-5" />
             </Link>
           )}
