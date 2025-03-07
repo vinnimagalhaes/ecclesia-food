@@ -10,6 +10,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Ecclesia Food',
   description: 'Sistema de gestão de eventos para igrejas',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 }
 
 export default function RootLayout({
@@ -19,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={inter.className}>
-      <body className="min-h-screen bg-gray-50">
+      <body className="min-h-screen bg-gray-50 overflow-x-hidden w-full max-w-full m-0 p-0">
         <AuthProvider>
           <CarrinhoProvider>
             {children}

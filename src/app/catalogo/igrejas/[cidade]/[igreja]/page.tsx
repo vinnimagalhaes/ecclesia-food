@@ -154,7 +154,7 @@ export default function CatalogoEventosIgrejaPage({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden m-0 p-0 max-w-full">
       {/* Header com informações da igreja */}
       <AppHeader
         title={nomeIgreja}
@@ -165,7 +165,7 @@ export default function CatalogoEventosIgrejaPage({
       />
 
       {/* Conteúdo principal */}
-      <div className="flex-1 p-4 -mt-2">
+      <div className="flex-1 p-4">
         <div className="flex justify-between items-center mb-4">
           <p className="text-gray-600 font-medium">
             {eventos.length} {eventos.length === 1 ? 'evento disponível' : 'eventos disponíveis'}

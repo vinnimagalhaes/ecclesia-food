@@ -141,7 +141,7 @@ export default function CatalogoIgrejasPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden m-0 p-0 max-w-full">
       {/* Header com barra de pesquisa */}
       <AppHeader 
         title="Catálogo de Igrejas"
@@ -164,7 +164,7 @@ export default function CatalogoIgrejasPage() {
       </AppHeader>
 
       {/* Conteúdo principal */}
-      <div className="flex-1 p-4 -mt-4">
+      <div className="flex-1 p-4">
         <div className="flex justify-between items-center mb-4">
           <p className="text-gray-600 font-medium">
             {filteredIgrejas.length} {filteredIgrejas.length === 1 ? 'igreja encontrada' : 'igrejas encontradas'}

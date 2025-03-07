@@ -296,7 +296,7 @@ export default function EventoDetalhesPage({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden pb-24">
+    <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden pb-24 m-0 p-0 max-w-full">
       {/* Cabeçalho Fixo */}
       <AppHeader
         title={evento.nome}

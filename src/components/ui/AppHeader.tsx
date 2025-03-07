@@ -32,15 +32,15 @@ export function AppHeader({
     : '';
 
   return (
-    <header className={`${backgroundClass} ${positionClass} text-white w-full rounded-b-3xl shadow-md`}>
-      <div className="px-4 pt-6 pb-6">
+    <header className={`${backgroundClass} ${positionClass} text-white w-full shadow-md`} style={{ maxWidth: '100vw', margin: 0, width: '100%' }}>
+      <div className="px-4 pt-6 pb-6 w-full max-w-full">
         <div className="flex items-center mb-2">
           {showBackButton && (
             <Link href={backUrl} className="mr-3">
               <ChevronLeft className="h-6 w-6" />
             </Link>
           )}
-          <h1 className="text-2xl font-bold flex-1">{title}</h1>
+          <h1 className="text-2xl font-bold flex-1 truncate">{title}</h1>
           {showHomeButton && (
             <Link href="/" className="ml-auto">
               <Home className="h-5 w-5" />
@@ -49,7 +49,7 @@ export function AppHeader({
         </div>
         
         {subtitle && (
-          <p className="text-white/80 text-sm mb-4">{subtitle}</p>
+          <p className="text-white/80 text-sm mb-4 truncate">{subtitle}</p>
         )}
         
         {children}
