@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Search, MapPin, Church, RefreshCw } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { AppHeader } from '@/components/ui/AppHeader';
+import { AppListItem } from '@/components/ui/AppListItem';
 
 interface PerfilIgreja {
   id: string;
@@ -106,23 +107,31 @@ export default function CatalogoIgrejasPage() {
 
   if (loading) {
     return (
-      <div className="container-app py-8">
-        <div className="flex justify-center">
-          <div className="animate-pulse text-gray-500">Carregando igrejas...</div>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="w-16 h-16 border-t-4 border-primary-500 border-solid rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-600 font-medium">Carregando igrejas...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container-app py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
-          {error}
+      <div className="p-4">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
           <Button
             onClick={() => fetchIgrejas()}
-            variant="secondary"
-            className="mt-4"
+            variant="primary"
+            className="mt-4 w-full"
           >
             Tentar novamente
           </Button>
@@ -132,73 +141,72 @@ export default function CatalogoIgrejasPage() {
   }
 
   return (
-    <div className="container-app py-8 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Catálogo de Igrejas</h1>
-          <p className="text-gray-600">Encontre eventos e produtos das igrejas participantes</p>
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* Header com barra de pesquisa */}
+      <AppHeader 
+        title="Catálogo de Igrejas"
+        subtitle="Encontre eventos e produtos das igrejas participantes"
+        showHomeButton
+      >
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Buscar por nome da igreja ou cidade..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="block w-full pl-12 pr-4 py-3 bg-white border-0 rounded-xl shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/30"
+          />
         </div>
-        <Button
-          onClick={() => fetchIgrejas(false)}
-          variant="secondary"
-          disabled={isRefreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-          <span>{isRefreshing ? 'Atualizando...' : 'Atualizar'}</span>
-        </Button>
-      </div>
+      </AppHeader>
 
-      {/* Barra de pesquisa */}
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
-        </div>
-        <input
-          type="text"
-          placeholder="Buscar por nome da igreja ou cidade..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        />
-      </div>
-
-      {/* Lista de igrejas */}
-      {filteredIgrejas.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-          <Church className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm ? 'Nenhuma igreja encontrada' : 'Nenhuma igreja cadastrada'}
-          </h3>
-          <p className="text-gray-600">
-            {searchTerm 
-              ? 'Tente buscar com outros termos'
-              : 'Em breve novas igrejas serão adicionadas.'}
+      {/* Conteúdo principal */}
+      <div className="flex-1 p-4 -mt-4">
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-gray-600 font-medium">
+            {filteredIgrejas.length} {filteredIgrejas.length === 1 ? 'igreja encontrada' : 'igrejas encontradas'}
           </p>
+          <Button
+            onClick={() => fetchIgrejas(false)}
+            variant="outline"
+            size="sm"
+            disabled={isRefreshing}
+            className="flex items-center gap-1"
+          >
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+            <span className="text-xs">{isRefreshing ? 'Atualizando' : 'Atualizar'}</span>
+          </Button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredIgrejas.map((igreja) => (
-            <Link 
-              key={igreja.id}
-              href={`/catalogo/igrejas/${formatarParaURL(igreja.cidade)}/${formatarParaURL(igreja.nome)}`}
-              className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-            >
-              <div className="p-6">
-                <div className="flex items-center gap-2 text-primary-500 mb-2">
-                  <Church size={20} />
-                  <h2 className="text-lg font-medium">{igreja.nome}</h2>
-                </div>
-                
-                <div className="flex items-start gap-2 text-gray-600">
-                  <MapPin size={16} className="mt-1 flex-shrink-0" />
-                  <span>{igreja.cidade}{igreja.estado ? ` - ${igreja.estado}` : ''}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+
+        {/* Lista de igrejas */}
+        {filteredIgrejas.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm p-8 text-center mt-4">
+            <Church className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {searchTerm ? 'Nenhuma igreja encontrada' : 'Nenhuma igreja cadastrada'}
+            </h3>
+            <p className="text-gray-600">
+              {searchTerm 
+                ? 'Tente buscar com outros termos'
+                : 'Em breve novas igrejas serão adicionadas.'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3">
+            {filteredIgrejas.map((igreja) => (
+              <AppListItem
+                key={igreja.id}
+                href={`/catalogo/igrejas/${formatarParaURL(igreja.cidade)}/${formatarParaURL(igreja.nome)}`}
+                title={igreja.nome}
+                location={`${igreja.cidade}${igreja.estado ? ` - ${igreja.estado}` : ''}`}
+                icon={<Church size={24} className="text-primary-500" />}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 } 
