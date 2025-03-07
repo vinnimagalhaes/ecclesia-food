@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
-import { v4 as uuidv4 } from 'uuid';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configuração para tornar a rota dinâmica
+export const dynamic = 'force-dynamic';
+
+// Configurar o Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Função para receber um upload de imagem
 export async function POST(req: Request) {
@@ -40,37 +48,35 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    
-    // Gerar um nome único para o arquivo
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    // Criar um nome único para o arquivo
-    const fileExtension = file.name.split('.').pop() || 'png';
-    const fileName = `${uuidv4()}.${fileExtension}`;
-    
-    // Definir o caminho onde a imagem será salva
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
-    const filePath = join(uploadDir, fileName);
-    
-    // Garantir que o diretório de uploads exista
+
     try {
-      await writeFile(filePath, buffer);
-      console.log('Arquivo salvo com sucesso em', filePath);
-    } catch (error) {
-      console.error('Erro ao salvar arquivo:', error);
+      // Converter o arquivo para base64
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const base64Data = buffer.toString('base64');
+      const mimeType = file.type;
+      const dataURI = `data:${mimeType};base64,${base64Data}`;
+
+      // Upload para o Cloudinary
+      const result = await cloudinary.uploader.upload(dataURI, {
+        folder: 'ecclesia-food',
+        resource_type: 'auto',
+      });
+
+      console.log('Upload para Cloudinary bem sucedido:', result.secure_url);
+
+      // Retornar a URL segura da imagem
       return NextResponse.json(
-        { message: 'Erro ao salvar o arquivo' },
+        { url: result.secure_url },
+        { status: 201 }
+      );
+    } catch (error) {
+      console.error('Erro no upload para Cloudinary:', error);
+      return NextResponse.json(
+        { message: 'Erro ao fazer upload da imagem' },
         { status: 500 }
       );
     }
-    
-    // Retornar o caminho público da imagem
-    const publicPath = `/uploads/${fileName}`;
-    return NextResponse.json(
-      { url: publicPath },
-      { status: 201 }
-    );
   } catch (error) {
     console.error('Erro no upload de imagem:', error);
     return NextResponse.json(
