@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus, Church } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -62,6 +62,7 @@ export default function EventoDetalhesPage({
   const [error, setError] = useState('');
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const [quantidades, setQuantidades] = useState<Record<string, number>>({});
+  const [nomeIgreja, setNomeIgreja] = useState('');
 
   // Efeito para carregar o evento e produtos
   useEffect(() => {
@@ -83,6 +84,30 @@ export default function EventoDetalhesPage({
         
         console.log('Dados do evento recebidos:', eventoData);
         setEvento(eventoData);
+        
+        // Buscar perfil da igreja do criador
+        try {
+          const configResponse = await fetch(`/api/usuarios/${eventoData.creator.id}/config?key=perfilIgreja`);
+          const configData = await configResponse.json();
+          
+          if (configResponse.ok && configData.value) {
+            const perfilParsed = JSON.parse(configData.value);
+            if (perfilParsed.nome) {
+              // Usar o nome da igreja do perfil
+              setNomeIgreja(perfilParsed.nome);
+            } else {
+              // Fallback para o nome do criador se não encontrar nome da igreja
+              setNomeIgreja(eventoData.creator.name);
+            }
+          } else {
+            // Fallback para o nome do criador se não encontrar configuração
+            setNomeIgreja(eventoData.creator.name);
+          }
+        } catch (configError) {
+          console.error('Erro ao carregar perfil da igreja:', configError);
+          // Fallback para o nome do criador se ocorrer erro
+          setNomeIgreja(eventoData.creator.name);
+        }
         
         // Buscar produtos do evento
         const produtosResponse = await fetch(`/api/catalogo/eventos/${params.id}/produtos`);
@@ -215,6 +240,10 @@ export default function EventoDetalhesPage({
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
           <div>
+            <div className="flex items-center gap-2 text-primary-500 mb-1">
+              <Church size={20} />
+              <h2 className="text-base sm:text-lg font-medium">{nomeIgreja}</h2>
+            </div>
             <h1 className="text-2xl font-bold text-gray-900">{evento.nome}</h1>
             
             <div className="mt-4 space-y-2">
