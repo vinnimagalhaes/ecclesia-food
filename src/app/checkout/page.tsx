@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { ShoppingBag, CreditCard, Smartphone } from 'lucide-react';
 import { AppHeader } from '@/components/ui/AppHeader';
 
 // Tipos
