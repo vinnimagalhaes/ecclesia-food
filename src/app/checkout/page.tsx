@@ -152,8 +152,8 @@ export default function CheckoutPage() {
       
       console.log('Dados do pedido:', dadosVenda);
       
-      // Enviar para a API de vendas
-      const response = await fetch('/api/vendas', {
+      // Enviar para a API de vendas pública (não requer autenticação)
+      const response = await fetch('/api/vendas/publica', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
