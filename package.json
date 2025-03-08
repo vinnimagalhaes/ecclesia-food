@@ -13,7 +13,9 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "validate": "npm run lint && npm run typecheck && npm run build",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "backup": "node scripts/backup-database.mjs",
+    "restore": "node scripts/restore-database.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",
