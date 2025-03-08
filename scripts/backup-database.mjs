@@ -1,4 +1,3 @@
-import { exec } from 'child_process';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
@@ -13,45 +12,54 @@ async function backupDatabase() {
     fs.mkdirSync(backupDir, { recursive: true });
   }
   
-  const backupFile = path.join(backupDir, `backup-${timestamp}.sql`);
+  const backupFile = path.join(backupDir, `backup-${timestamp}.json`);
   
   try {
-    // Obter URL do banco de dados da env
-    const dbUrl = new URL(process.env.DATABASE_URL);
-    const host = dbUrl.hostname;
-    const user = dbUrl.username;
-    const password = dbUrl.password;
-    const database = dbUrl.pathname.substring(1);
-    const port = dbUrl.port || '5432';
+    console.log('Iniciando backup do banco de dados...');
     
-    console.log(`Iniciando backup do banco ${database} em ${host}...`);
+    // Buscar todos os dados das tabelas principais
+    const users = await prisma.user.findMany();
+    const events = await prisma.event.findMany();
+    const products = await prisma.product.findMany();
+    const productImages = await prisma.productImage.findMany();
+    const sales = await prisma.sale.findMany();
+    const saleItems = await prisma.saleItem.findMany();
+    const systemConfigs = await prisma.systemConfig.findMany();
+    const churches = await prisma.church.findMany();
     
-    // Executar pg_dump
-    exec(
-      `PGPASSWORD=${password} pg_dump -h ${host} -p ${port} -U ${user} -d ${database} -f ${backupFile}`,
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Erro ao criar backup: ${error.message}`);
-          return;
-        }
-        console.log(`Backup criado com sucesso: ${backupFile}`);
-        
-        // Manter apenas os últimos 7 backups
-        const files = fs.readdirSync(backupDir)
-          .filter(file => file.startsWith('backup-'))
-          .map(file => path.join(backupDir, file));
-        
-        if (files.length > 7) {
-          files.sort((a, b) => fs.statSync(a).mtime.getTime() - fs.statSync(b).mtime.getTime());
-          
-          // Remover backups mais antigos
-          for (let i = 0; i < files.length - 7; i++) {
-            fs.unlinkSync(files[i]);
-            console.log(`Backup antigo removido: ${files[i]}`);
-          }
-        }
+    // Criar objeto de backup
+    const backupData = {
+      timestamp: new Date().toISOString(),
+      data: {
+        users,
+        events,
+        products,
+        productImages,
+        sales,
+        saleItems,
+        systemConfigs,
+        churches
       }
-    );
+    };
+    
+    // Salvar backup como JSON
+    fs.writeFileSync(backupFile, JSON.stringify(backupData, null, 2));
+    console.log(`Backup criado com sucesso: ${backupFile}`);
+    
+    // Manter apenas os últimos 7 backups
+    const files = fs.readdirSync(backupDir)
+      .filter(file => file.startsWith('backup-') && file.endsWith('.json'))
+      .map(file => path.join(backupDir, file));
+    
+    if (files.length > 7) {
+      files.sort((a, b) => fs.statSync(a).mtime.getTime() - fs.statSync(b).mtime.getTime());
+      
+      // Remover backups mais antigos
+      for (let i = 0; i < files.length - 7; i++) {
+        fs.unlinkSync(files[i]);
+        console.log(`Backup antigo removido: ${files[i]}`);
+      }
+    }
   } catch (error) {
     console.error('Erro ao realizar backup:', error);
   } finally {

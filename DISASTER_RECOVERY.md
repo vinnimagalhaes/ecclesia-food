@@ -8,6 +8,7 @@ Este documento detalha os procedimentos para backup, recuperação e continuidad
 
 - **Periodicidade**: Diária (configurada para rodar às 3:00 AM)
 - **Retenção**: Os últimos 7 backups são mantidos localmente
+- **Formato**: JSON (contém todos os dados do banco de dados)
 - **Armazenamento**:
   - Local: Diretório `/backups` na raiz do projeto
   - Externo: Backups devem ser sincronizados com um serviço de armazenamento externo
@@ -19,7 +20,7 @@ Este documento detalha os procedimentos para backup, recuperação e continuidad
    ```
    npm run backup
    ```
-3. O backup será criado no diretório `/backups` com o timestamp atual
+3. O backup será criado no diretório `/backups` com o timestamp atual no formato `backup-YYYY-MM-DDTHH-MM-SS-mmmZ.json`
 
 ## Procedimento de Restauração
 
@@ -32,7 +33,7 @@ Este documento detalha os procedimentos para backup, recuperação e continuidad
 
 2. Execute o script de restauração:
    ```
-   npm run restore backups/backup-2023-01-01T03-00-00-000Z.sql
+   npm run restore backups/backup-2023-01-01T03-00-00-000Z.json
    ```
 
 3. Digite "CONFIRMAR" quando solicitado
