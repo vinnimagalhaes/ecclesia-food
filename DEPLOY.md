@@ -17,6 +17,42 @@ Para o ambiente de produção, recomendamos usar o serviço Supabase para o banc
 3. Obtenha a string de conexão PostgreSQL em: Configurações do Projeto > Database > Connection string > URI
 4. Guarde esta string para usar nas variáveis de ambiente
 
+## Configuração do GitHub Actions
+
+O projeto está configurado para usar GitHub Actions para automatizar o processo de build, teste e deploy. Para configurar corretamente, siga os passos abaixo:
+
+### 1. Configurar Segredos no GitHub
+
+Acesse as configurações do repositório no GitHub e adicione os seguintes segredos:
+
+1. `DATABASE_URL`: URL de conexão com o banco de dados PostgreSQL
+2. `VERCEL_TOKEN`: Token de API da Vercel (obtenha em https://vercel.com/account/tokens)
+3. `VERCEL_ORG_ID`: ID da organização na Vercel
+4. `VERCEL_PROJECT_ID`: ID do projeto na Vercel
+
+Para obter os IDs da Vercel, execute:
+```bash
+vercel link
+```
+
+### 2. Configurar Variáveis de Ambiente na Vercel
+
+Acesse o painel da Vercel e configure as seguintes variáveis de ambiente:
+
+1. `DATABASE_URL`: URL de conexão com o banco de dados PostgreSQL
+2. `NEXTAUTH_SECRET`: Segredo para NextAuth
+3. `NEXTAUTH_URL`: URL completa do aplicativo (ex: https://ecclesia-food.vercel.app)
+4. `CLOUDINARY_CLOUD_NAME`: Nome da cloud no Cloudinary
+5. `CLOUDINARY_API_KEY`: Chave de API do Cloudinary
+6. `CLOUDINARY_API_SECRET`: Segredo da API do Cloudinary
+
+### 3. Configurar Domínio Personalizado (opcional)
+
+1. Acesse as configurações do projeto na Vercel
+2. Vá para a seção "Domains"
+3. Adicione seu domínio personalizado
+4. Siga as instruções para configurar os registros DNS
+
 ## Passo a Passo para Deploy na Vercel
 
 1. **Preparar o repositório**
@@ -97,6 +133,53 @@ Para o ambiente de produção, recomendamos usar o serviço Supabase para o banc
    
    - Execute `npx prisma migrate reset` em ambiente de desenvolvimento
    - Atualize o esquema no Supabase manualmente
+
+## Processo de Deploy
+
+### Deploy Automático
+
+O deploy é automatizado através do GitHub Actions. Sempre que um push é feito para a branch `main`, o workflow é acionado:
+
+1. Executa testes e linting
+2. Faz o build da aplicação
+3. Executa migrações do banco de dados
+4. Faz o deploy para a Vercel
+
+### Deploy Manual
+
+Se precisar fazer um deploy manual:
+
+1. Instale a CLI da Vercel:
+   ```
+   npm install -g vercel
+   ```
+
+2. Faça login:
+   ```
+   vercel login
+   ```
+
+3. Execute o deploy:
+   ```
+   vercel --prod
+   ```
+
+## Monitoramento
+
+Após o deploy, monitore:
+
+1. Logs da aplicação na Vercel
+2. Métricas de desempenho
+3. Alertas de erros
+
+## Rollback
+
+Em caso de problemas após o deploy:
+
+1. Acesse o painel da Vercel
+2. Vá para a seção "Deployments"
+3. Encontre o último deploy estável
+4. Clique em "..." e selecione "Promote to Production"
 
 ---
 
