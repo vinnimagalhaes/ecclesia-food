@@ -29,13 +29,8 @@ type ChurchData = {
 
 const steps: Step[] = [
   {
-    question: 'Qual o nome da sua igreja?',
+    question: 'Nome da Igreja',
     field: 'name',
-    type: 'text'
-  },
-  {
-    question: 'Qual a cidade em que sua igreja está?',
-    field: 'city',
     type: 'text'
   },
   {
@@ -43,6 +38,11 @@ const steps: Step[] = [
     field: 'state',
     type: 'select',
     options: ESTADOS_BRASILEIROS
+  },
+  {
+    question: 'Qual a cidade em que sua igreja está?',
+    field: 'city',
+    type: 'text'
   }
 ];
 
