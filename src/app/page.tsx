@@ -1,6 +1,3 @@
-import { Button } from '@/components/ui/Button';
-import Link from 'next/link';
-import { Search } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 export default function Home() {
