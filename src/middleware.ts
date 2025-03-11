@@ -9,6 +9,12 @@ export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     console.log(`[Middleware] Iniciando verificação para: ${pathname}`);
     
+    // Verificar se estamos na rota raiz
+    if (pathname === '/') {
+      console.log('[Middleware] Rota raiz - acesso público permitido');
+      return NextResponse.next();
+    }
+    
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
@@ -24,8 +30,7 @@ export async function middleware(request: NextRequest) {
       '/vendas/novo',
       '/relatorios',
       '/configuracoes',
-      '/dashboard',
-      '/'  // Adicionando a rota raiz como protegida
+      '/dashboard'
     ];
 
     // Lista de rotas protegidas apenas para SUPER_ADMIN
@@ -36,6 +41,7 @@ export async function middleware(request: NextRequest) {
 
     // Lista de rotas públicas (para usuários finais)
     const publicPaths = [
+      '/',
       '/catalogo',
       '/catalogo/eventos',
       '/catalogo/produtos',
