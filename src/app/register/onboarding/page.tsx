@@ -12,24 +12,6 @@ const ESTADOS_BRASILEIROS = [
   'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ];
 
-// Mapeamento de estado para cidades (simplificado para alguns estados)
-const CIDADES_POR_ESTADO: Record<string, string[]> = {
-  'SP': ['São Paulo', 'Campinas', 'Ribeirão Preto', 'Santos', 'São José dos Campos', 'Sorocaba', 'Guarulhos', 'Osasco', 'Santo André', 'São Bernardo do Campo'],
-  'RJ': ['Rio de Janeiro', 'Niterói', 'São Gonçalo', 'Duque de Caxias', 'Nova Iguaçu', 'Petrópolis', 'Volta Redonda', 'Campos dos Goytacazes', 'Macaé', 'Angra dos Reis'],
-  'MG': ['Belo Horizonte', 'Uberlândia', 'Contagem', 'Juiz de Fora', 'Betim', 'Montes Claros', 'Ribeirão das Neves', 'Uberaba', 'Governador Valadares', 'Ipatinga'],
-  'BA': ['Salvador', 'Feira de Santana', 'Vitória da Conquista', 'Camaçari', 'Itabuna', 'Juazeiro', 'Ilhéus', 'Lauro de Freitas', 'Jequié', 'Porto Seguro'],
-  'RS': ['Porto Alegre', 'Caxias do Sul', 'Pelotas', 'Canoas', 'Santa Maria', 'Gravataí', 'Viamão', 'Novo Hamburgo', 'São Leopoldo', 'Rio Grande'],
-  'PR': ['Curitiba', 'Londrina', 'Maringá', 'Ponta Grossa', 'Cascavel', 'São José dos Pinhais', 'Foz do Iguaçu', 'Colombo', 'Guarapuava', 'Paranaguá'],
-  // Adicionar mais estados conforme necessário
-};
-
-// Adicionando outras cidades para estados que não estão na lista acima
-ESTADOS_BRASILEIROS.forEach(estado => {
-  if (!CIDADES_POR_ESTADO[estado]) {
-    CIDADES_POR_ESTADO[estado] = ['Outra cidade'];
-  }
-});
-
 type Step = {
   question: string;
   field: keyof ChurchData;
@@ -84,6 +66,8 @@ export default function OnboardingPage() {
     phone: '',
     description: ''
   });
+  const [citiesList, setCitiesList] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
 
   // Verificar autenticação
   useEffect(() => {
@@ -92,27 +76,46 @@ export default function OnboardingPage() {
     }
   }, [status, router]);
 
-  // Obter cidades do estado selecionado
-  const getCitiesForState = (state: string): string[] => {
-    return CIDADES_POR_ESTADO[state] || ['Outra cidade'];
-  };
-
-  // Verificar se há necessidade de limpar a cidade quando mudar o estado
+  // Carregar cidades quando o estado mudar
   useEffect(() => {
-    if (currentStep === 2) {
-      // Se estivermos na etapa de cidade, obtemos as cidades do estado selecionado
-      const cities = getCitiesForState(churchData.state);
+    if (churchData.state) {
+      fetchCitiesForState(churchData.state);
+    }
+  }, [churchData.state]);
+
+  // Função para buscar cidades de um estado usando API pública
+  const fetchCitiesForState = async (state: string) => {
+    try {
+      setLoadingCities(true);
       
-      // Se a cidade atual não está na lista de cidades para o estado selecionado,
-      // resetamos a seleção de cidade
+      // Usar API do IBGE para buscar municípios
+      const url = `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${state}/municipios?orderBy=nome`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Falha ao carregar cidades');
+      }
+      
+      const data = await response.json();
+      const cities = data.map((city: any) => city.nome).sort();
+      
+      setCitiesList(cities);
+      
+      // Limpar cidade selecionada se não estiver na nova lista
       if (churchData.city && !cities.includes(churchData.city)) {
         setChurchData(prev => ({
           ...prev,
           city: ''
         }));
       }
+    } catch (error) {
+      console.error('Erro ao buscar cidades:', error);
+      toast.error('Não foi possível carregar a lista de cidades. Por favor, tente novamente.');
+      setCitiesList(['Erro ao carregar cidades']);
+    } finally {
+      setLoadingCities(false);
     }
-  }, [churchData.state, currentStep, churchData.city]);
+  };
 
   const handleNext = async () => {
     if (currentStep === steps.length - 1) {
@@ -193,9 +196,9 @@ export default function OnboardingPage() {
   // Obter opções para o passo atual
   const getOptionsForCurrentStep = () => {
     if (typeof currentStepData.options === 'function') {
-      // Para o caso da cidade, opções dinâmicas baseadas no estado
+      // Para o caso da cidade, retornamos a lista de cidades carregada
       if (currentStepData.field === 'city') {
-        return getCitiesForState(churchData.state);
+        return citiesList;
       }
       return [];
     }
@@ -259,26 +262,35 @@ export default function OnboardingPage() {
                 autoFocus
               />
             ) : (
-              <select
-                value={churchData[currentStepData.field]}
-                onChange={(e) => handleInputChange(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-lg shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
-                autoFocus
-              >
-                <option value="">
-                  {currentStepData.field === 'state' ? 'Selecione o estado' : 'Selecione a cidade'}
-                </option>
-                {getOptionsForCurrentStep().map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <div>
+                {currentStepData.field === 'city' && loadingCities ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="w-8 h-8 border-t-2 border-primary-500 border-solid rounded-full animate-spin mr-3"></div>
+                    <p>Carregando cidades...</p>
+                  </div>
+                ) : (
+                  <select
+                    value={churchData[currentStepData.field]}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-lg shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
+                    autoFocus
+                  >
+                    <option value="">
+                      {currentStepData.field === 'state' ? 'Selecione o estado' : 'Selecione a cidade'}
+                    </option>
+                    {getOptionsForCurrentStep().map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
             )}
 
             <button
               onClick={handleNext}
-              disabled={!canAdvance || isLoading}
+              disabled={!canAdvance || isLoading || (currentStepData.field === 'city' && loadingCities)}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               {isLoading ? 'Salvando...' : currentStep === steps.length - 1 ? 'Concluir' : 'Próximo'}
