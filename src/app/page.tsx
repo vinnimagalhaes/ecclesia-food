@@ -1,8 +1,15 @@
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
+  // Redirecionamento automático para o catálogo de igrejas
+  redirect('/catalogo/igrejas');
+  
+  // O código abaixo não será executado devido ao redirecionamento
+  // Mantido apenas como referência caso seja necessário reverter
+  /*
   return (
     <div className="min-h-screen">
       <main className="container-app py-12">
@@ -57,4 +64,5 @@ export default function Home() {
       </main>
     </div>
   );
+  */
 } 
