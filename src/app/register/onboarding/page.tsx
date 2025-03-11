@@ -5,17 +5,36 @@ import { useRouter } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 import { toast } from 'sonner';
 
+// Lista de estados brasileiros
 const ESTADOS_BRASILEIROS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
   'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
   'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ];
 
+// Mapeamento de estado para cidades (simplificado para alguns estados)
+const CIDADES_POR_ESTADO: Record<string, string[]> = {
+  'SP': ['São Paulo', 'Campinas', 'Ribeirão Preto', 'Santos', 'São José dos Campos', 'Sorocaba', 'Guarulhos', 'Osasco', 'Santo André', 'São Bernardo do Campo'],
+  'RJ': ['Rio de Janeiro', 'Niterói', 'São Gonçalo', 'Duque de Caxias', 'Nova Iguaçu', 'Petrópolis', 'Volta Redonda', 'Campos dos Goytacazes', 'Macaé', 'Angra dos Reis'],
+  'MG': ['Belo Horizonte', 'Uberlândia', 'Contagem', 'Juiz de Fora', 'Betim', 'Montes Claros', 'Ribeirão das Neves', 'Uberaba', 'Governador Valadares', 'Ipatinga'],
+  'BA': ['Salvador', 'Feira de Santana', 'Vitória da Conquista', 'Camaçari', 'Itabuna', 'Juazeiro', 'Ilhéus', 'Lauro de Freitas', 'Jequié', 'Porto Seguro'],
+  'RS': ['Porto Alegre', 'Caxias do Sul', 'Pelotas', 'Canoas', 'Santa Maria', 'Gravataí', 'Viamão', 'Novo Hamburgo', 'São Leopoldo', 'Rio Grande'],
+  'PR': ['Curitiba', 'Londrina', 'Maringá', 'Ponta Grossa', 'Cascavel', 'São José dos Pinhais', 'Foz do Iguaçu', 'Colombo', 'Guarapuava', 'Paranaguá'],
+  // Adicionar mais estados conforme necessário
+};
+
+// Adicionando outras cidades para estados que não estão na lista acima
+ESTADOS_BRASILEIROS.forEach(estado => {
+  if (!CIDADES_POR_ESTADO[estado]) {
+    CIDADES_POR_ESTADO[estado] = ['Outra cidade'];
+  }
+});
+
 type Step = {
   question: string;
   field: keyof ChurchData;
   type: 'text' | 'select';
-  options?: string[];
+  options?: string[] | (() => string[]);
 };
 
 type ChurchData = {
@@ -34,15 +53,20 @@ const steps: Step[] = [
     type: 'text'
   },
   {
-    question: 'Em qual estado fica sua igreja?',
+    question: 'Estado da Igreja',
     field: 'state',
     type: 'select',
     options: ESTADOS_BRASILEIROS
   },
   {
-    question: 'Qual a cidade em que sua igreja está?',
+    question: 'Cidade da Igreja',
     field: 'city',
-    type: 'text'
+    type: 'select',
+    // Opções dinâmicas baseadas no estado selecionado
+    options: function() {
+      // Esta função será chamada dinamicamente quando a etapa for renderizada
+      return [];
+    }
   }
 ];
 
@@ -51,6 +75,7 @@ export default function OnboardingPage() {
   const { data: session, status } = useSession();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [visitedSteps, setVisitedSteps] = useState<number[]>([0]); // Rastreando etapas visitadas
   const [churchData, setChurchData] = useState<ChurchData>({
     name: '',
     city: '',
@@ -66,6 +91,28 @@ export default function OnboardingPage() {
       router.push('/login');
     }
   }, [status, router]);
+
+  // Obter cidades do estado selecionado
+  const getCitiesForState = (state: string): string[] => {
+    return CIDADES_POR_ESTADO[state] || ['Outra cidade'];
+  };
+
+  // Verificar se há necessidade de limpar a cidade quando mudar o estado
+  useEffect(() => {
+    if (currentStep === 2) {
+      // Se estivermos na etapa de cidade, obtemos as cidades do estado selecionado
+      const cities = getCitiesForState(churchData.state);
+      
+      // Se a cidade atual não está na lista de cidades para o estado selecionado,
+      // resetamos a seleção de cidade
+      if (churchData.city && !cities.includes(churchData.city)) {
+        setChurchData(prev => ({
+          ...prev,
+          city: ''
+        }));
+      }
+    }
+  }, [churchData.state, currentStep, churchData.city]);
 
   const handleNext = async () => {
     if (currentStep === steps.length - 1) {
@@ -102,7 +149,21 @@ export default function OnboardingPage() {
       }
     } else {
       // Próxima pergunta
-      setCurrentStep(prev => prev + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      
+      // Adicionar à lista de etapas visitadas
+      if (!visitedSteps.includes(nextStep)) {
+        setVisitedSteps(prev => [...prev, nextStep]);
+      }
+    }
+  };
+
+  // Navegar para uma etapa específica (usado nas bolinhas clicáveis)
+  const goToStep = (stepIndex: number) => {
+    // Só permite navegar para etapas já visitadas ou a próxima etapa
+    if (visitedSteps.includes(stepIndex) || stepIndex === currentStep + 1) {
+      setCurrentStep(stepIndex);
     }
   };
 
@@ -129,6 +190,18 @@ export default function OnboardingPage() {
 
   const canAdvance = churchData[currentStepData.field] !== '';
 
+  // Obter opções para o passo atual
+  const getOptionsForCurrentStep = () => {
+    if (typeof currentStepData.options === 'function') {
+      // Para o caso da cidade, opções dinâmicas baseadas no estado
+      if (currentStepData.field === 'city') {
+        return getCitiesForState(churchData.state);
+      }
+      return [];
+    }
+    return currentStepData.options || [];
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto">
@@ -142,20 +215,26 @@ export default function OnboardingPage() {
           </p>
         </div>
 
-        {/* Indicador de progresso */}
+        {/* Indicador de progresso com bolinhas clicáveis */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             {steps.map((_, index) => (
               <div key={index} className="flex items-center">
-                <div className={`
-                  rounded-full h-8 w-8 flex items-center justify-center text-sm font-medium
-                  ${index <= currentStep ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'}
-                `}>
+                <button
+                  onClick={() => goToStep(index)}
+                  disabled={!visitedSteps.includes(index) && index !== currentStep + 1}
+                  className={`
+                    rounded-full h-8 w-8 flex items-center justify-center text-sm font-medium transition-colors
+                    ${index <= currentStep ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'}
+                    ${visitedSteps.includes(index) || index === currentStep + 1 ? 'cursor-pointer hover:opacity-90' : 'cursor-not-allowed'}
+                  `}
+                  aria-label={`Ir para etapa ${index + 1}`}
+                >
                   {index + 1}
-                </div>
+                </button>
                 {index < steps.length - 1 && (
                   <div className={`
-                    h-1 w-12 mx-2
+                    h-1 w-12 mx-2 transition-colors
                     ${index < currentStep ? 'bg-primary-600' : 'bg-gray-200'}
                   `} />
                 )}
@@ -186,8 +265,10 @@ export default function OnboardingPage() {
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-lg shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                 autoFocus
               >
-                <option value="">Selecione o estado</option>
-                {currentStepData.options?.map((option) => (
+                <option value="">
+                  {currentStepData.field === 'state' ? 'Selecione o estado' : 'Selecione a cidade'}
+                </option>
+                {getOptionsForCurrentStep().map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
