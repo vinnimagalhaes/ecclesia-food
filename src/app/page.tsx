@@ -1,12 +1,18 @@
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 export default function Home() {
-  // Redirecionamento automático para o catálogo de igrejas
-  redirect('/catalogo/igrejas');
+  // Verificar o hostname para decidir se deve redirecionar
+  const headersList = headers();
+  const host = headersList.get('host') || '';
   
-  // O código abaixo não será executado devido ao redirecionamento
-  // Mantido apenas como referência caso seja necessário reverter
-  /*
+  // Redirecionar apenas se NÃO for o subdomínio admin
+  if (!host.startsWith('admin.')) {
+    // Redirecionamento automático para o catálogo de igrejas no site principal
+    redirect('/catalogo/igrejas');
+  }
+  
+  // Se for o subdomínio admin, continua renderizando a página normalmente
   return (
     <div className="min-h-screen">
       <main className="container-app py-12">
@@ -26,32 +32,17 @@ export default function Home() {
                 
                 <div className="space-y-6">
                   <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <h3 className="font-medium text-lg mb-2">Buscar Eventos</h3>
-                    <p className="text-gray-600 text-sm mb-4">
-                      Encontre eventos das igrejas participantes.
-                    </p>
-                    <Link href="/catalogo/igrejas">
-                      <Button 
-                        variant="primary" 
-                        size="lg" 
-                        className="w-full inline-flex items-center justify-center gap-2"
-                      >
-                        <Search size={20} />
-                        Pesquisar Igreja
-                      </Button>
-                    </Link>
-                  </div>
-
-                  <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     <h3 className="font-medium text-lg mb-2">Área Administrativa</h3>
                     <p className="text-gray-600 text-sm mb-4">
                       Acesse para gerenciar eventos e relatórios da sua igreja.
                     </p>
-                    <Link href="/login">
-                      <Button variant="secondary" size="lg" className="w-full">
+                    <a href="/login" className="inline-block w-full">
+                      <button 
+                        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg text-center transition-colors"
+                      >
                         Entrar como Administrador
-                      </Button>
-                    </Link>
+                      </button>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -61,5 +52,4 @@ export default function Home() {
       </main>
     </div>
   );
-  */
 } 
