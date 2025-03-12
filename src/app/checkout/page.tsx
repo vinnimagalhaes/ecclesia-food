@@ -42,6 +42,74 @@ export default function CheckoutPage() {
     metodoPagamento: 'dinheiro',
     observacoes: ''
   });
+  const [total, setTotal] = useState(0);
+
+  // Carregar itens do localStorage
+  useEffect(() => {
+    try {
+      const carrinhoSalvo = localStorage.getItem('carrinho');
+      
+      if (!carrinhoSalvo) {
+        setItens([]);
+        setError('Seu carrinho está vazio. Adicione produtos antes de finalizar a compra.');
+        return;
+      }
+      
+      const carrinhoParseado = JSON.parse(carrinhoSalvo);
+      
+      // Validar dados do carrinho
+      if (!Array.isArray(carrinhoParseado) || carrinhoParseado.length === 0) {
+        setItens([]);
+        setError('Seu carrinho está vazio ou contém dados inválidos.');
+        return;
+      }
+      
+      // Verificar se todos os itens têm as propriedades necessárias
+      const itensValidos = carrinhoParseado.filter(item => 
+        item && typeof item === 'object' && 
+        item.produtoId && 
+        item.nome && 
+        typeof item.preco === 'number' && 
+        typeof item.quantidade === 'number' &&
+        item.eventId
+      );
+      
+      if (itensValidos.length === 0) {
+        setError('Os dados do carrinho estão incompletos. Por favor, volte ao catálogo e adicione produtos novamente.');
+        setItens([]);
+        return;
+      }
+      
+      if (itensValidos.length !== carrinhoParseado.length) {
+        console.warn('Alguns itens do carrinho foram removidos por estarem incompletos', {
+          original: carrinhoParseado.length,
+          validos: itensValidos.length
+        });
+      }
+      
+      // Verificar se todos os itens têm o mesmo eventId
+      const eventIds = new Set(itensValidos.map(item => item.eventId));
+      if (eventIds.size > 1) {
+        setError('Seu carrinho contém itens de eventos diferentes. Por favor, finalize um evento por vez.');
+        // Vamos manter os itens para que o usuário possa ver o que está no carrinho
+        setItens(itensValidos);
+        return;
+      }
+      
+      setItens(itensValidos);
+      
+      // Calcular o total do carrinho
+      const novoTotal = itensValidos.reduce((acc, item) => {
+        return acc + (item.preco * item.quantidade);
+      }, 0);
+      
+      setTotal(novoTotal);
+    } catch (err) {
+      console.error('Erro ao carregar carrinho:', err);
+      setError('Não foi possível carregar o carrinho. Os dados podem estar corrompidos.');
+      setItens([]);
+    }
+  }, []);
 
   // Carregar carrinho do localStorage
   useEffect(() => {
@@ -98,9 +166,6 @@ export default function CheckoutPage() {
     });
   }
   
-  // Calcular total do carrinho
-  const total = itens.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
-  
   // Função para atualizar o formulário
   function atualizarFormulario(campo: keyof FormularioCheckout, valor: string) {
     setFormulario(prev => ({
@@ -120,7 +185,21 @@ export default function CheckoutPage() {
     }
     
     if (itens.length === 0) {
-      setError('Seu carrinho está vazio.');
+      setError('Seu carrinho está vazio. Adicione produtos antes de finalizar a compra.');
+      return;
+    }
+    
+    // Verificar se todos os itens têm eventId
+    const todosEventosValidos = itens.every(item => Boolean(item.eventId));
+    if (!todosEventosValidos) {
+      setError('Informações do evento estão incompletas. Tente adicionar os itens ao carrinho novamente.');
+      return;
+    }
+    
+    // Verificar se todos os itens têm o mesmo eventId
+    const eventIds = new Set(itens.map(item => item.eventId));
+    if (eventIds.size > 1) {
+      setError('Seu carrinho contém itens de eventos diferentes. Por favor, finalize um evento por vez.');
       return;
     }
     
@@ -128,29 +207,29 @@ export default function CheckoutPage() {
       setEnviando(true);
       setError('');
       
-      console.log('Enviando pedido para API...');
-      
-      // Preparar os dados para a API no formato correto
+      // Montar objeto com dados do pedido
       const dadosVenda = {
         cliente: formulario.nome,
-        email: formulario.email || '', // Pode estar vazio
+        email: formulario.email || undefined,
         telefone: formulario.telefone,
-        tipo: 'evento', // Padrão para vendas de catálogo
-        total: total,
         formaPagamento: formulario.metodoPagamento,
-        origem: 'usuario_final',
-        status: 'PENDENTE',
+        total: total,
+        eventId: itens[0]?.eventId, // Usar o ID do evento do primeiro item
         itens: itens.map(item => ({
           nome: item.nome,
           quantidade: item.quantidade,
           precoUnitario: item.preco,
           productId: item.produtoId
         })),
-        eventId: itens[0]?.eventId || undefined,
         observacoes: formulario.observacoes
       };
       
       console.log('Dados do pedido:', dadosVenda);
+      
+      // Verificar se temos todas as informações necessárias antes de enviar
+      if (!dadosVenda.eventId) {
+        throw new Error('ID do evento não encontrado. Por favor, comece o processo novamente.');
+      }
       
       // Enviar para a API de vendas pública (não requer autenticação)
       const response = await fetch('/api/vendas/publica', {
@@ -161,12 +240,13 @@ export default function CheckoutPage() {
         body: JSON.stringify(dadosVenda)
       });
       
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao processar pedido');
+        console.error('Erro da API:', responseData);
+        throw new Error(responseData.error || responseData.detalhes || 'Erro ao processar pedido');
       }
       
-      const responseData = await response.json();
       console.log('Resposta da API:', responseData);
       
       // Salvar ID e informações do pedido para exibição na página de sucesso
