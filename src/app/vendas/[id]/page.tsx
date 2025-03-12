@@ -15,7 +15,8 @@ import {
   Clock, 
   CheckCircle, 
   XCircle,
-  Truck
+  Truck,
+  MessageSquare
 } from 'lucide-react';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -53,6 +54,9 @@ interface Venda {
     nome: string;
     data?: string;
     local?: string;
+  };
+  metadata?: {
+    observacoes?: string;
   };
 }
 
@@ -367,6 +371,18 @@ export default function VendaDetalhesPage({ params }: { params: { id: string } }
                 <p>{venda.origem === 'usuario_final' ? 'Site (Cliente Final)' : 'Administrativo'}</p>
               </div>
             </div>
+
+            {venda.metadata && venda.metadata.observacoes && (
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <h3 className="font-medium text-gray-900 mb-2 flex items-center">
+                  <MessageSquare size={16} className="mr-1 text-primary-500" />
+                  Observações do Cliente
+                </h3>
+                <div className="bg-yellow-50 p-3 rounded-md">
+                  <p className="text-gray-800">{venda.metadata.observacoes}</p>
+                </div>
+              </div>
+            )}
 
             {venda.event && (
               <div className="border-t border-gray-200 pt-4 mt-4">

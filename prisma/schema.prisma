@@ -120,6 +120,7 @@ model Sale {
   origem          String?
   telefone        String?
   tipo            String
+  metadata        Json?      @default("{}")
   event           Event?     @relation("EventSales", fields: [eventId], references: [id])
   user            User?      @relation("UserSales", fields: [userId], references: [id])
   items           SaleItem[]
