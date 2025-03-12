@@ -350,7 +350,7 @@ export default function EventoDetalhesPage({
                   className={`py-2 px-4 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                     categoriaAtiva === categoria
                       ? 'bg-primary-500 text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                      : 'bg-white text-gray-600 hover:bg-gray-100 border border-primary-500/30'
                   }`}
                 >
                   {categoria}
