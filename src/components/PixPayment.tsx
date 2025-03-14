@@ -16,15 +16,41 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string>('');
 
+  // Log das props recebidas quando componente é montado
+  useEffect(() => {
+    console.log('PixPayment montado com props:', { valor, chavePix, nomeChavePix, cidadeChavePix });
+  }, []);
+
   useEffect(() => {
     const gerarCodigoPix = async () => {
       try {
         setCarregando(true);
         setErro('');
 
+        console.log('Verificando dados PIX recebidos:');
+        console.log('- chavePix:', chavePix, typeof chavePix);
+        console.log('- nomeChavePix:', nomeChavePix, typeof nomeChavePix);
+        console.log('- cidadeChavePix:', cidadeChavePix, typeof cidadeChavePix);
+        console.log('- valor:', valor, typeof valor);
+
         // Verificar se os dados necessários estão presentes
-        if (!chavePix) {
+        if (!chavePix || chavePix.trim() === '') {
+          console.error('Chave PIX não configurada ou vazia');
           setErro('Chave PIX não configurada. Entre em contato com o administrador.');
+          setCarregando(false);
+          return;
+        }
+
+        if (!nomeChavePix || nomeChavePix.trim() === '') {
+          console.error('Nome da chave PIX não configurado ou vazio');
+          setErro('Nome do beneficiário PIX não configurado. Entre em contato com o administrador.');
+          setCarregando(false);
+          return;
+        }
+
+        if (!cidadeChavePix || cidadeChavePix.trim() === '') {
+          console.error('Cidade da chave PIX não configurada ou vazia');
+          setErro('Cidade do beneficiário PIX não configurada. Entre em contato com o administrador.');
           setCarregando(false);
           return;
         }

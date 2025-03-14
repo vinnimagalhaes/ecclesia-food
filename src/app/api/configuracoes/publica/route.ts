@@ -62,11 +62,24 @@ export async function GET() {
     if (configPagamento) {
       try {
         const valor = JSON.parse(configPagamento.value);
+        console.log('Configuração de pagamento encontrada:', valor);
+        
+        // Verificar se a chave PIX está presente
+        if (valor.chavePix) {
+          console.log('Chave PIX encontrada:', valor.chavePix);
+        } else {
+          console.log('Chave PIX não encontrada na configuração');
+        }
+        
         configuracoes.configPagamento = { ...defaultConfigPagamento, ...valor };
       } catch (e) {
         console.error('Erro ao processar configuração de pagamento:', e);
       }
+    } else {
+      console.log('Nenhuma configuração de pagamento encontrada no banco de dados');
     }
+    
+    console.log('Configurações completas a serem retornadas:', configuracoes);
 
     return NextResponse.json(configuracoes);
   } catch (error) {
