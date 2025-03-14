@@ -52,8 +52,8 @@ export default function SucessoPage() {
       const data = await response.json();
       setConfigPagamento({
         chavePix: data.configPagamento.chavePix,
-        nomeChavePix: data.perfilIgreja.nome,
-        cidadeChavePix: data.perfilIgreja.cidade
+        nomeChavePix: data.configPagamento.nomeChavePix || data.perfilIgreja.nome,
+        cidadeChavePix: data.configPagamento.cidadeChavePix || data.perfilIgreja.cidade
       });
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);

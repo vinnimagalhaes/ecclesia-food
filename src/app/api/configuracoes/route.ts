@@ -28,6 +28,9 @@ interface ConfigPagamento {
   aceitaCartao: boolean;
   aceitaPix: boolean;
   chavePix: string;
+  tipoPix: string;
+  nomeChavePix: string;
+  cidadeChavePix: string;
   taxaServico: number;
 }
 
@@ -118,6 +121,9 @@ export async function GET(request: Request) {
         aceitaCartao: true,
         aceitaPix: true,
         chavePix: '',
+        tipoPix: '',
+        nomeChavePix: '',
+        cidadeChavePix: '',
         taxaServico: 0,
       };
 
