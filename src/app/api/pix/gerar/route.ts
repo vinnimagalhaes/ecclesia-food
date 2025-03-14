@@ -8,6 +8,10 @@ export const runtime = 'nodejs';
 // Tornar a rota dinâmica para evitar cacheamento
 export const dynamic = 'force-dynamic';
 
+// Chave PIX aleatória de telefone para demonstração (formato +5500000000000)
+// Esta é uma chave fictícia apenas para fallback
+const DEMO_PIX_KEY = '11944707018';
+
 export async function POST(request: Request) {
   try {
     console.log('Iniciando geração de PIX');
@@ -27,10 +31,11 @@ export async function POST(request: Request) {
     
     const { valor, chavePix: chavePixRecebida, nomeChavePix, cidadeChavePix } = body;
 
-    // Garantir que temos uma chave PIX, mesmo que seja uma de teste
+    // Garantir que temos uma chave PIX usando um telefone de demonstração como fallback
+    // Em vez de email, usar telefone que é mais comumente aceito
     const chavePix = chavePixRecebida && chavePixRecebida.trim() !== ''
       ? chavePixRecebida
-      : 'teste@ecclesiafood.com'; // Chave PIX de fallback
+      : DEMO_PIX_KEY; // Chave PIX de fallback (telefone no formato simplificado)
 
     // Garantir que temos um valor numérico válido
     const valorNumerico = typeof valor === 'number' && !isNaN(valor) && valor > 0
@@ -40,8 +45,8 @@ export async function POST(request: Request) {
     console.log('Dados sanitizados:', {
       chavePix,
       valorNumerico,
-      nomeChavePix: nomeChavePix || 'Ecclesia Food',
-      cidadeChavePix: cidadeChavePix || 'São Paulo'
+      nomeChavePix: nomeChavePix || 'N', // Nome curto para compatibilidade
+      cidadeChavePix: cidadeChavePix || 'C'  // Cidade curta para compatibilidade
     });
 
     // Validar apenas os dados essenciais
@@ -58,24 +63,9 @@ export async function POST(request: Request) {
     let brcode;
     
     try {
-      // Se temos os dados completos, usar o método completo, caso contrário, usar o simplificado
-      if (nomeChavePix && cidadeChavePix) {
-        // Gerar o código PIX (BRCode) com todos os campos
-        console.log('Usando geração de PIX completa com nome e cidade');
-        const txid = `ECCLESIA${Date.now()}`;
-        brcode = PixUtils.generatePayload(
-          chavePix,
-          'Pagamento Ecclesia Food',
-          nomeChavePix,
-          cidadeChavePix,
-          txid,
-          valorNumerico
-        );
-      } else {
-        // Gerar o código PIX (BRCode) simplificado
-        console.log('Usando geração de PIX simplificada apenas com chave e valor');
-        brcode = PixUtils.generateSimplePayload(chavePix, valorNumerico);
-      }
+      // Sempre usar o método simplificado que é mais compatível com bancos
+      console.log('Usando geração de PIX simplificada para maior compatibilidade');
+      brcode = PixUtils.generateSimplePayload(chavePix, valorNumerico);
       
       console.log('BRCode gerado com sucesso:', brcode);
     } catch (error) {

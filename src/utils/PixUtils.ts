@@ -19,16 +19,14 @@ export class PixUtils {
   }
 
   private static getMerchantAccountInfo(pixKey: string): string {
-    const gui = 'br.gov.bcb.pix';
+    const gui = 'BR.GOV.BCB.PIX';
     const key = pixKey;
     const merchantAccountString = this.getValue('00', gui) + this.getValue('01', key);
     return this.getValue(this.ID_MERCHANT_ACCOUNT, merchantAccountString);
   }
 
   private static getAdditionalDataField(description: string, txid: string): string {
-    const txidString = this.getValue('05', txid);
-    const descriptionString = description ? this.getValue('02', description) : '';
-    return this.getValue(this.ID_FIELD_ADDITIONAL_DATA, txidString + descriptionString);
+    return this.getValue(this.ID_FIELD_ADDITIONAL_DATA, this.getValue('05', txid));
   }
 
   /**
@@ -39,15 +37,12 @@ export class PixUtils {
     pixKey: string,
     amount: number
   ): string {
-    // Usando valores padrão para os campos não fornecidos
-    const description = 'Pagamento Ecclesia Food';
-    const merchantName = 'Ecclesia Food';
-    const merchantCity = 'SAO PAULO';  // Cidade padrão
-    const txid = `ECCLESIA${Date.now()}`;
+    const merchantName = 'N';
+    const merchantCity = 'C';
+    const txid = `ECL${Date.now().toString().substring(0, 8)}`;
 
-    return this.generatePayload(
+    return this.generateSimpleCompatiblePayload(
       pixKey,
-      description,
       merchantName,
       merchantCity,
       txid,
@@ -56,7 +51,43 @@ export class PixUtils {
   }
 
   /**
+   * Gera um payload PIX simplificado e compatível com a maioria dos bancos
+   */
+  static generateSimpleCompatiblePayload(
+    pixKey: string,
+    merchantName: string,
+    merchantCity: string,
+    txid: string,
+    amount: number
+  ): string {
+    let payload = this.getValue(this.ID_PAYLOAD_FORMAT, this.PAYLOAD_FORMAT_INDICATOR);
+
+    payload += this.getMerchantAccountInfo(pixKey);
+
+    payload += this.getValue(this.ID_MERCHANT_NAME, merchantName);
+
+    payload += this.getValue(this.ID_MERCHANT_CITY, merchantCity);
+
+    if (amount > 0) {
+      payload += this.getValue(
+        this.ID_TRANSACTION_AMOUNT,
+        amount.toFixed(2)
+      );
+    }
+
+    payload += this.getValue(this.ID_COUNTRY_CODE, this.COUNTRY_CODE);
+
+    payload += this.getAdditionalDataField('', txid);
+
+    payload += this.ID_CRC16 + '04';
+
+    const crc16 = CRC16.compute(payload);
+    return payload + crc16.toString(16).toUpperCase();
+  }
+
+  /**
    * Gera um payload PIX completo com todos os campos
+   * Mantido para compatibilidade com o código existente
    */
   static generatePayload(
     pixKey: string,
@@ -66,36 +97,12 @@ export class PixUtils {
     txid: string,
     amount: number
   ): string {
-    // Início do payload
-    let payload = this.getValue(this.ID_PAYLOAD_FORMAT, this.PAYLOAD_FORMAT_INDICATOR);
-
-    // Conta do recebedor
-    payload += this.getMerchantAccountInfo(pixKey);
-
-    // Nome do recebedor
-    payload += this.getValue(this.ID_MERCHANT_NAME, merchantName);
-
-    // Cidade do recebedor
-    payload += this.getValue(this.ID_MERCHANT_CITY, merchantCity);
-
-    // Valor da transação
-    if (amount > 0) {
-      payload += this.getValue(
-        this.ID_TRANSACTION_AMOUNT,
-        amount.toFixed(2)
-      );
-    }
-
-    // País
-    payload += this.getValue(this.ID_COUNTRY_CODE, this.COUNTRY_CODE);
-
-    // Campo adicional (descrição e txid)
-    payload += this.getAdditionalDataField(description, txid);
-
-    // CRC16
-    payload += this.ID_CRC16 + '04';
-
-    const crc16 = CRC16.compute(payload);
-    return payload + crc16.toString(16).toUpperCase();
+    return this.generateSimpleCompatiblePayload(
+      pixKey,
+      merchantName.substring(0, 10),
+      merchantCity.substring(0, 10),
+      txid.replace(/[^a-zA-Z0-9]/g, '').substring(0, 10),
+      amount
+    );
   }
 } 

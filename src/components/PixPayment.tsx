@@ -34,10 +34,11 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
         console.log('- valor:', valor, typeof valor);
 
         // Verificar se a chave PIX está presente
-        // Se não estiver configurada, usar uma fallback de teste (apenas para não quebrar a UI)
+        // Se não estiver configurada, usar uma fallback de telefone (mais compatível)
+        // Uma chave telefone é mais comumente aceita pelos apps bancários
         const chavePixFinal = chavePix && chavePix.trim() !== ''
           ? chavePix
-          : 'teste@ecclesiafood.com'; // Fallback para desenvolvimento
+          : '11944707018'; // Fallback de telefone para desenvolvimento
 
         // Verificar se apenas os dados obrigatórios estão presentes
         if (!chavePixFinal || chavePixFinal.trim() === '') {
@@ -47,12 +48,15 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
           return;
         }
 
-        // Removendo as verificações dos campos opcionais
+        // Usar nome e cidade mais simples (formato curto) para maior compatibilidade
+        const nomeSimplificado = 'N';
+        const cidadeSimplificada = 'C';
+
         console.log('Enviando requisição para gerar PIX com dados:', { 
           valor, 
           chavePix: chavePixFinal,
-          ...(nomeChavePix && { nomeChavePix }),
-          ...(cidadeChavePix && { cidadeChavePix })
+          nomeChavePix: nomeSimplificado,
+          cidadeChavePix: cidadeSimplificada
         });
 
         try {
@@ -64,8 +68,9 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
             body: JSON.stringify({
               valor,
               chavePix: chavePixFinal,
-              nomeChavePix,
-              cidadeChavePix,
+              // Usar valores simplificados
+              nomeChavePix: nomeSimplificado,
+              cidadeChavePix: cidadeSimplificada,
             }),
           });
 
