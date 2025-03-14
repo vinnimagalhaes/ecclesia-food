@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 // GET: Obter as configurações públicas
-export async function GET(request: Request) {
+export async function GET() {
   try {
     console.log('GET /api/configuracoes/publica - Buscando configurações públicas');
 
