@@ -22,6 +22,15 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
         setCarregando(true);
         setErro('');
 
+        // Verificar se os dados necessários estão presentes
+        if (!chavePix) {
+          setErro('Chave PIX não configurada. Entre em contato com o administrador.');
+          setCarregando(false);
+          return;
+        }
+
+        console.log('Enviando requisição para gerar PIX com dados:', { valor, chavePix, nomeChavePix, cidadeChavePix });
+
         const response = await fetch('/api/pix/gerar', {
           method: 'POST',
           headers: {
@@ -35,16 +44,20 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
           }),
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error('Erro ao gerar código PIX');
+          console.error('Resposta de erro da API:', data);
+          throw new Error(data.detalhes || data.error || 'Erro ao gerar código PIX');
         }
 
-        const data = await response.json();
         setQrCodeUrl(data.qrcode);
         setPixCopiaECola(data.brcode);
       } catch (error) {
         console.error('Erro ao gerar PIX:', error);
-        setErro('Não foi possível gerar o código PIX. Por favor, tente novamente.');
+        setErro(error instanceof Error ? 
+          `Não foi possível gerar o código PIX: ${error.message}` : 
+          'Não foi possível gerar o código PIX. Por favor, tente novamente.');
       } finally {
         setCarregando(false);
       }
