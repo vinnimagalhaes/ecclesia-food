@@ -73,17 +73,18 @@ export default function SucessoPage() {
       }
       
       // Garantir que a chave PIX nunca seja undefined
-      // Caso não esteja configurada, usar uma chave PIX de teste
+      // Usando um número de telefone como fallback (mais compatível que email)
       const chavePix = temChavePix 
-        ? data.configPagamento.chavePix 
-        : 'teste@ecclesiafood.com'; // Chave de teste para evitar erro
+        ? data.configPagamento.chavePix
+        : '11944707018'; // Número de telefone para maior compatibilidade
       
+      // Usar nome e cidade curtos para melhor compatibilidade
       // Simplificando para usar apenas a chave PIX
       const config = {
         chavePix,
-        // Mantendo opcional para compatibilidade com versão anterior
-        nomeChavePix: data.configPagamento.nomeChavePix || data.perfilIgreja?.nome || 'Ecclesia Food',
-        cidadeChavePix: data.configPagamento.cidadeChavePix || data.perfilIgreja?.cidade || 'São Paulo'
+        // Usando nomes curtos para maior compatibilidade
+        nomeChavePix: 'N',
+        cidadeChavePix: 'C'
       };
       
       console.log('Configuração PIX final (simplificada):', JSON.stringify(config, null, 2));
@@ -94,9 +95,9 @@ export default function SucessoPage() {
       // Em caso de erro, definir uma configuração padrão para evitar falhas
       console.log('Usando configuração PIX padrão devido a erro');
       setConfigPagamento({
-        chavePix: 'teste@ecclesiafood.com',
-        nomeChavePix: 'Ecclesia Food',
-        cidadeChavePix: 'São Paulo'
+        chavePix: '11944707018', // Usando telefone em vez de email
+        nomeChavePix: 'N',
+        cidadeChavePix: 'C'
       });
     }
   };
