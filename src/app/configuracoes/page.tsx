@@ -5,6 +5,14 @@ import { Button } from '@/components/ui/Button';
 import { Save, Church, CreditCard, User, Settings, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface ConfigPagamento {
+  aceitaDinheiro: boolean;
+  aceitaCartao: boolean;
+  aceitaPix: boolean;
+  chavePix: string;
+  tipoPix: string;
+}
+
 export default function ConfiguracoesPage() {
   // Estados para os formulários com valores iniciais vazios
   const [perfilIgreja, setPerfilIgreja] = useState({
@@ -18,13 +26,15 @@ export default function ConfiguracoesPage() {
     responsavel: '',
   });
   
-  const [configPagamento, setConfigPagamento] = useState({
+  const defaultConfigPagamento: ConfigPagamento = {
     aceitaDinheiro: true,
     aceitaCartao: true,
     aceitaPix: true,
     chavePix: '',
-    taxaServico: 0,
-  });
+    tipoPix: 'cpf',
+  };
+
+  const [configPagamento, setConfigPagamento] = useState(defaultConfigPagamento);
 
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
@@ -346,19 +356,19 @@ export default function ConfiguracoesPage() {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Taxa de Serviço (%)
+                Tipo da Chave PIX
               </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={configPagamento.taxaServico}
-                onChange={(e) => atualizarConfigPagamento('taxaServico', Number(e.target.value))}
+              <select
+                value={configPagamento.tipoPix}
+                onChange={(e) => atualizarConfigPagamento('tipoPix', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Essa taxa será adicionada ao valor das vendas.
-              </p>
+              >
+                <option value="cpf">CPF</option>
+                <option value="cnpj">CNPJ</option>
+                <option value="email">E-mail</option>
+                <option value="telefone">Telefone</option>
+                <option value="aleatoria">Chave Aleatória</option>
+              </select>
             </div>
           </div>
           
