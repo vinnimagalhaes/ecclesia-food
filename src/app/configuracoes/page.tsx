@@ -11,6 +11,7 @@ interface ConfigPagamento {
   aceitaPix: boolean;
   chavePix: string;
   tipoPix: string;
+  nomeChavePix: string;
 }
 
 export default function ConfiguracoesPage() {
@@ -32,6 +33,7 @@ export default function ConfiguracoesPage() {
     aceitaPix: true,
     chavePix: '',
     tipoPix: 'cpf',
+    nomeChavePix: '',
   };
 
   const [configPagamento, setConfigPagamento] = useState(defaultConfigPagamento);
@@ -340,18 +342,33 @@ export default function ConfiguracoesPage() {
             
             {/* Chave PIX (condicional) */}
             {configPagamento.aceitaPix && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Chave PIX
-                </label>
-                <input
-                  type="text"
-                  value={configPagamento.chavePix}
-                  onChange={(e) => atualizarConfigPagamento('chavePix', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="E-mail, telefone, CPF ou chave aleatória"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Chave PIX
+                  </label>
+                  <input
+                    type="text"
+                    value={configPagamento.chavePix}
+                    onChange={(e) => atualizarConfigPagamento('chavePix', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="E-mail, telefone, CPF ou chave aleatória"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome cadastrado da Chave PIX
+                  </label>
+                  <input
+                    type="text"
+                    value={configPagamento.nomeChavePix}
+                    onChange={(e) => atualizarConfigPagamento('nomeChavePix', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="Nome completo do titular da chave"
+                  />
+                </div>
+              </>
             )}
             
             <div>
