@@ -31,6 +31,33 @@ export class PixUtils {
     return this.getValue(this.ID_FIELD_ADDITIONAL_DATA, txidString + descriptionString);
   }
 
+  /**
+   * Gera um payload PIX simplificado usando apenas a chave PIX e o valor
+   * Este método usa valores padrão para os campos não fornecidos
+   */
+  static generateSimplePayload(
+    pixKey: string,
+    amount: number
+  ): string {
+    // Usando valores padrão para os campos não fornecidos
+    const description = 'Pagamento Ecclesia Food';
+    const merchantName = 'Ecclesia Food';
+    const merchantCity = 'SAO PAULO';  // Cidade padrão
+    const txid = `ECCLESIA${Date.now()}`;
+
+    return this.generatePayload(
+      pixKey,
+      description,
+      merchantName,
+      merchantCity,
+      txid,
+      amount
+    );
+  }
+
+  /**
+   * Gera um payload PIX completo com todos os campos
+   */
   static generatePayload(
     pixKey: string,
     description: string,

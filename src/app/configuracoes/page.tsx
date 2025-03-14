@@ -11,8 +11,6 @@ interface ConfigPagamento {
   aceitaPix: boolean;
   chavePix: string;
   tipoPix: string;
-  nomeChavePix: string;
-  cidadeChavePix: string;
 }
 
 export default function ConfiguracoesPage() {
@@ -34,8 +32,6 @@ export default function ConfiguracoesPage() {
     aceitaPix: true,
     chavePix: '',
     tipoPix: 'cpf',
-    nomeChavePix: '',
-    cidadeChavePix: '',
   };
 
   const [configPagamento, setConfigPagamento] = useState(defaultConfigPagamento);
@@ -220,26 +216,12 @@ export default function ConfiguracoesPage() {
         if (configPagamento.aceitaPix) {
           console.log('Validando configuração PIX antes de enviar:', {
             chavePix: configPagamento.chavePix,
-            tipoPix: configPagamento.tipoPix,
-            nomeChavePix: configPagamento.nomeChavePix,
-            cidadeChavePix: configPagamento.cidadeChavePix
+            tipoPix: configPagamento.tipoPix
           });
           
           if (!configPagamento.chavePix || configPagamento.chavePix.trim() === '') {
             setSalvando(false);
             toast.error('A chave PIX não pode estar vazia.');
-            return;
-          }
-          
-          if (!configPagamento.nomeChavePix || configPagamento.nomeChavePix.trim() === '') {
-            setSalvando(false);
-            toast.error('O nome do beneficiário da chave PIX não pode estar vazio.');
-            return;
-          }
-          
-          if (!configPagamento.cidadeChavePix || configPagamento.cidadeChavePix.trim() === '') {
-            setSalvando(false);
-            toast.error('A cidade do beneficiário da chave PIX não pode estar vazia.');
             return;
           }
         }
@@ -541,32 +523,6 @@ export default function ConfiguracoesPage() {
                       }
                     </p>
                   )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nome cadastrado da Chave PIX
-                  </label>
-                  <input
-                    type="text"
-                    value={configPagamento.nomeChavePix}
-                    onChange={(e) => atualizarConfigPagamento('nomeChavePix', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    placeholder="Nome completo do titular da chave"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cidade do beneficiário da chave PIX
-                  </label>
-                  <input
-                    type="text"
-                    value={configPagamento.cidadeChavePix}
-                    onChange={(e) => atualizarConfigPagamento('cidadeChavePix', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    placeholder="Cidade onde a chave PIX foi registrada"
-                  />
                 </div>
               </>
             )}

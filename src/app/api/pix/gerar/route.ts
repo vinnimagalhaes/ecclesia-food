@@ -14,27 +14,37 @@ export async function POST(request: Request) {
     
     const { valor, chavePix, nomeChavePix, cidadeChavePix } = body;
 
-    // Validar os dados recebidos
-    if (!valor || !chavePix || !nomeChavePix || !cidadeChavePix) {
-      console.log('Dados incompletos:', { valor, chavePix, nomeChavePix, cidadeChavePix });
+    // Validar apenas os dados essenciais
+    if (!valor || !chavePix) {
+      console.log('Dados essenciais incompletos:', { valor, chavePix });
       return NextResponse.json(
-        { error: 'Dados incompletos para gerar o PIX' },
+        { error: 'Dados incompletos para gerar o PIX. É necessário fornecer valor e chave PIX.' },
         { status: 400 }
       );
     }
 
-    console.log('Gerando BRCode PIX com os dados:', { valor, chavePix, nomeChavePix, cidadeChavePix });
+    console.log('Gerando BRCode PIX simplificado com os dados:', { valor, chavePix });
     
-    // Gerar o código PIX (BRCode)
-    const txid = `ECCLESIA${Date.now()}`;
-    const brcode = PixUtils.generatePayload(
-      chavePix,
-      'Pagamento Ecclesia Food',
-      nomeChavePix,
-      cidadeChavePix,
-      txid,
-      valor
-    );
+    let brcode;
+    
+    // Se temos os dados completos, usar o método completo, caso contrário, usar o simplificado
+    if (nomeChavePix && cidadeChavePix) {
+      // Gerar o código PIX (BRCode) com todos os campos
+      console.log('Usando geração de PIX completa com nome e cidade');
+      const txid = `ECCLESIA${Date.now()}`;
+      brcode = PixUtils.generatePayload(
+        chavePix,
+        'Pagamento Ecclesia Food',
+        nomeChavePix,
+        cidadeChavePix,
+        txid,
+        valor
+      );
+    } else {
+      // Gerar o código PIX (BRCode) simplificado
+      console.log('Usando geração de PIX simplificada apenas com chave e valor');
+      brcode = PixUtils.generateSimplePayload(chavePix, valor);
+    }
     
     console.log('BRCode gerado com sucesso:', brcode);
 

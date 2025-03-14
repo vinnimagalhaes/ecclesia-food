@@ -135,30 +135,6 @@ export default function DiagnosticoPIXPage() {
                         <span>Chave PIX configurada</span>
                       </div>
                     )}
-                    
-                    {/* Nome Beneficiário */}
-                    {diagnostico.configExiste && diagnostico.aceitaPix && diagnostico.chaveConfigured && (
-                      <div className="flex items-center">
-                        {diagnostico.nomeConfigured ? (
-                          <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                        ) : (
-                          <XCircle className="h-5 w-5 text-red-500 mr-2" />
-                        )}
-                        <span>Nome do beneficiário configurado</span>
-                      </div>
-                    )}
-                    
-                    {/* Cidade Beneficiário */}
-                    {diagnostico.configExiste && diagnostico.aceitaPix && diagnostico.chaveConfigured && (
-                      <div className="flex items-center">
-                        {diagnostico.cidadeConfigured ? (
-                          <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                        ) : (
-                          <XCircle className="h-5 w-5 text-red-500 mr-2" />
-                        )}
-                        <span>Cidade do beneficiário configurada</span>
-                      </div>
-                    )}
                   </div>
                 </div>
                 
@@ -206,8 +182,6 @@ export default function DiagnosticoPIXPage() {
                   <li>Na seção <strong>Configurações de Pagamento</strong>, marque a opção <strong>PIX</strong></li>
                   <li>Selecione o <strong>Tipo da Chave PIX</strong> (CPF, CNPJ, E-mail, Telefone ou Chave Aleatória)</li>
                   <li>Digite sua <strong>Chave PIX</strong> no formato correto</li>
-                  <li>Preencha o <strong>Nome cadastrado da Chave PIX</strong> (exatamente como registrado no banco)</li>
-                  <li>Preencha a <strong>Cidade do beneficiário da chave PIX</strong></li>
                   <li>Clique em <strong>Salvar Configurações de Pagamento</strong></li>
                 </ol>
               </div>

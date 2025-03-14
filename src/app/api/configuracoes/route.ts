@@ -29,8 +29,6 @@ interface ConfigPagamento {
   aceitaPix: boolean;
   chavePix: string;
   tipoPix: string;
-  nomeChavePix: string;
-  cidadeChavePix: string;
   taxaServico: number;
 }
 
@@ -122,8 +120,6 @@ export async function GET(request: Request) {
         aceitaPix: true,
         chavePix: '',
         tipoPix: '',
-        nomeChavePix: '',
-        cidadeChavePix: '',
         taxaServico: 0,
       };
 

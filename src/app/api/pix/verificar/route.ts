@@ -68,32 +68,12 @@ export async function GET() {
         });
       }
 
-      // Verificar nome e cidade
-      const nomeOK = configuracao.nomeChavePix && configuracao.nomeChavePix.trim() !== '';
-      const cidadeOK = configuracao.cidadeChavePix && configuracao.cidadeChavePix.trim() !== '';
-
-      if (!nomeOK || !cidadeOK) {
-        return NextResponse.json({
-          status: 'ERROR',
-          configExiste: true,
-          aceitaPix: true,
-          chaveConfigured: true,
-          nomeConfigured: nomeOK,
-          cidadeConfigured: cidadeOK,
-          message: 'Configuração PIX incompleta: ' + 
-            (!nomeOK ? 'Nome do beneficiário não configurado. ' : '') +
-            (!cidadeOK ? 'Cidade do beneficiário não configurada.' : '')
-        });
-      }
-
       // Tudo OK
       return NextResponse.json({
         status: 'OK',
         configExiste: true,
         aceitaPix: true,
         chaveConfigured: true,
-        nomeConfigured: true,
-        cidadeConfigured: true,
         message: 'Configuração PIX completa',
         tipo: configuracao.tipoPix,
         // Não retornamos a chave PIX completa por questões de segurança

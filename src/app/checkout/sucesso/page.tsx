@@ -56,16 +56,16 @@ export default function SucessoPage() {
       const data = await response.json();
       console.log('Configurações recebidas:', data);
       console.log('Chave PIX encontrada:', data.configPagamento.chavePix);
-      console.log('Nome PIX encontrado:', data.configPagamento.nomeChavePix || data.perfilIgreja.nome);
-      console.log('Cidade PIX encontrada:', data.configPagamento.cidadeChavePix || data.perfilIgreja.cidade);
       
+      // Simplificando para usar apenas a chave PIX
       const config = {
         chavePix: data.configPagamento.chavePix,
+        // Mantendo opcional para compatibilidade com versão anterior
         nomeChavePix: data.configPagamento.nomeChavePix || data.perfilIgreja.nome,
         cidadeChavePix: data.configPagamento.cidadeChavePix || data.perfilIgreja.cidade
       };
       
-      console.log('Configuração PIX final:', config);
+      console.log('Configuração PIX final (simplificada):', config);
       setConfigPagamento(config);
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);

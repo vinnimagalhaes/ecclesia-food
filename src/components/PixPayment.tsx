@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/Button';
 interface PixPaymentProps {
   valor: number;
   chavePix: string;
-  nomeChavePix: string;
-  cidadeChavePix: string;
+  nomeChavePix?: string;
+  cidadeChavePix?: string;
 }
 
 export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: PixPaymentProps) {
@@ -33,7 +33,7 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
         console.log('- cidadeChavePix:', cidadeChavePix, typeof cidadeChavePix);
         console.log('- valor:', valor, typeof valor);
 
-        // Verificar se os dados necessários estão presentes
+        // Verificar se apenas os dados obrigatórios estão presentes
         if (!chavePix || chavePix.trim() === '') {
           console.error('Chave PIX não configurada ou vazia');
           setErro('Chave PIX não configurada. Entre em contato com o administrador.');
@@ -41,21 +41,13 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
           return;
         }
 
-        if (!nomeChavePix || nomeChavePix.trim() === '') {
-          console.error('Nome da chave PIX não configurado ou vazio');
-          setErro('Nome do beneficiário PIX não configurado. Entre em contato com o administrador.');
-          setCarregando(false);
-          return;
-        }
-
-        if (!cidadeChavePix || cidadeChavePix.trim() === '') {
-          console.error('Cidade da chave PIX não configurada ou vazia');
-          setErro('Cidade do beneficiário PIX não configurada. Entre em contato com o administrador.');
-          setCarregando(false);
-          return;
-        }
-
-        console.log('Enviando requisição para gerar PIX com dados:', { valor, chavePix, nomeChavePix, cidadeChavePix });
+        // Removendo as verificações dos campos opcionais
+        console.log('Enviando requisição para gerar PIX com dados:', { 
+          valor, 
+          chavePix,
+          ...(nomeChavePix && { nomeChavePix }),
+          ...(cidadeChavePix && { cidadeChavePix })
+        });
 
         const response = await fetch('/api/pix/gerar', {
           method: 'POST',

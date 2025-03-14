@@ -31,8 +31,6 @@ export async function GET() {
       aceitaPix: true,
       chavePix: '',
       tipoPix: '',
-      nomeChavePix: '',
-      cidadeChavePix: '',
       taxaServico: 0,
     };
 
