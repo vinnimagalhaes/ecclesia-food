@@ -52,6 +52,17 @@ export async function middleware(request: NextRequest) {
       '/checkout/sucesso'
     ];
 
+    // Lista de APIs públicas
+    const publicApiPaths = [
+      '/api/auth',
+      '/api/catalogo',
+      '/api/igrejas',
+      '/api/register',
+      '/api/church',
+      '/api/vendas/publica',
+      '/api/configuracoes'
+    ];
+
     // Lista de rotas que não precisam de verificação de perfil de igreja
     const bypassChurchCheck = [
       '/onboarding',
@@ -62,7 +73,7 @@ export async function middleware(request: NextRequest) {
       '/api/church',
       '/api/register',
       '/api/check-church-profile',
-      '/api/master'  // Adicionando a API master
+      '/api/master'
     ];
 
     // Verifica se a rota atual está na lista de rotas protegidas
@@ -80,26 +91,31 @@ export async function middleware(request: NextRequest) {
       pathname === path || pathname.startsWith(`${path}/`)
     );
 
+    // Verifica se é uma API pública
+    const isPublicApi = publicApiPaths.some(path =>
+      pathname.startsWith(path)
+    );
+
     // Verifica se é uma rota que não precisa de verificação de perfil
     const isBypassPath = bypassChurchCheck.some(path =>
       pathname === path || pathname.startsWith(`${path}/`)
     );
 
-    // Verifica se é uma rota de API protegida
-    const isProtectedApi = pathname.startsWith('/api/') && 
-      !pathname.startsWith('/api/auth') &&
-      !pathname.startsWith('/api/catalogo') &&
-      !pathname.startsWith('/api/igrejas') &&
-      !pathname.startsWith('/api/register') &&
-      !pathname.startsWith('/api/church') &&
-      !pathname.startsWith('/api/vendas/publica') &&
-      !pathname.startsWith('/api/configuracoes');  // Adicionando configurações como API pública
+    // Se for uma rota pública ou API pública, permite o acesso
+    if (isPublicPath || isPublicApi) {
+      console.log('[Middleware] Rota pública - acesso permitido');
+      return NextResponse.next();
+    }
+
+    // Verifica se é uma rota de API protegida (todas as APIs que não são públicas)
+    const isProtectedApi = pathname.startsWith('/api/') && !isPublicApi;
       
     console.log(`[Middleware] Análise da rota:`, {
       pathname,
       isProtectedPath,
       isSuperAdminPath,
       isPublicPath,
+      isPublicApi,
       isBypassPath,
       isProtectedApi,
       hasToken: !!token
