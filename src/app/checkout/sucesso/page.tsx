@@ -45,7 +45,7 @@ export default function SucessoPage() {
 
   const carregarConfiguracoes = async () => {
     try {
-      const response = await fetch('/api/configuracoes');
+      const response = await fetch('/api/configuracoes/publica');
       if (!response.ok) {
         throw new Error('Erro ao carregar configurações');
       }
