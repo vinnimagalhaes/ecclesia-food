@@ -18,11 +18,14 @@ export async function GET() {
     });
 
     if (!admin) {
+      console.log('Admin não encontrado - retornando erro 404');
       return NextResponse.json(
         { error: 'Configurações não encontradas' },
         { status: 404 }
       );
     }
+    
+    console.log('Admin encontrado:', admin.id);
 
     // Valores padrão
     const defaultConfigPagamento = {
@@ -35,17 +38,20 @@ export async function GET() {
     };
 
     // Buscar configurações de pagamento do SystemConfig
+    console.log(`Buscando configurações de pagamento para userId=${admin.id}`);
     const configPagamento = await db.systemConfig.findFirst({
       where: { 
         userId: admin.id,
         key: 'configPagamento'
       }
     });
+    console.log('Configuração obtida do banco:', configPagamento?.id || 'nenhuma');
 
     // Buscar os dados do perfil da igreja
     const churchProfile = await db.church.findUnique({
       where: { userId: admin.id }
     });
+    console.log('Perfil da igreja:', churchProfile?.id || 'nenhum');
 
     // Preparar resposta
     const configuracoes = {
@@ -56,20 +62,29 @@ export async function GET() {
       configPagamento: defaultConfigPagamento
     };
 
+    // Adicionar flag para debug
+    configuracoes.configPagamento.chavePix = configuracoes.configPagamento.chavePix || '';
+    console.log('chavePix inicial:', JSON.stringify(configuracoes.configPagamento.chavePix));
+
     // Atualizar configurações de pagamento se encontradas
     if (configPagamento) {
       try {
         const valor = JSON.parse(configPagamento.value);
-        console.log('Configuração de pagamento encontrada:', valor);
+        console.log('Valor JSON obtido da configuração:', JSON.stringify(valor, null, 2));
         
         // Verificar se a chave PIX está presente
         if (valor.chavePix) {
-          console.log('Chave PIX encontrada:', valor.chavePix);
+          console.log(`Chave PIX encontrada: "${valor.chavePix}" (${typeof valor.chavePix})`);
         } else {
-          console.log('Chave PIX não encontrada na configuração');
+          console.log('Chave PIX não encontrada ou vazia na configuração');
         }
         
         configuracoes.configPagamento = { ...defaultConfigPagamento, ...valor };
+        
+        // Log após a fusão das configurações
+        console.log(`chavePix após processamento: "${configuracoes.configPagamento.chavePix}" (${typeof configuracoes.configPagamento.chavePix})`);
+        console.log(`aceitaPix: ${configuracoes.configPagamento.aceitaPix}`);
+        console.log(`tipoPix: ${configuracoes.configPagamento.tipoPix}`);
       } catch (e) {
         console.error('Erro ao processar configuração de pagamento:', e);
       }
@@ -77,7 +92,10 @@ export async function GET() {
       console.log('Nenhuma configuração de pagamento encontrada no banco de dados');
     }
     
-    console.log('Configurações completas a serem retornadas:', configuracoes);
+    // Verificação final (sanitização)
+    configuracoes.configPagamento.chavePix = configuracoes.configPagamento.chavePix || '';
+    
+    console.log('Configurações completas a serem retornadas:', JSON.stringify(configuracoes, null, 2));
 
     return NextResponse.json(configuracoes);
   } catch (error) {

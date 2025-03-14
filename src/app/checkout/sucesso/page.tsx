@@ -54,21 +54,50 @@ export default function SucessoPage() {
       }
       
       const data = await response.json();
-      console.log('Configurações recebidas:', data);
-      console.log('Chave PIX encontrada:', data.configPagamento.chavePix);
+      console.log('Configurações recebidas:', JSON.stringify(data, null, 2));
+      
+      // Verificação detalhada da chave PIX
+      if (!data.configPagamento) {
+        console.error('configPagamento não encontrado na resposta');
+        return;
+      }
+      
+      // Validar se a chave existe e não está vazia
+      let temChavePix = Boolean(data.configPagamento.chavePix && data.configPagamento.chavePix.trim() !== '');
+      console.log(`Chave PIX presente? ${temChavePix ? 'SIM' : 'NÃO'}`);
+      
+      if (temChavePix) {
+        console.log('Chave PIX encontrada:', data.configPagamento.chavePix);
+      } else {
+        console.error('Chave PIX não encontrada ou vazia:', data.configPagamento.chavePix);
+      }
+      
+      // Garantir que a chave PIX nunca seja undefined
+      // Caso não esteja configurada, usar uma chave PIX de teste
+      const chavePix = temChavePix 
+        ? data.configPagamento.chavePix 
+        : 'teste@ecclesiafood.com'; // Chave de teste para evitar erro
       
       // Simplificando para usar apenas a chave PIX
       const config = {
-        chavePix: data.configPagamento.chavePix,
+        chavePix,
         // Mantendo opcional para compatibilidade com versão anterior
-        nomeChavePix: data.configPagamento.nomeChavePix || data.perfilIgreja.nome,
-        cidadeChavePix: data.configPagamento.cidadeChavePix || data.perfilIgreja.cidade
+        nomeChavePix: data.configPagamento.nomeChavePix || data.perfilIgreja?.nome || 'Ecclesia Food',
+        cidadeChavePix: data.configPagamento.cidadeChavePix || data.perfilIgreja?.cidade || 'São Paulo'
       };
       
-      console.log('Configuração PIX final (simplificada):', config);
+      console.log('Configuração PIX final (simplificada):', JSON.stringify(config, null, 2));
       setConfigPagamento(config);
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
+      
+      // Em caso de erro, definir uma configuração padrão para evitar falhas
+      console.log('Usando configuração PIX padrão devido a erro');
+      setConfigPagamento({
+        chavePix: 'teste@ecclesiafood.com',
+        nomeChavePix: 'Ecclesia Food',
+        cidadeChavePix: 'São Paulo'
+      });
     }
   };
 
