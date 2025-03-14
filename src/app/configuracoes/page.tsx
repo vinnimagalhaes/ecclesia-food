@@ -408,23 +408,6 @@ export default function ConfiguracoesPage() {
                 </div>
               </>
             )}
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo da Chave PIX
-              </label>
-              <select
-                value={configPagamento.tipoPix}
-                onChange={(e) => atualizarConfigPagamento('tipoPix', e.target.value)}
-                className="w-[250px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="cpf">CPF</option>
-                <option value="cnpj">CNPJ</option>
-                <option value="email">E-mail</option>
-                <option value="telefone">Telefone</option>
-                <option value="aleatoria">Chave Aleatória</option>
-              </select>
-            </div>
           </div>
           
           <div>
