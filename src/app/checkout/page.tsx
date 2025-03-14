@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { AppHeader } from '@/components/ui/AppHeader';
+import { PixPayment } from '@/components/PixPayment';
 
 // Tipos
 type ItemCarrinho = {
@@ -29,12 +30,22 @@ type FormularioCheckout = {
   observacoes: string;
 };
 
+type ConfigPagamento = {
+  aceitaDinheiro: boolean;
+  aceitaCartao: boolean;
+  aceitaPix: boolean;
+  chavePix: string;
+  nomeChavePix: string;
+  cidadeChavePix: string;
+};
+
 export default function CheckoutPage() {
   const router = useRouter();
   const [itens, setItens] = useState<ItemCarrinho[]>([]);
   const [loading, setLoading] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
+  const [configPagamento, setConfigPagamento] = useState<ConfigPagamento | null>(null);
   const [formulario, setFormulario] = useState<FormularioCheckout>({
     nome: '',
     email: '',
@@ -43,6 +54,29 @@ export default function CheckoutPage() {
     observacoes: ''
   });
   const [total, setTotal] = useState(0);
+
+  // Carregar configurações de pagamento
+  useEffect(() => {
+    const carregarConfiguracoes = async () => {
+      try {
+        const response = await fetch('/api/configuracoes');
+        if (!response.ok) {
+          throw new Error('Erro ao carregar configurações');
+        }
+        const data = await response.json();
+        setConfigPagamento({
+          ...data.configPagamento,
+          nomeChavePix: data.perfilIgreja.nome,
+          cidadeChavePix: data.perfilIgreja.cidade
+        });
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+        setError('Não foi possível carregar as configurações de pagamento');
+      }
+    };
+
+    carregarConfiguracoes();
+  }, []);
 
   // Carregar itens do localStorage
   useEffect(() => {
@@ -373,61 +407,77 @@ export default function CheckoutPage() {
                   </label>
                   
                   <div className="grid grid-cols-1 gap-2">
-                    <label className={`
-                      relative flex items-center p-3 rounded-md border cursor-pointer
-                      ${formulario.metodoPagamento === 'dinheiro' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:bg-gray-50'}
-                    `}>
-                      <input
-                        type="radio"
-                        name="metodoPagamento"
-                        value="dinheiro"
-                        checked={formulario.metodoPagamento === 'dinheiro'}
-                        onChange={() => atualizarFormulario('metodoPagamento', 'dinheiro')}
-                        className="sr-only"
-                      />
-                      <div className="flex items-center">
-                        <span className={`w-4 h-4 mr-2 rounded-full border flex-shrink-0 ${formulario.metodoPagamento === 'dinheiro' ? 'border-4 border-primary-500' : 'border border-gray-400'}`}></span>
-                        <span className="font-medium text-gray-700">Dinheiro</span>
-                      </div>
-                    </label>
+                    {configPagamento?.aceitaDinheiro && (
+                      <label className={`
+                        relative flex items-center p-3 rounded-md border cursor-pointer
+                        ${formulario.metodoPagamento === 'dinheiro' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:bg-gray-50'}
+                      `}>
+                        <input
+                          type="radio"
+                          name="metodoPagamento"
+                          value="dinheiro"
+                          checked={formulario.metodoPagamento === 'dinheiro'}
+                          onChange={() => atualizarFormulario('metodoPagamento', 'dinheiro')}
+                          className="sr-only"
+                        />
+                        <div className="flex items-center">
+                          <span className={`w-4 h-4 mr-2 rounded-full border flex-shrink-0 ${formulario.metodoPagamento === 'dinheiro' ? 'border-4 border-primary-500' : 'border border-gray-400'}`}></span>
+                          <span className="font-medium text-gray-700">Dinheiro</span>
+                        </div>
+                      </label>
+                    )}
                     
-                    <label className={`
-                      relative flex items-center p-3 rounded-md border cursor-pointer
-                      ${formulario.metodoPagamento === 'cartao' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:bg-gray-50'}
-                    `}>
-                      <input
-                        type="radio"
-                        name="metodoPagamento"
-                        value="cartao"
-                        checked={formulario.metodoPagamento === 'cartao'}
-                        onChange={() => atualizarFormulario('metodoPagamento', 'cartao')}
-                        className="sr-only"
-                      />
-                      <div className="flex items-center">
-                        <span className={`w-4 h-4 mr-2 rounded-full border flex-shrink-0 ${formulario.metodoPagamento === 'cartao' ? 'border-4 border-primary-500' : 'border border-gray-400'}`}></span>
-                        <span className="font-medium text-gray-700">Cartão</span>
-                      </div>
-                    </label>
+                    {configPagamento?.aceitaCartao && (
+                      <label className={`
+                        relative flex items-center p-3 rounded-md border cursor-pointer
+                        ${formulario.metodoPagamento === 'cartao' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:bg-gray-50'}
+                      `}>
+                        <input
+                          type="radio"
+                          name="metodoPagamento"
+                          value="cartao"
+                          checked={formulario.metodoPagamento === 'cartao'}
+                          onChange={() => atualizarFormulario('metodoPagamento', 'cartao')}
+                          className="sr-only"
+                        />
+                        <div className="flex items-center">
+                          <span className={`w-4 h-4 mr-2 rounded-full border flex-shrink-0 ${formulario.metodoPagamento === 'cartao' ? 'border-4 border-primary-500' : 'border border-gray-400'}`}></span>
+                          <span className="font-medium text-gray-700">Cartão</span>
+                        </div>
+                      </label>
+                    )}
                     
-                    <label className={`
-                      relative flex items-center p-3 rounded-md border cursor-pointer
-                      ${formulario.metodoPagamento === 'pix' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:bg-gray-50'}
-                    `}>
-                      <input
-                        type="radio"
-                        name="metodoPagamento"
-                        value="pix"
-                        checked={formulario.metodoPagamento === 'pix'}
-                        onChange={() => atualizarFormulario('metodoPagamento', 'pix')}
-                        className="sr-only"
-                      />
-                      <div className="flex items-center">
-                        <span className={`w-4 h-4 mr-2 rounded-full border flex-shrink-0 ${formulario.metodoPagamento === 'pix' ? 'border-4 border-primary-500' : 'border border-gray-400'}`}></span>
-                        <span className="font-medium text-gray-700">Pix</span>
-                      </div>
-                    </label>
+                    {configPagamento?.aceitaPix && (
+                      <label className={`
+                        relative flex items-center p-3 rounded-md border cursor-pointer
+                        ${formulario.metodoPagamento === 'pix' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:bg-gray-50'}
+                      `}>
+                        <input
+                          type="radio"
+                          name="metodoPagamento"
+                          value="pix"
+                          checked={formulario.metodoPagamento === 'pix'}
+                          onChange={() => atualizarFormulario('metodoPagamento', 'pix')}
+                          className="sr-only"
+                        />
+                        <div className="flex items-center">
+                          <span className={`w-4 h-4 mr-2 rounded-full border flex-shrink-0 ${formulario.metodoPagamento === 'pix' ? 'border-4 border-primary-500' : 'border border-gray-400'}`}></span>
+                          <span className="font-medium text-gray-700">Pix</span>
+                        </div>
+                      </label>
+                    )}
                   </div>
                 </div>
+
+                {/* Componente PixPayment */}
+                {formulario.metodoPagamento === 'pix' && configPagamento && (
+                  <PixPayment
+                    valor={total}
+                    chavePix={configPagamento.chavePix}
+                    nomeChavePix={configPagamento.nomeChavePix}
+                    cidadeChavePix={configPagamento.cidadeChavePix}
+                  />
+                )}
                 
                 <div>
                   <label htmlFor="observacoes" className="block text-sm font-medium text-gray-700 mb-1">
