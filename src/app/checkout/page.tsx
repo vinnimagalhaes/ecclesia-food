@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { AppHeader } from '@/components/ui/AppHeader';
-import { PixPayment } from '@/components/PixPayment';
 
 // Tipos
 type ItemCarrinho = {
@@ -475,16 +474,6 @@ export default function CheckoutPage() {
                     )}
                   </div>
                 </div>
-
-                {/* Componente PixPayment */}
-                {formulario.metodoPagamento === 'pix' && configPagamento && (
-                  <PixPayment
-                    valor={total}
-                    chavePix={configPagamento.chavePix}
-                    nomeChavePix={configPagamento.nomeChavePix}
-                    cidadeChavePix={configPagamento.cidadeChavePix}
-                  />
-                )}
                 
                 <div>
                   <label htmlFor="observacoes" className="block text-sm font-medium text-gray-700 mb-1">
