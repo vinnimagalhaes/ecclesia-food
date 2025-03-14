@@ -215,6 +215,34 @@ export default function ConfiguracoesPage() {
         }
         
         dados = configPagamento;
+        
+        // Verificar dados críticos da configuração PIX
+        if (configPagamento.aceitaPix) {
+          console.log('Validando configuração PIX antes de enviar:', {
+            chavePix: configPagamento.chavePix,
+            tipoPix: configPagamento.tipoPix,
+            nomeChavePix: configPagamento.nomeChavePix,
+            cidadeChavePix: configPagamento.cidadeChavePix
+          });
+          
+          if (!configPagamento.chavePix || configPagamento.chavePix.trim() === '') {
+            setSalvando(false);
+            toast.error('A chave PIX não pode estar vazia.');
+            return;
+          }
+          
+          if (!configPagamento.nomeChavePix || configPagamento.nomeChavePix.trim() === '') {
+            setSalvando(false);
+            toast.error('O nome do beneficiário da chave PIX não pode estar vazio.');
+            return;
+          }
+          
+          if (!configPagamento.cidadeChavePix || configPagamento.cidadeChavePix.trim() === '') {
+            setSalvando(false);
+            toast.error('A cidade do beneficiário da chave PIX não pode estar vazia.');
+            return;
+          }
+        }
       } else {
         toast.info('Funcionalidade não implementada completamente');
         setSalvando(false);
