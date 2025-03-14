@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import QRCode from 'qrcode';
 import { PixUtils } from '@/utils/PixUtils';
 
+// Forçar o uso do runtime Node.js
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     const { valor, chavePix, nomeChavePix, cidadeChavePix } = await request.json();
