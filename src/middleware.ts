@@ -92,7 +92,8 @@ export async function middleware(request: NextRequest) {
       !pathname.startsWith('/api/igrejas') &&
       !pathname.startsWith('/api/register') &&
       !pathname.startsWith('/api/church') &&
-      !pathname.startsWith('/api/vendas/publica');
+      !pathname.startsWith('/api/vendas/publica') &&
+      !pathname.startsWith('/api/configuracoes');  // Adicionando configurações como API pública
       
     console.log(`[Middleware] Análise da rota:`, {
       pathname,
