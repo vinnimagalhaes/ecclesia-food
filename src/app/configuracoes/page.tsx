@@ -93,6 +93,111 @@ export default function ConfiguracoesPage() {
     }));
   };
   
+  // Função para formatar CPF: 000.000.000-00
+  const formatarCPF = (valor: string) => {
+    // Remove tudo que não for dígito
+    const apenasDigitos = valor.replace(/\D/g, '');
+    
+    // Aplica a máscara
+    return apenasDigitos
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+      .slice(0, 14); // Limita ao tamanho máximo de um CPF formatado
+  };
+  
+  // Função para formatar CNPJ: 00.000.000/0001-00
+  const formatarCNPJ = (valor: string) => {
+    // Remove tudo que não for dígito
+    const apenasDigitos = valor.replace(/\D/g, '');
+    
+    // Aplica a máscara
+    return apenasDigitos
+      .replace(/(\d{2})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1/$2')
+      .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+      .slice(0, 18); // Limita ao tamanho máximo de um CNPJ formatado
+  };
+  
+  // Função para formatar telefone: +55 (00) 00000-0000
+  const formatarTelefone = (valor: string) => {
+    // Remove tudo que não for dígito
+    const apenasDigitos = valor.replace(/\D/g, '');
+    
+    // Aplica a máscara
+    if (apenasDigitos.length <= 2) {
+      return apenasDigitos;
+    }
+    if (apenasDigitos.length <= 4) {
+      return `+${apenasDigitos.slice(0, 2)} (${apenasDigitos.slice(2)}`;
+    }
+    if (apenasDigitos.length <= 6) {
+      return `+${apenasDigitos.slice(0, 2)} (${apenasDigitos.slice(2, 4)}) ${apenasDigitos.slice(4)}`;
+    }
+    if (apenasDigitos.length <= 11) {
+      return `+${apenasDigitos.slice(0, 2)} (${apenasDigitos.slice(2, 4)}) ${apenasDigitos.slice(4, 9)}-${apenasDigitos.slice(9)}`;
+    }
+    return `+${apenasDigitos.slice(0, 2)} (${apenasDigitos.slice(2, 4)}) ${apenasDigitos.slice(4, 9)}-${apenasDigitos.slice(9, 13)}`;
+  };
+  
+  // Função para validar email
+  const validarEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+  
+  // Função para atualizar a chave PIX com formatação adequada
+  const atualizarChavePix = (valor: string) => {
+    let valorFormatado = valor;
+    
+    switch (configPagamento.tipoPix) {
+      case 'cpf':
+        valorFormatado = formatarCPF(valor);
+        break;
+      case 'cnpj':
+        valorFormatado = formatarCNPJ(valor);
+        break;
+      case 'telefone':
+        valorFormatado = formatarTelefone(valor);
+        break;
+      case 'email':
+        // Email não precisa de formatação especial, mas podemos limitar caracteres inválidos
+        valorFormatado = valor.replace(/\s/g, ''); // Remove espaços
+        break;
+      case 'aleatoria':
+        // Chave aleatória geralmente é alfanumérica e não tem formatação especial
+        break;
+    }
+    
+    setConfigPagamento(prev => ({
+      ...prev,
+      chavePix: valorFormatado
+    }));
+  };
+  
+  // Verificar validade da chave PIX antes de salvar
+  const verificarChavePixValida = () => {
+    if (!configPagamento.aceitaPix || !configPagamento.chavePix) {
+      return true; // Não precisa validar se PIX não for aceito ou se a chave estiver vazia
+    }
+    
+    switch (configPagamento.tipoPix) {
+      case 'cpf':
+        return configPagamento.chavePix.length === 14; // 000.000.000-00
+      case 'cnpj':
+        return configPagamento.chavePix.length === 18; // 00.000.000/0001-00
+      case 'telefone':
+        return configPagamento.chavePix.length >= 19; // +55 (00) 00000-0000
+      case 'email':
+        return validarEmail(configPagamento.chavePix);
+      case 'aleatoria':
+        return configPagamento.chavePix.length > 0;
+      default:
+        return true;
+    }
+  };
+  
   const salvarConfiguracoes = async (tipo: string) => {
     try {
       let dados;
@@ -102,6 +207,13 @@ export default function ConfiguracoesPage() {
       if (tipo === 'perfil da igreja') {
         dados = perfilIgreja;
       } else if (tipo === 'pagamento') {
+        // Validar chave PIX antes de salvar
+        if (configPagamento.aceitaPix && configPagamento.chavePix && !verificarChavePixValida()) {
+          setSalvando(false);
+          toast.error(`Chave PIX inválida. Verifique o formato para o tipo ${configPagamento.tipoPix.toUpperCase()}.`);
+          return;
+        }
+        
         dados = configPagamento;
       } else {
         toast.info('Funcionalidade não implementada completamente');
@@ -351,7 +463,14 @@ export default function ConfiguracoesPage() {
                   </label>
                   <select
                     value={configPagamento.tipoPix}
-                    onChange={(e) => atualizarConfigPagamento('tipoPix', e.target.value)}
+                    onChange={(e) => {
+                      // Limpar a chave PIX ao mudar o tipo para evitar formatos inválidos
+                      setConfigPagamento(prev => ({
+                        ...prev,
+                        tipoPix: e.target.value,
+                        chavePix: ''
+                      }));
+                    }}
                     className="w-[250px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="cpf">CPF</option>
@@ -367,10 +486,14 @@ export default function ConfiguracoesPage() {
                     Chave PIX
                   </label>
                   <input
-                    type="text"
+                    type={configPagamento.tipoPix === 'email' ? 'email' : 'text'}
                     value={configPagamento.chavePix}
-                    onChange={(e) => atualizarConfigPagamento('chavePix', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    onChange={(e) => atualizarChavePix(e.target.value)}
+                    className={`w-full px-3 py-2 border ${
+                      configPagamento.chavePix && !verificarChavePixValida() 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-primary-500'
+                    } rounded-md focus:outline-none focus:ring-2`}
                     placeholder={
                       configPagamento.tipoPix === 'cpf' ? '000.000.000-00' :
                       configPagamento.tipoPix === 'cnpj' ? '00.000.000/0001-00' :
@@ -379,6 +502,17 @@ export default function ConfiguracoesPage() {
                       'Chave aleatória gerada pelo banco'
                     }
                   />
+                  {configPagamento.chavePix && !verificarChavePixValida() && (
+                    <p className="mt-1 text-sm text-red-500">
+                      Formato inválido para {
+                        configPagamento.tipoPix === 'cpf' ? 'CPF. Use: 000.000.000-00' :
+                        configPagamento.tipoPix === 'cnpj' ? 'CNPJ. Use: 00.000.000/0001-00' :
+                        configPagamento.tipoPix === 'email' ? 'e-mail. Use um e-mail válido' :
+                        configPagamento.tipoPix === 'telefone' ? 'telefone. Use: +55 (00) 00000-0000' :
+                        'chave aleatória'
+                      }
+                    </p>
+                  )}
                 </div>
 
                 <div>
