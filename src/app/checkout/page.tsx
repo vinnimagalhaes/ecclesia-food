@@ -255,7 +255,13 @@ export default function CheckoutPage() {
           precoUnitario: item.preco,
           productId: item.produtoId
         })),
-        observacoes: formulario.observacoes
+        observacoes: formulario.observacoes,
+        // Adicionar informações do PIX se for o método de pagamento selecionado
+        pixInfo: formulario.metodoPagamento === 'pix' ? {
+          chavePix: configPagamento?.chavePix,
+          nomeChavePix: configPagamento?.nomeChavePix,
+          cidadeChavePix: configPagamento?.cidadeChavePix
+        } : undefined
       };
       
       console.log('Dados do pedido:', dadosVenda);
@@ -290,7 +296,8 @@ export default function CheckoutPage() {
           total: total,
           data: new Date().toISOString(),
           cliente: formulario.nome,
-          itensQuantidade: itens.length
+          itensQuantidade: itens.length,
+          formaPagamento: formulario.metodoPagamento
         }));
       }
       
