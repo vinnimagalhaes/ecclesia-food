@@ -48,7 +48,8 @@ export async function middleware(request: NextRequest) {
       '/catalogo/rifas',
       '/catalogo/igrejas',
       '/carrinho',
-      '/checkout'
+      '/checkout',
+      '/checkout/sucesso'
     ];
 
     // Lista de rotas que não precisam de verificação de perfil de igreja
