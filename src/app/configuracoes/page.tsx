@@ -345,6 +345,23 @@ export default function ConfiguracoesPage() {
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tipo da Chave PIX
+                  </label>
+                  <select
+                    value={configPagamento.tipoPix}
+                    onChange={(e) => atualizarConfigPagamento('tipoPix', e.target.value)}
+                    className="w-[250px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="cpf">CPF</option>
+                    <option value="cnpj">CNPJ</option>
+                    <option value="email">E-mail</option>
+                    <option value="telefone">Telefone</option>
+                    <option value="aleatoria">Chave Aleatória</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Chave PIX
                   </label>
                   <input
@@ -352,7 +369,13 @@ export default function ConfiguracoesPage() {
                     value={configPagamento.chavePix}
                     onChange={(e) => atualizarConfigPagamento('chavePix', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    placeholder="E-mail, telefone, CPF ou chave aleatória"
+                    placeholder={
+                      configPagamento.tipoPix === 'cpf' ? '000.000.000-00' :
+                      configPagamento.tipoPix === 'cnpj' ? '00.000.000/0001-00' :
+                      configPagamento.tipoPix === 'email' ? 'exemplo@email.com' :
+                      configPagamento.tipoPix === 'telefone' ? '+55 (00) 00000-0000' :
+                      'Chave aleatória gerada pelo banco'
+                    }
                   />
                 </div>
 
