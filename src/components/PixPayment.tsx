@@ -55,28 +55,42 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
           ...(cidadeChavePix && { cidadeChavePix })
         });
 
-        const response = await fetch('/api/pix/gerar', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            valor,
-            chavePix: chavePixFinal,
-            nomeChavePix,
-            cidadeChavePix,
-          }),
-        });
+        try {
+          const response = await fetch('/api/pix/gerar', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              valor,
+              chavePix: chavePixFinal,
+              nomeChavePix,
+              cidadeChavePix,
+            }),
+          });
 
-        const data = await response.json();
+          // Log detalhado do status da resposta
+          console.log('Status da resposta:', response.status, response.statusText);
 
-        if (!response.ok) {
-          console.error('Resposta de erro da API:', data);
-          throw new Error(data.detalhes || data.error || 'Erro ao gerar código PIX');
+          const data = await response.json();
+          console.log('Resposta completa da API:', data);
+
+          if (!response.ok) {
+            console.error('Resposta de erro da API:', data);
+            throw new Error(data.detalhes || data.error || `Erro ao gerar código PIX (${response.status})`);
+          }
+
+          if (!data.qrcode || !data.brcode) {
+            console.error('Resposta incompleta da API (faltando qrcode ou brcode):', data);
+            throw new Error('Resposta incompleta do servidor');
+          }
+
+          setQrCodeUrl(data.qrcode);
+          setPixCopiaECola(data.brcode);
+        } catch (error) {
+          console.error('Erro na comunicação com a API:', error);
+          throw new Error(`Erro na comunicação: ${error instanceof Error ? error.message : 'Falha na requisição'}`);
         }
-
-        setQrCodeUrl(data.qrcode);
-        setPixCopiaECola(data.brcode);
       } catch (error) {
         console.error('Erro ao gerar PIX:', error);
         setErro(error instanceof Error ? 
