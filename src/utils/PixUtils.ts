@@ -6,14 +6,12 @@ export class PixUtils {
   private static ID_MERCHANT_ACCOUNT = '26';
   private static ID_MERCHANT_NAME = '59';
   private static ID_MERCHANT_CITY = '60';
-  private static ID_POSTAL_CODE = '61';
   private static ID_TRANSACTION_AMOUNT = '54';
   private static ID_COUNTRY_CODE = '58';
   private static ID_FIELD_ADDITIONAL_DATA = '62';
   private static ID_CRC16 = '63';
   private static PAYLOAD_FORMAT_INDICATOR = '01';
   private static COUNTRY_CODE = 'BR';
-  private static TRANSACTION_CURRENCY = '986';
 
   private static getValue(id: string, value: string): string {
     const size = value.length.toString().padStart(this.PAD_LEFT, '0');
