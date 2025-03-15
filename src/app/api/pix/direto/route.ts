@@ -5,6 +5,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import QRCode from 'qrcode';
 
+// Configuração para tornar a rota explicitamente dinâmica
+export const dynamic = 'force-dynamic';
+
 // Função para formatar a chave PIX com base no tipo
 function formatarChavePix(chavePix: string, tipoPix: string): string {
   console.log(`Formatando chave PIX: ${chavePix} do tipo: ${tipoPix}`);

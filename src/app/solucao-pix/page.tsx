@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { QrCode, Copy, CheckCircle, RefreshCw, Info, AlertCircle } from 'lucide-react';
 
+// Configuração para indicar que esta página lida com conteúdo dinâmico
+export const dynamic = 'force-dynamic';
+
 export default function SolucaoPixPage() {
   const [carregando, setCarregando] = useState(true);
   const [resultado, setResultado] = useState<any>(null);
