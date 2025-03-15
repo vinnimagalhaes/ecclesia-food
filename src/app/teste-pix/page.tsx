@@ -2,17 +2,19 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { QrCode, Copy, CheckCircle } from 'lucide-react';
+import { QrCode, Copy, CheckCircle, Info } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TestePixPage() {
   const [chave, setChave] = useState('');
+  const [tipoPix, setTipoPix] = useState('cpf');
   const [valor, setValor] = useState('1.00');
   const [carregando, setCarregando] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [pixCopiaECola, setPixCopiaECola] = useState<string>('');
   const [copiado, setCopiado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [ajudaVisivel, setAjudaVisivel] = useState(false);
 
   const gerarCodigoPix = async () => {
     if (!chave.trim()) {
@@ -37,6 +39,7 @@ export default function TestePixPage() {
         },
         body: JSON.stringify({
           chavePix: chave,
+          tipoPix,
           valor: valorNumerico
         }),
       });
@@ -75,17 +78,63 @@ export default function TestePixPage() {
       <div className="bg-white p-6 rounded-xl shadow-sm mb-6">
         <div className="space-y-4">
           <div>
-            <label htmlFor="chavePix" className="block text-sm font-medium text-gray-700 mb-1">
-              Sua Chave PIX
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="chavePix" className="block text-sm font-medium text-gray-700">
+                Sua Chave PIX
+              </label>
+              <button 
+                type="button" 
+                onClick={() => setAjudaVisivel(!ajudaVisivel)}
+                className="text-primary-500 text-sm flex items-center"
+              >
+                <Info size={16} className="mr-1" />
+                {ajudaVisivel ? 'Ocultar ajuda' : 'Mostrar ajuda'}
+              </button>
+            </div>
+            
+            {ajudaVisivel && (
+              <div className="bg-blue-50 p-4 rounded-md mb-2 text-sm text-blue-800">
+                <p className="font-semibold mb-2">Formatos corretos para chaves PIX:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li><strong>CPF:</strong> 12345678900 (apenas números)</li>
+                  <li><strong>Telefone:</strong> 11912345678 (DDD + número, sem 0, sem +55)</li>
+                  <li><strong>Email:</strong> seuemail@dominio.com</li>
+                  <li><strong>Chave aleatória:</strong> 123e4567-e89b-12d3-a456-426655440000</li>
+                </ul>
+                <p className="mt-2">O sistema automaticamente formatará a chave de acordo com o tipo selecionado.</p>
+              </div>
+            )}
+            
             <input
               id="chavePix"
               type="text"
               value={chave}
               onChange={(e) => setChave(e.target.value)}
-              placeholder="CPF, telefone, email ou chave aleatória"
+              placeholder={
+                tipoPix === 'cpf' ? '12345678900' :
+                tipoPix === 'telefone' ? '11912345678' :
+                tipoPix === 'email' ? 'seuemail@dominio.com' :
+                '123e4567-e89b-12d3-a456-426655440000'
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
+          </div>
+          
+          <div>
+            <label htmlFor="tipoPix" className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo da Chave
+            </label>
+            <select
+              id="tipoPix"
+              value={tipoPix}
+              onChange={(e) => setTipoPix(e.target.value)}
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md"
+            >
+              <option value="cpf">CPF</option>
+              <option value="telefone">Telefone</option>
+              <option value="email">Email</option>
+              <option value="aleatoria">Chave Aleatória</option>
+            </select>
           </div>
           
           <div>
@@ -163,6 +212,12 @@ export default function TestePixPage() {
                   )}
                 </Button>
               </div>
+            </div>
+
+            <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200">
+              <p className="text-sm text-yellow-800">
+                Se este código PIX não funcionar no seu aplicativo bancário, tente usando uma chave PIX de outro tipo ou verifique se o formato está correto.
+              </p>
             </div>
           </div>
         </div>

@@ -43,6 +43,17 @@ export async function GET() {
     diagnostico.adminEncontrado = true;
     console.log('Admin encontrado:', admin.id);
 
+    // Adicionar verificação de todas as configurações do usuário
+    console.log('Verificando todas as configurações do usuário...');
+    const allConfigs = await db.systemConfig.findMany({
+      where: { userId: admin.id }
+    });
+    
+    console.log(`Encontradas ${allConfigs.length} configurações para o usuário ${admin.id}:`);
+    allConfigs.forEach(config => {
+      console.log(`- Configuração: key=${config.key}, id=${config.id}`);
+    });
+    
     // Buscar configurações de pagamento do SystemConfig
     console.log(`Buscando configurações de pagamento para userId=${admin.id}`);
     const configPagamento = await db.systemConfig.findFirst({
@@ -60,6 +71,7 @@ export async function GET() {
 
     diagnostico.configPagamentoEncontrada = true;
     console.log('Configuração obtida do banco:', configPagamento.id);
+    console.log('Valor da configuração:', configPagamento.value);
 
     // Tentar parsear o valor da configuração
     try {

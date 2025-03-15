@@ -8,6 +8,39 @@ export const runtime = 'nodejs';
 // Tornar a rota dinâmica para evitar cacheamento
 export const dynamic = 'force-dynamic';
 
+/**
+ * Formata a chave PIX de acordo com o tipo
+ * @param {string} chavePix - A chave PIX
+ * @param {string} tipoPix - O tipo da chave PIX (cpf, email, telefone, aleatoria)
+ * @returns {string} - A chave PIX formatada
+ */
+function formatarChavePix(chavePix: string, tipoPix: string): string {
+  // Se não houver tipo, retornar a chave como está
+  if (!tipoPix) return chavePix.trim();
+  
+  const chave = chavePix.trim();
+  
+  switch (tipoPix.toLowerCase()) {
+    case 'cpf':
+      // Remove tudo que não for dígito
+      return chave.replace(/\D/g, '');
+    case 'telefone':
+      // Remove tudo que não for dígito e garante formato correto para telefone
+      const apenasDigitos = chave.replace(/\D/g, '');
+      // Remove o + e o código do país, se houver
+      const semCodigoPais = apenasDigitos.replace(/^55/, '');
+      // Se começar com 0, remove (alguns apps adicionam 0 antes do DDD)
+      return semCodigoPais.replace(/^0/, '');
+    case 'email':
+      // Email é usado como está, apenas garantindo lowercase
+      return chave.toLowerCase();
+    case 'aleatoria':
+    default:
+      // Chave aleatória é usada como está
+      return chave;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     console.log('Iniciando geração de PIX de teste');
@@ -25,28 +58,47 @@ export async function POST(request: Request) {
       );
     }
     
-    const { valor, chavePix } = body;
+    const { valor, chavePix, tipoPix = 'cpf' } = body;
 
     // Verificar se há uma chave PIX válida
-    const chavePixFinal = chavePix?.trim() || 'use-sua-chave-aqui'; // Coloque aqui sua chave PIX real para teste
+    if (!chavePix || chavePix.trim() === '') {
+      return NextResponse.json(
+        { error: 'Chave PIX não informada' },
+        { status: 400 }
+      );
+    }
 
-    console.log('Usando chave PIX de teste:', chavePixFinal);
+    // Formatar a chave PIX de acordo com o tipo
+    const chavePixFormatada = formatarChavePix(chavePix, tipoPix);
+    console.log(`Chave PIX formatada (${tipoPix}): "${chavePixFormatada}"`);
 
     // Garantir que temos um valor numérico válido
     const valorNumerico = typeof valor === 'number' && !isNaN(valor) && valor > 0
       ? valor
       : 1.00; // Valor padrão de 1 real
 
-    console.log('Gerando BRCode PIX simplificado com os dados:', { valorNumerico, chavePix: chavePixFinal });
+    console.log('Gerando BRCode PIX simplificado com os dados:', { 
+      valorNumerico, 
+      chavePixOriginal: chavePix,
+      chavePixFormatada,
+      tipoPix 
+    });
     
     let brcode;
     
     try {
-      // Sempre usar o método simplificado que é mais compatível com bancos
+      // Usar o método simplificado que é mais compatível com bancos
       console.log('Usando geração de PIX simplificada para maior compatibilidade');
-      brcode = PixUtils.generateSimplePayload(chavePixFinal, valorNumerico);
+      brcode = PixUtils.generateSimplePayload(chavePixFormatada, valorNumerico);
       
       console.log('BRCode gerado com sucesso:', brcode);
+      
+      // Analisar o brcode para debugging
+      console.log('Análise do BRCode:');
+      const pixKeyPart = brcode.match(/26\d{2}0014BR\.GOV\.BCB\.PIX01\d{2}(.*?)(?:\d{2}|$)/);
+      if (pixKeyPart && pixKeyPart[1]) {
+        console.log(`- Chave PIX extraída do BRCode: "${pixKeyPart[1]}"`);
+      }
     } catch (error) {
       console.error('Erro ao gerar o BRCode:', error);
       return NextResponse.json(
@@ -65,7 +117,8 @@ export async function POST(request: Request) {
       return NextResponse.json({
         brcode,
         qrcode,
-        chavePix: chavePixFinal, // Retornar a chave usada para referência
+        chavePix: chavePixFormatada,
+        tipoPix,
         valor: valorNumerico
       }, { status: 200 });
     } catch (error) {
