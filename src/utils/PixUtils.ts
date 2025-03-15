@@ -48,7 +48,6 @@ export class PixUtils {
     return this.getValue(this.ID_MERCHANT_ACCOUNT, merchantAccountString);
   }
 
-  // Removido parâmetro description não utilizado
   private static getAdditionalDataField(txid: string): string {
     return this.getValue(this.ID_FIELD_ADDITIONAL_DATA, this.getValue('05', txid));
   }
@@ -101,7 +100,6 @@ export class PixUtils {
 
     payload += this.getValue(this.ID_COUNTRY_CODE, this.COUNTRY_CODE);
 
-    // Chamada atualizada sem o parâmetro description
     payload += this.getAdditionalDataField(txid);
 
     payload += this.ID_CRC16 + '04';
@@ -113,10 +111,11 @@ export class PixUtils {
   /**
    * Gera um payload PIX completo com todos os campos
    * Mantido para compatibilidade com o código existente
+   * @param {string} description - Parâmetro mantido para compatibilidade, mas não utilizado
    */
   static generatePayload(
     pixKey: string,
-    description: string,
+    _description: string, // Prefixado com _ para indicar que é um parâmetro não utilizado
     merchantName: string,
     merchantCity: string,
     txid: string,
