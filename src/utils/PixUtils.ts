@@ -25,7 +25,7 @@ export class PixUtils {
     return this.getValue(this.ID_MERCHANT_ACCOUNT, merchantAccountString);
   }
 
-  private static getAdditionalDataField(description: string, txid: string): string {
+  private static getAdditionalDataField(txid: string): string {
     return this.getValue(this.ID_FIELD_ADDITIONAL_DATA, this.getValue('05', txid));
   }
 
@@ -77,7 +77,7 @@ export class PixUtils {
 
     payload += this.getValue(this.ID_COUNTRY_CODE, this.COUNTRY_CODE);
 
-    payload += this.getAdditionalDataField('', txid);
+    payload += this.getAdditionalDataField(txid);
 
     payload += this.ID_CRC16 + '04';
 
