@@ -25,6 +25,10 @@ function formatarChavePix(chavePix: string, tipoPix: string): string {
       if (chaveFormatada.length !== 11) {
         console.log('CPF inválido: não tem 11 dígitos');
       }
+      
+      // Alguns bancos podem requerer o CPF em formato específico
+      // Teste ambos os formatos se necessário
+      console.log('Usando CPF como chave PIX sem formatação');
       break;
       
     case 'cnpj':
@@ -39,22 +43,26 @@ function formatarChavePix(chavePix: string, tipoPix: string): string {
     case 'telefone':
       // Remove caracteres não numéricos
       chaveFormatada = chaveFormatada.replace(/\D/g, '');
-      // Adiciona +55 se não começar com +
+      
+      // Formato recomendado para telefone no PIX é +5511999999999
       if (!chaveFormatada.startsWith('+')) {
+        // Se começar com 55, garantir que tem o +
         if (chaveFormatada.startsWith('55')) {
           chaveFormatada = '+' + chaveFormatada;
         } else {
+          // Se não começar com 55, adicionar o prefixo completo
           chaveFormatada = '+55' + chaveFormatada;
         }
       }
       break;
       
     case 'email':
-      // Não precisa de formatação especial
+      // Email deve estar em minúsculas conforme recomendação do BACEN
+      chaveFormatada = chaveFormatada.toLowerCase();
       break;
       
     case 'aleatoria':
-      // Não precisa de formatação especial
+      // Chaves aleatórias devem ser usadas exatamente como estão
       break;
       
     default:

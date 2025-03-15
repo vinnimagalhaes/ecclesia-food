@@ -60,9 +60,11 @@ export class PixUtils {
     pixKey: string,
     amount: number
   ): string {
-    const merchantName = 'N';
-    const merchantCity = 'C';
-    const txid = `ECL${Date.now().toString().substring(0, 8)}`;
+    const merchantName = 'ECCLESIA';
+    const merchantCity = 'SAO PAULO';
+    // Gera um ID de transação compatível com o padrão esperado pelos bancos
+    const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const txid = `ECCLESIA${randomPart}`;
 
     return this.generateSimpleCompatiblePayload(
       pixKey,
@@ -83,14 +85,19 @@ export class PixUtils {
     txid: string,
     amount: number
   ): string {
+    // Formato do payload conforme especificação do BACEN
     let payload = this.getValue(this.ID_PAYLOAD_FORMAT, this.PAYLOAD_FORMAT_INDICATOR);
 
+    // Conta do recebedor (chave PIX)
     payload += this.getMerchantAccountInfo(pixKey);
 
-    payload += this.getValue(this.ID_MERCHANT_NAME, merchantName);
+    // Nome do recebedor - limitado a 25 caracteres
+    payload += this.getValue(this.ID_MERCHANT_NAME, merchantName.substring(0, 25));
 
-    payload += this.getValue(this.ID_MERCHANT_CITY, merchantCity);
+    // Cidade do recebedor - limitado a 15 caracteres
+    payload += this.getValue(this.ID_MERCHANT_CITY, merchantCity.substring(0, 15));
 
+    // Valor da transação
     if (amount > 0) {
       payload += this.getValue(
         this.ID_TRANSACTION_AMOUNT,
@@ -98,12 +105,18 @@ export class PixUtils {
       );
     }
 
+    // Código do país (Brasil)
     payload += this.getValue(this.ID_COUNTRY_CODE, this.COUNTRY_CODE);
 
-    payload += this.getAdditionalDataField(txid);
+    // Campo para dados adicionais (txid)
+    // Limita o tamanho do txid conforme recomendação
+    const txidLimitado = txid.replace(/[^a-zA-Z0-9]/g, '').substring(0, 25);
+    payload += this.getAdditionalDataField(txidLimitado);
 
+    // Adiciona o campo para o CRC16 que será calculado abaixo
     payload += this.ID_CRC16 + '04';
 
+    // Calcula o CRC16 do payload e adiciona ao final
     const crc16 = CRC16.compute(payload);
     return payload + crc16.toString(16).toUpperCase();
   }
