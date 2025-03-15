@@ -34,19 +34,15 @@ export function PixPayment({ valor, chavePix, nomeChavePix, cidadeChavePix }: Pi
         console.log('- valor:', valor, typeof valor);
 
         // Verificar se a chave PIX está presente
-        // Se não estiver configurada, usar uma fallback de telefone (mais compatível)
-        // Uma chave telefone é mais comumente aceita pelos apps bancários
-        const chavePixFinal = chavePix && chavePix.trim() !== ''
-          ? chavePix
-          : '11944707018'; // Fallback de telefone para desenvolvimento
-
-        // Verificar se apenas os dados obrigatórios estão presentes
-        if (!chavePixFinal || chavePixFinal.trim() === '') {
-          console.error('Chave PIX não configurada ou vazia mesmo após fallback');
+        // Não usar fallback - se não houver chave, exibir erro
+        if (!chavePix || chavePix.trim() === '') {
+          console.error('Chave PIX não configurada ou vazia');
           setErro('Chave PIX não configurada. Entre em contato com o administrador.');
           setCarregando(false);
           return;
         }
+
+        const chavePixFinal = chavePix.trim();
 
         // Usar nome e cidade mais simples (formato curto) para maior compatibilidade
         const nomeSimplificado = 'N';

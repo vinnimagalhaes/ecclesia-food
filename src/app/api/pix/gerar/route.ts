@@ -8,9 +8,7 @@ export const runtime = 'nodejs';
 // Tornar a rota dinâmica para evitar cacheamento
 export const dynamic = 'force-dynamic';
 
-// Chave PIX aleatória de telefone para demonstração (formato +5500000000000)
-// Esta é uma chave fictícia apenas para fallback
-const DEMO_PIX_KEY = '11944707018';
+// Removida a chave PIX de demonstração hardcoded
 
 export async function POST(request: Request) {
   try {
@@ -31,11 +29,17 @@ export async function POST(request: Request) {
     
     const { valor, chavePix: chavePixRecebida, nomeChavePix, cidadeChavePix } = body;
 
-    // Garantir que temos uma chave PIX usando um telefone de demonstração como fallback
-    // Em vez de email, usar telefone que é mais comumente aceito
-    const chavePix = chavePixRecebida && chavePixRecebida.trim() !== ''
-      ? chavePixRecebida
-      : DEMO_PIX_KEY; // Chave PIX de fallback (telefone no formato simplificado)
+    // Verificar se há uma chave PIX válida
+    // Não usar fallback - se não houver chave, retornar erro
+    if (!chavePixRecebida || chavePixRecebida.trim() === '') {
+      console.error('Chave PIX não fornecida ou vazia');
+      return NextResponse.json(
+        { error: 'Chave PIX não configurada. Configure uma chave PIX nas configurações do sistema.' },
+        { status: 400 }
+      );
+    }
+
+    const chavePix = chavePixRecebida.trim();
 
     // Garantir que temos um valor numérico válido
     const valorNumerico = typeof valor === 'number' && !isNaN(valor) && valor > 0
@@ -50,10 +54,10 @@ export async function POST(request: Request) {
     });
 
     // Validar apenas os dados essenciais
-    if (!valorNumerico || !chavePix) {
-      console.log('Dados essenciais incompletos mesmo após sanitização');
+    if (!valorNumerico) {
+      console.log('Valor inválido ou não fornecido');
       return NextResponse.json(
-        { error: 'Dados incompletos para gerar o PIX. É necessário fornecer valor e chave PIX.' },
+        { error: 'Valor inválido para gerar o PIX.' },
         { status: 400 }
       );
     }

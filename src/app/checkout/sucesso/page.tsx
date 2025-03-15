@@ -72,33 +72,26 @@ export default function SucessoPage() {
         console.error('Chave PIX não encontrada ou vazia:', data.configPagamento.chavePix);
       }
       
-      // Garantir que a chave PIX nunca seja undefined
-      // Usando um número de telefone como fallback (mais compatível que email)
-      const chavePix = temChavePix 
-        ? data.configPagamento.chavePix
-        : '11944707018'; // Número de telefone para maior compatibilidade
+      // Se não houver chave PIX configurada, não prosseguir com o componente PIX
+      if (!temChavePix) {
+        console.error('Não há chave PIX configurada, não será possível gerar o QR code');
+        return;
+      }
       
-      // Usar nome e cidade curtos para melhor compatibilidade
-      // Simplificando para usar apenas a chave PIX
+      // Usar apenas a chave PIX real configurada, sem fallback
       const config = {
-        chavePix,
+        chavePix: data.configPagamento.chavePix.trim(),
         // Usando nomes curtos para maior compatibilidade
         nomeChavePix: 'N',
         cidadeChavePix: 'C'
       };
       
-      console.log('Configuração PIX final (simplificada):', JSON.stringify(config, null, 2));
+      console.log('Configuração PIX final:', JSON.stringify(config, null, 2));
       setConfigPagamento(config);
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
-      
-      // Em caso de erro, definir uma configuração padrão para evitar falhas
-      console.log('Usando configuração PIX padrão devido a erro');
-      setConfigPagamento({
-        chavePix: '11944707018', // Usando telefone em vez de email
-        nomeChavePix: 'N',
-        cidadeChavePix: 'C'
-      });
+      // Em caso de erro, não definir configuração, apenas logar o erro
+      console.error('Não foi possível configurar o PIX devido a um erro');
     }
   };
 
