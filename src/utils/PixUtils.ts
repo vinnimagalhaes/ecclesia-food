@@ -1,4 +1,27 @@
-import { CRC16 } from './CRC16';
+// Implementando CRC16 diretamente no arquivo para evitar problemas de importação
+class CRC16 {
+  private static readonly POLYNOMIAL = 0x1021;
+  private static readonly INITIAL = 0xFFFF;
+
+  static compute(str: string): number {
+    let crc = this.INITIAL;
+    const bytes = new TextEncoder().encode(str);
+
+    for (const byte of bytes) {
+      crc ^= byte << 8;
+      for (let i = 0; i < 8; i++) {
+        if (crc & 0x8000) {
+          crc = (crc << 1) ^ this.POLYNOMIAL;
+        } else {
+          crc = crc << 1;
+        }
+        crc &= 0xFFFF;
+      }
+    }
+
+    return crc;
+  }
+}
 
 export class PixUtils {
   private static PAD_LEFT = 2;
@@ -25,6 +48,7 @@ export class PixUtils {
     return this.getValue(this.ID_MERCHANT_ACCOUNT, merchantAccountString);
   }
 
+  // Removido parâmetro description não utilizado
   private static getAdditionalDataField(txid: string): string {
     return this.getValue(this.ID_FIELD_ADDITIONAL_DATA, this.getValue('05', txid));
   }
@@ -77,6 +101,7 @@ export class PixUtils {
 
     payload += this.getValue(this.ID_COUNTRY_CODE, this.COUNTRY_CODE);
 
+    // Chamada atualizada sem o parâmetro description
     payload += this.getAdditionalDataField(txid);
 
     payload += this.ID_CRC16 + '04';
