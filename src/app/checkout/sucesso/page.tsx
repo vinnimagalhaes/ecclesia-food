@@ -25,7 +25,6 @@ const QR_CODE_PIX_ESTATICO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEA
 export default function SucessoPage() {
   const router = useRouter();
   const [pedido, setPedido] = useState<UltimoPedido | null>(null);
-  const [configPagamento, setConfigPagamento] = useState<any>(null);
   const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
@@ -39,68 +38,11 @@ export default function SucessoPage() {
     try {
       const ultimoPedido = JSON.parse(ultimoPedidoStr);
       setPedido(ultimoPedido);
-
-      // Se for pagamento PIX, carregar as configurações
-      if (ultimoPedido.formaPagamento === 'pix') {
-        carregarConfiguracoes();
-      }
     } catch (error) {
       console.error('Erro ao carregar informações do pedido:', error);
       router.push('/');
     }
   }, [router]);
-
-  const carregarConfiguracoes = async () => {
-    try {
-      console.log('Iniciando carregamento das configurações PIX...');
-      const response = await fetch('/api/configuracoes/publica');
-      
-      if (!response.ok) {
-        console.error('Erro na resposta da API de configurações:', response.status);
-        throw new Error('Erro ao carregar configurações');
-      }
-      
-      const data = await response.json();
-      console.log('Configurações recebidas:', JSON.stringify(data, null, 2));
-      
-      // Verificação detalhada da chave PIX
-      if (!data.configPagamento) {
-        console.error('configPagamento não encontrado na resposta');
-        return;
-      }
-      
-      // Validar se a chave existe e não está vazia
-      let temChavePix = Boolean(data.configPagamento.chavePix && data.configPagamento.chavePix.trim() !== '');
-      console.log(`Chave PIX presente? ${temChavePix ? 'SIM' : 'NÃO'}`);
-      
-      if (temChavePix) {
-        console.log('Chave PIX encontrada:', data.configPagamento.chavePix);
-      } else {
-        console.error('Chave PIX não encontrada ou vazia:', data.configPagamento.chavePix);
-      }
-      
-      // Se não houver chave PIX configurada, não prosseguir com o componente PIX
-      if (!temChavePix) {
-        console.error('Não há chave PIX configurada, não será possível gerar o QR code');
-        return;
-      }
-      
-      // Usar apenas a chave PIX real configurada, sem fallback
-      const config = {
-        chavePix: data.configPagamento.chavePix.trim(),
-        // Usando nomes curtos para maior compatibilidade
-        nomeChavePix: 'N',
-        cidadeChavePix: 'C'
-      };
-      
-      console.log('Configuração PIX final:', JSON.stringify(config, null, 2));
-      setConfigPagamento(config);
-    } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
-      // Em caso de erro, não definir configuração, apenas logar o erro
-      console.error('Não foi possível configurar o PIX devido a um erro');
-    }
-  };
 
   const copiarCodigoPix = async () => {
     try {
