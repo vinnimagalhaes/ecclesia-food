@@ -16,7 +16,6 @@ const QR_CODE_PIX_ESTATICO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEA
 export default function SolucaoPixPage() {
   const [carregando, setCarregando] = useState(true);
   const [copiado, setCopiado] = useState(false);
-  const [detalhesVisiveis, setDetalhesVisiveis] = useState(false);
 
   // Simulação de carregamento
   useEffect(() => {
