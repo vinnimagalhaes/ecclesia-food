@@ -37,7 +37,6 @@ export default function SucessoPage() {
   const [pedido, setPedido] = useState<UltimoPedido | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [configPagamento, setConfigPagamento] = useState<ConfigPagamento | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Recuperar informações do último pedido
@@ -68,7 +67,6 @@ export default function SucessoPage() {
         setConfigPagamento(data.configPagamento);
       } catch (error) {
         console.error('Erro ao carregar configurações:', error);
-        setError('Não foi possível carregar as configurações de pagamento');
       }
     };
 
