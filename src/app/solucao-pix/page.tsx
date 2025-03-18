@@ -4,6 +4,16 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { QrCode, Copy, CheckCircle } from 'lucide-react';
 
+interface ConfigPagamento {
+  aceitaDinheiro: boolean;
+  aceitaCartao: boolean;
+  aceitaPix: boolean;
+  chavePix: string;
+  tipoPix: string;
+  taxaServico: number;
+  qrCodePix: string;
+}
+
 // Configuração para indicar que esta página lida com conteúdo dinâmico
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +26,7 @@ const QR_CODE_PIX_ESTATICO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEA
 export default function SolucaoPixPage() {
   const [carregando, setCarregando] = useState(true);
   const [copiado, setCopiado] = useState(false);
+  const [configPagamento, setConfigPagamento] = useState<ConfigPagamento | null>(null);
 
   // Simulação de carregamento
   useEffect(() => {
@@ -24,6 +35,24 @@ export default function SolucaoPixPage() {
     }, 1500);
     
     return () => clearTimeout(timer);
+  }, []);
+
+  // Carregar configurações de pagamento
+  useEffect(() => {
+    const carregarConfiguracoes = async () => {
+      try {
+        const response = await fetch('/api/configuracoes/publica');
+        if (!response.ok) {
+          throw new Error('Erro ao carregar configurações');
+        }
+        const data = await response.json();
+        setConfigPagamento(data.configPagamento);
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+      }
+    };
+
+    carregarConfiguracoes();
   }, []);
 
   const copiarCodigoPix = async () => {
@@ -73,7 +102,7 @@ export default function SolucaoPixPage() {
               {/* QR Code */}
               <div className="flex flex-col items-center">
                 <img
-                  src={QR_CODE_PIX_ESTATICO}
+                  src={configPagamento?.qrCodePix || QR_CODE_PIX_ESTATICO}
                   alt="QR Code PIX"
                   className="w-64 h-64 border border-gray-200 rounded-lg p-2"
                 />

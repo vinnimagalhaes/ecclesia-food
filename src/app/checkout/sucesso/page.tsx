@@ -7,14 +7,24 @@ import { AppHeader } from '@/components/ui/AppHeader';
 import Link from 'next/link';
 import { QrCode, Copy, CheckCircle } from 'lucide-react';
 
-type UltimoPedido = {
+interface UltimoPedido {
   id: string;
   total: number;
   data: string;
   cliente: string;
   itensQuantidade: number;
-  formaPagamento: 'dinheiro' | 'cartao' | 'pix';
-};
+  formaPagamento: string;
+}
+
+interface ConfigPagamento {
+  aceitaDinheiro: boolean;
+  aceitaCartao: boolean;
+  aceitaPix: boolean;
+  chavePix: string;
+  tipoPix: string;
+  taxaServico: number;
+  qrCodePix: string;
+}
 
 // Código PIX estático para uso enquanto a geração dinâmica não funciona
 const CODIGO_PIX_ESTATICO = "00020126330014BR.GOV.BCB.PIX0111444707018905204000053039865802BR5924Vinicius Souza Magalhaes6009SAO PAULO62140510i7ImBv3mlq6304F3B4";
@@ -26,6 +36,8 @@ export default function SucessoPage() {
   const router = useRouter();
   const [pedido, setPedido] = useState<UltimoPedido | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [configPagamento, setConfigPagamento] = useState<ConfigPagamento | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Recuperar informações do último pedido
@@ -43,6 +55,25 @@ export default function SucessoPage() {
       router.push('/');
     }
   }, [router]);
+
+  // Carregar configurações de pagamento
+  useEffect(() => {
+    const carregarConfiguracoes = async () => {
+      try {
+        const response = await fetch('/api/configuracoes/publica');
+        if (!response.ok) {
+          throw new Error('Erro ao carregar configurações');
+        }
+        const data = await response.json();
+        setConfigPagamento(data.configPagamento);
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+        setError('Não foi possível carregar as configurações de pagamento');
+      }
+    };
+
+    carregarConfiguracoes();
+  }, []);
 
   const copiarCodigoPix = async () => {
     try {
@@ -103,10 +134,7 @@ export default function SucessoPage() {
                 <span className="font-medium">Total:</span> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pedido.total)}
               </p>
               <p className="text-sm text-gray-600">
-                <span className="font-medium">Forma de pagamento:</span> {
-                  pedido.formaPagamento === 'pix' ? 'PIX' :
-                  pedido.formaPagamento === 'cartao' ? 'Cartão' : 'Dinheiro'
-                }
+                <span className="font-medium">Forma de pagamento:</span> {pedido.formaPagamento}
               </p>
             </div>
           </div>
@@ -123,7 +151,7 @@ export default function SucessoPage() {
                 {/* QR Code */}
                 <div className="flex flex-col items-center">
                   <img
-                    src={QR_CODE_PIX_ESTATICO}
+                    src={configPagamento?.qrCodePix || QR_CODE_PIX_ESTATICO}
                     alt="QR Code PIX"
                     className="w-64 h-64 border border-gray-200 rounded-lg p-2"
                   />

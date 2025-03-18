@@ -30,6 +30,7 @@ interface ConfigPagamento {
   chavePix: string;
   tipoPix: string;
   taxaServico: number;
+  qrCodePix: string;
 }
 
 interface Configuracoes {
@@ -121,6 +122,7 @@ export async function GET(request: Request) {
         chavePix: '',
         tipoPix: '',
         taxaServico: 0,
+        qrCodePix: '',
       };
 
       // Inicializar com valores padrão
