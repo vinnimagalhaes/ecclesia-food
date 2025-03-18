@@ -149,7 +149,7 @@ export default function SucessoPage() {
                 {/* QR Code */}
                 <div className="flex flex-col items-center">
                   <img
-                    src={configPagamento?.qrCodePix || QR_CODE_PIX_ESTATICO}
+                    src={configPagamento?.qrCodePix}
                     alt="QR Code PIX"
                     className="w-64 h-64 border border-gray-200 rounded-lg p-2"
                   />
