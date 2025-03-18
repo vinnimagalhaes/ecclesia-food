@@ -145,11 +145,20 @@ export default function SucessoPage() {
               <div className="space-y-6">
                 {/* QR Code */}
                 <div className="flex flex-col items-center">
-                  <img
-                    src={configPagamento?.qrCodePix}
-                    alt="QR Code PIX"
-                    className="w-64 h-64 border border-gray-200 rounded-lg p-2"
-                  />
+                  {configPagamento?.qrCodePix ? (
+                    <img
+                      src={configPagamento.qrCodePix}
+                      alt="QR Code PIX"
+                      className="w-64 h-64 border border-gray-200 rounded-lg p-2"
+                    />
+                  ) : (
+                    <div className="w-64 h-64 border border-gray-200 rounded-lg p-2 flex items-center justify-center bg-gray-50">
+                      <p className="text-gray-500 text-sm text-center">
+                        QR Code PIX não configurado.<br/>
+                        Por favor, configure o QR code nas configurações.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Código Copia e Cola */}
