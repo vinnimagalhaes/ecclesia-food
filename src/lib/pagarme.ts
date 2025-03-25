@@ -50,31 +50,59 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
 
     // Validar dados antes de enviar
     if (!amount || amount <= 0) {
+      console.error('Valor inválido:', amount);
       throw new Error('Valor do pagamento inválido');
     }
 
-    if (!customer.name || !customer.email || !customer.document_number || !customer.phone) {
-      console.error('Dados do cliente incompletos:', {
-        name: customer.name,
-        email: customer.email,
-        document_number: customer.document_number,
-        phone: customer.phone
-      });
-      throw new Error('Dados do cliente incompletos');
+    console.log('Validando dados do cliente:', {
+      name: customer.name,
+      email: customer.email,
+      document_number: customer.document_number,
+      phone: customer.phone
+    });
+
+    if (!customer.name) {
+      console.error('Nome do cliente não fornecido');
+      throw new Error('Nome do cliente não fornecido');
+    }
+
+    if (!customer.email) {
+      console.error('Email do cliente não fornecido');
+      throw new Error('Email do cliente não fornecido');
+    }
+
+    if (!customer.document_number) {
+      console.error('Documento do cliente não fornecido');
+      throw new Error('Documento do cliente não fornecido');
+    }
+
+    if (!customer.phone) {
+      console.error('Telefone do cliente não fornecido');
+      throw new Error('Telefone do cliente não fornecido');
     }
 
     if (!orderId) {
+      console.error('ID do pedido não fornecido');
       throw new Error('ID do pedido não fornecido');
     }
 
     if (!items || items.length === 0) {
+      console.error('Nenhum item fornecido no pedido');
       throw new Error('Nenhum item fornecido no pedido');
     }
 
     // Formatar o telefone para o formato da Pagar.me
     const phone = customer.phone.replace(/\D/g, '');
+    console.log('Telefone formatado:', phone);
+
+    if (phone.length < 10) {
+      console.error('Telefone inválido:', phone);
+      throw new Error('Telefone do cliente inválido');
+    }
+
     const areaCode = phone.substring(0, 2);
     const number = phone.substring(2);
+    console.log('Telefone separado:', { areaCode, number });
 
     // Converter valor para centavos
     const amountInCents = Math.round(amount * 100);
