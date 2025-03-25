@@ -1,12 +1,16 @@
-if (!process.env.PAGARME_API_KEY) {
-  throw new Error('PAGARME_API_KEY não está definida');
-}
+import { PAGARME_API_KEY } from '@/config/env';
 
-const PAGARME_API_KEY = process.env.PAGARME_API_KEY;
+// URL base da API da Pagar.me
 const PAGARME_API_URL = 'https://api.pagar.me/core/v5';
 
+// Verificar se a chave da API está presente
+if (!PAGARME_API_KEY) {
+  console.error('PAGARME_API_KEY não está definida nas variáveis de ambiente');
+  throw new Error('PAGARME_API_KEY não está definida nas variáveis de ambiente');
+}
+
 console.log('Iniciando conexão com API da Pagar.me...');
-console.log('API Key presente:', !!process.env.PAGARME_API_KEY);
+console.log('API Key presente:', !!PAGARME_API_KEY);
 
 interface Customer {
   name: string;
@@ -101,26 +105,28 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
   }
 }
 
-export async function getTransactionStatus(transactionId: string) {
+export async function getTransactionStatus(orderId: string) {
   try {
-    console.log('Buscando status da transação:', transactionId);
+    console.log('Verificando status do pedido:', orderId);
 
-    const response = await fetch(`${PAGARME_API_URL}/orders/${transactionId}`, {
+    const response = await fetch(`${PAGARME_API_URL}/orders/${orderId}`, {
+      method: 'GET',
       headers: {
         'Authorization': `Basic ${Buffer.from(PAGARME_API_KEY + ':').toString('base64')}`,
+        'Content-Type': 'application/json',
       },
     });
 
     const data = await response.json();
-    console.log('Status da transação:', data);
+    console.log('Resposta da Pagar.me:', JSON.stringify(data, null, 2));
 
     if (!response.ok) {
-      throw new Error(data.message || 'Erro ao buscar status da transação');
+      throw new Error(data.message || 'Erro ao verificar status');
     }
 
     return data;
   } catch (error) {
-    console.error('Erro ao buscar status da transação:', error);
+    console.error('Erro ao verificar status:', error);
     throw error;
   }
 } 
