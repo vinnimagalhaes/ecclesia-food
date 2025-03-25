@@ -38,6 +38,11 @@ export async function POST(request: Request) {
         phone: body.customer.phone,
       },
       orderId: body.orderId,
+      items: body.items || [{
+        name: 'Pedido',
+        amount: body.amount,
+        quantity: 1,
+      }],
     });
 
     console.log('Resposta da Pagar.me:', paymentData);

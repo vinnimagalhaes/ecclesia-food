@@ -30,14 +30,20 @@ interface PaymentRequest {
   amount: number;
   customer: Customer;
   orderId: string;
+  items: Array<{
+    name: string;
+    amount: number;
+    quantity: number;
+  }>;
 }
 
-export async function createPixPayment({ amount, customer, orderId }: PaymentRequest) {
+export async function createPixPayment({ amount, customer, orderId, items }: PaymentRequest) {
   try {
     console.log('Iniciando criação de pagamento PIX:', {
       amount,
       customer,
       orderId,
+      items,
     });
 
     // Validar dados antes de enviar
@@ -51,6 +57,10 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
 
     if (!orderId) {
       throw new Error('ID do pedido não fornecido');
+    }
+
+    if (!items || items.length === 0) {
+      throw new Error('Nenhum item fornecido no pedido');
     }
 
     const requestBody = {
@@ -69,14 +79,12 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
           }
         } : undefined
       },
-      items: [
-        {
-          amount,
-          description: 'Pagamento via PIX',
-          quantity: 1,
-          code: 'PIX',
-        },
-      ],
+      items: items.map((item, index) => ({
+        amount: item.amount,
+        description: item.name,
+        quantity: item.quantity,
+        code: `ITEM_${index + 1}`,
+      })),
       payments: [
         {
           payment_method: 'pix',
