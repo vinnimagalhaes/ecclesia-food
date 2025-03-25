@@ -11,6 +11,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -69,6 +70,29 @@ function LoginForm() {
             placeholder="Senha"
           />
         </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <input
+            id="admin-mode"
+            name="admin-mode"
+            type="checkbox"
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            checked={isAdmin}
+            onChange={(e) => setIsAdmin(e.target.checked)}
+          />
+          <label htmlFor="admin-mode" className="ml-2 block text-sm text-gray-900">
+            Modo Administrativo
+          </label>
+        </div>
+        {isAdmin && (
+          <div className="text-sm">
+            <Link href="/auth/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+              Esqueceu sua senha?
+            </Link>
+          </div>
+        )}
       </div>
 
       <div>

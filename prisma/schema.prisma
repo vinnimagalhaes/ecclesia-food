@@ -34,23 +34,25 @@ model Session {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String?
-  email         String         @unique
-  emailVerified DateTime?
-  password      String?
-  image         String?
-  role          UserRole       @default(MEMBER)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  isActive      Boolean        @default(true)
-  accounts      Account[]
-  church        Church?        @relation("ChurchProfile")
-  events        Event[]        @relation("CreatedEvents")
-  products      Product[]      @relation("CreatedProducts")
-  sales         Sale[]         @relation("UserSales")
-  sessions      Session[]
-  configs       SystemConfig[] @relation("UserConfigs")
+  id              String    @id @default(cuid())
+  name            String?
+  email           String    @unique
+  password        String?
+  role            UserRole  @default(CUSTOMER)
+  emailVerified   DateTime?
+  image           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  isActive        Boolean   @default(true)
+  resetToken      String?   @unique
+  resetTokenExpiry DateTime?
+  accounts        Account[]
+  church          Church?   @relation("ChurchProfile")
+  events          Event[]   @relation("CreatedEvents")
+  products        Product[] @relation("CreatedProducts")
+  sales           Sale[]    @relation("UserSales")
+  sessions        Session[]
+  configs         SystemConfig[] @relation("UserConfigs")
 }
 
 model VerificationToken {
@@ -167,8 +169,9 @@ model Church {
 }
 
 enum UserRole {
-  MEMBER
   ADMIN
+  CUSTOMER
+  MEMBER
   SUPER_ADMIN
 }
 
