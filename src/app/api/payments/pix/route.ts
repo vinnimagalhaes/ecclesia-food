@@ -41,9 +41,8 @@ export async function POST(request: Request) {
 
     console.log('Resposta da Pagar.me:', paymentData);
 
-    // Extrair QR code da resposta
-    const qrCode = paymentData.charges?.[0]?.last_transaction?.qr_code;
-    if (!qrCode) {
+    // Verificar se temos o QR code
+    if (!paymentData.qr_code) {
       console.error('QR code não encontrado na resposta:', paymentData);
       return NextResponse.json(
         { error: 'QR code não encontrado na resposta' },
@@ -53,7 +52,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       id: paymentData.id,
-      qr_code: qrCode,
+      qr_code: paymentData.qr_code,
+      qr_code_url: paymentData.qr_code_url,
+      expires_at: paymentData.expires_at,
       status: paymentData.status,
     });
   } catch (error) {

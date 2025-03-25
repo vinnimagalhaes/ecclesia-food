@@ -110,7 +110,7 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
     });
 
     const data = await response.json();
-    console.log('Resposta da Pagar.me:', JSON.stringify(data, null, 2));
+    console.log('Resposta completa da Pagar.me:', JSON.stringify(data, null, 2));
 
     if (!response.ok) {
       console.error('Erro na resposta da Pagar.me:', {
@@ -121,7 +121,31 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
       throw new Error(data.message || 'Erro ao criar pagamento');
     }
 
-    return data;
+    // Verificar se temos os dados necessários
+    if (!data.charges || !Array.isArray(data.charges) || data.charges.length === 0) {
+      console.error('Resposta não contém charges:', data);
+      throw new Error('Resposta inválida da Pagar.me: charges não encontrados');
+    }
+
+    const charge = data.charges[0];
+    if (!charge.last_transaction) {
+      console.error('Charge não contém last_transaction:', charge);
+      throw new Error('Resposta inválida da Pagar.me: last_transaction não encontrado');
+    }
+
+    if (!charge.last_transaction.qr_code) {
+      console.error('Last transaction não contém qr_code:', charge.last_transaction);
+      throw new Error('Resposta inválida da Pagar.me: qr_code não encontrado');
+    }
+
+    return {
+      id: data.id,
+      status: data.status,
+      charges: data.charges,
+      qr_code: charge.last_transaction.qr_code,
+      qr_code_url: charge.last_transaction.qr_code_url,
+      expires_at: charge.last_transaction.expires_at,
+    };
   } catch (error) {
     console.error('Erro ao criar pagamento:', error);
     throw error;
