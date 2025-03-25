@@ -23,6 +23,7 @@ interface Customer {
   name: string;
   email: string;
   document_number: string;
+  phone?: string;  // Adicionando telefone opcional
 }
 
 interface PaymentRequest {
@@ -57,16 +58,16 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
       customer: {
         name: customer.name,
         email: customer.email,
-        document: customer.document_number.replace(/\D/g, ''), // Remove caracteres não numéricos
+        document: customer.document_number.replace(/\D/g, ''),
         type: 'individual',
         document_type: 'cpf',
-        phones: {
+        phones: customer.phone ? {
           mobile_phone: {
             country_code: '55',
-            area_code: '11',
-            number: '999999999'
+            area_code: customer.phone.substring(0, 2),
+            number: customer.phone.substring(2).replace(/\D/g, '')
           }
-        }
+        } : undefined
       },
       items: [
         {

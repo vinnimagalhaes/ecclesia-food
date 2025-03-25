@@ -35,6 +35,7 @@ export async function POST(request: Request) {
         name: body.customer.name,
         email: body.customer.email,
         document_number: body.customer.document_number,
+        phone: body.customer.phone,
       },
       orderId: body.orderId,
     });
