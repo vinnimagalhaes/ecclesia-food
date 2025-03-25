@@ -43,6 +43,7 @@ export async function POST(request: Request) {
         amount: body.amount,
         quantity: 1,
       }],
+      expiresIn: body.expiresIn || 3600, // 1 hora por padrão
     });
 
     console.log('Resposta da Pagar.me:', paymentData);

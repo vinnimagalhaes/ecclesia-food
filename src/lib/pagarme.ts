@@ -23,7 +23,7 @@ interface Customer {
   name: string;
   email: string;
   document_number: string;
-  phone?: string;  // Adicionando telefone opcional
+  phone: string;  // Agora é obrigatório
 }
 
 interface PaymentRequest {
@@ -35,15 +35,17 @@ interface PaymentRequest {
     amount: number;
     quantity: number;
   }>;
+  expiresIn?: number; // Tempo de expiração do PIX em segundos
 }
 
-export async function createPixPayment({ amount, customer, orderId, items }: PaymentRequest) {
+export async function createPixPayment({ amount, customer, orderId, items, expiresIn = 3600 }: PaymentRequest) {
   try {
     console.log('Iniciando criação de pagamento PIX:', {
       amount,
       customer,
       orderId,
       items,
+      expiresIn,
     });
 
     // Validar dados antes de enviar
@@ -51,7 +53,7 @@ export async function createPixPayment({ amount, customer, orderId, items }: Pay
       throw new Error('Valor do pagamento inválido');
     }
 
-    if (!customer.name || !customer.email || !customer.document_number) {
+    if (!customer.name || !customer.email || !customer.document_number || !customer.phone) {
       throw new Error('Dados do cliente incompletos');
     }
 
@@ -63,6 +65,11 @@ export async function createPixPayment({ amount, customer, orderId, items }: Pay
       throw new Error('Nenhum item fornecido no pedido');
     }
 
+    // Formatar o telefone para o formato da Pagar.me
+    const phone = customer.phone.replace(/\D/g, '');
+    const areaCode = phone.substring(0, 2);
+    const number = phone.substring(2);
+
     const requestBody = {
       code: orderId,
       customer: {
@@ -71,13 +78,13 @@ export async function createPixPayment({ amount, customer, orderId, items }: Pay
         document: customer.document_number.replace(/\D/g, ''),
         type: 'individual',
         document_type: 'cpf',
-        phones: customer.phone ? {
+        phones: {
           mobile_phone: {
             country_code: '55',
-            area_code: customer.phone.substring(0, 2),
-            number: customer.phone.substring(2).replace(/\D/g, '')
+            area_code: areaCode,
+            number: number
           }
-        } : undefined
+        }
       },
       items: items.map((item, index) => ({
         amount: item.amount,
@@ -89,7 +96,7 @@ export async function createPixPayment({ amount, customer, orderId, items }: Pay
         {
           payment_method: 'pix',
           pix: {
-            expires_in: 3600, // 1 hora
+            expires_in: expiresIn,
             additional_information: [
               {
                 name: 'Pedido',
@@ -105,9 +112,7 @@ export async function createPixPayment({ amount, customer, orderId, items }: Pay
 
     console.log('Enviando requisição para Pagar.me:', JSON.stringify(requestBody, null, 2));
 
-    // Criar o token de autenticação
     const authToken = Buffer.from(PAGARME_API_KEY + ':').toString('base64');
-    console.log('Token de autenticação gerado:', authToken.substring(0, 10) + '...');
 
     const response = await fetch(`${PAGARME_API_URL}/orders`, {
       method: 'POST',
@@ -118,6 +123,9 @@ export async function createPixPayment({ amount, customer, orderId, items }: Pay
       body: JSON.stringify(requestBody),
     });
 
+    console.log('Status da resposta:', response.status);
+    console.log('Headers da resposta:', Object.fromEntries(response.headers.entries()));
+
     const data = await response.json();
     console.log('Resposta completa da Pagar.me:', JSON.stringify(data, null, 2));
 
@@ -125,11 +133,11 @@ export async function createPixPayment({ amount, customer, orderId, items }: Pay
       console.error('Erro na resposta da Pagar.me:', {
         status: response.status,
         statusText: response.statusText,
-        data: data,
+        data,
         errors: data.errors,
         message: data.message,
       });
-      throw new Error(data.message || 'Erro ao criar pagamento');
+      throw new Error(data.message || 'Erro ao criar pagamento na Pagar.me');
     }
 
     // Verificar se temos os dados necessários
@@ -166,16 +174,34 @@ export async function createPixPayment({ amount, customer, orderId, items }: Pay
       throw new Error('Resposta inválida da Pagar.me: qr_code não encontrado');
     }
 
+    // Calcular data de expiração
+    const expiresAt = new Date();
+    expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
+
     return {
       id: data.id,
       status: data.status,
       charges: data.charges,
       qr_code: lastTransaction.qr_code || lastTransaction.qr_code_url,
       qr_code_url: lastTransaction.qr_code_url,
-      expires_at: lastTransaction.expires_at,
+      expires_at: expiresAt.toISOString(),
+      order_code: orderId,
+      customer: {
+        name: customer.name,
+        email: customer.email,
+        document: customer.document_number,
+        phone: customer.phone,
+      },
+      items: items.map(item => ({
+        name: item.name,
+        amount: item.amount,
+        quantity: item.quantity,
+        total: item.amount * item.quantity,
+      })),
+      total: amount,
     };
   } catch (error) {
-    console.error('Erro ao criar pagamento:', error);
+    console.error('Erro ao criar pagamento PIX:', error);
     throw error;
   }
 }
