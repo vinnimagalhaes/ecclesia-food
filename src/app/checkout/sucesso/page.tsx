@@ -94,7 +94,7 @@ export default function SucessoPage() {
           {pedido.formaPagamento === 'pix' && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <PixPayment
-                amount={pedido.total * 100} // Converter para centavos
+                amount={pedido.total}
                 customer={pedido.customer || {
                   name: pedido.cliente,
                   email: pedido.email || '',
