@@ -39,6 +39,10 @@ export default function ConfiguracoesPage() {
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [perfilSalvoComSucesso, setPerfilSalvoComSucesso] = useState(false);
+  const [senhaAtual, setSenhaAtual] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [alterandoSenha, setAlterandoSenha] = useState(false);
 
   // Carregar configurações da API ao iniciar
   useEffect(() => {
@@ -262,6 +266,79 @@ export default function ConfiguracoesPage() {
       toast.error('Erro ao salvar configurações');
     } finally {
       setSalvando(false);
+    }
+  };
+
+  // Função para alterar a senha do usuário
+  const alterarSenha = async () => {
+    try {
+      // Validações
+      if (!senhaAtual) {
+        toast.error('A senha atual é obrigatória');
+        return;
+      }
+      
+      if (!novaSenha) {
+        toast.error('A nova senha é obrigatória');
+        return;
+      }
+      
+      if (novaSenha !== confirmarSenha) {
+        toast.error('As senhas não coincidem');
+        return;
+      }
+      
+      if (novaSenha.length < 6) {
+        toast.error('A nova senha deve ter pelo menos 6 caracteres');
+        return;
+      }
+      
+      setAlterandoSenha(true);
+      
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: senhaAtual,
+          newPassword: novaSenha,
+        }),
+      });
+      
+      if (response.ok) {
+        toast.success('Senha alterada com sucesso!');
+        // Limpar os campos
+        setSenhaAtual('');
+        setNovaSenha('');
+        setConfirmarSenha('');
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Erro ao alterar senha');
+      }
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error);
+      toast.error('Ocorreu um erro ao alterar a senha');
+    } finally {
+      setAlterandoSenha(false);
+    }
+  };
+
+  // Função para encerrar outras sessões
+  const encerrarOutrasSessoes = async () => {
+    try {
+      const response = await fetch('/api/auth/sessions', {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        toast.success('Todas as outras sessões foram encerradas');
+      } else {
+        toast.error('Erro ao encerrar sessões');
+      }
+    } catch (error) {
+      console.error('Erro ao encerrar sessões:', error);
+      toast.error('Ocorreu um erro ao encerrar sessões');
     }
   };
 
@@ -687,6 +764,88 @@ export default function ConfiguracoesPage() {
             >
               <User size={16} />
               <span>Gerenciar Usuários</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Alteração de Senha */}
+        <div className="bg-white p-6 rounded-xl shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <User className="h-5 w-5 text-primary-500" />
+            <h2 className="text-xl font-semibold">Segurança da Conta</h2>
+          </div>
+          
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-4">Alterar Senha</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Senha Atual
+                </label>
+                <input
+                  type="password"
+                  value={senhaAtual}
+                  onChange={(e) => setSenhaAtual(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              
+              <div className="md:col-span-2 h-0 md:h-auto"></div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nova Senha
+                </label>
+                <input
+                  type="password"
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirmar Nova Senha
+                </label>
+                <input
+                  type="password"
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <Button
+                variant="primary"
+                className="flex items-center gap-2"
+                onClick={alterarSenha}
+                disabled={alterandoSenha}
+              >
+                <Save size={16} />
+                <span>Alterar Senha</span>
+              </Button>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-200 pt-4">
+            <h3 className="text-lg font-medium mb-4">Sessões Ativas</h3>
+            
+            <div className="mb-4">
+              <p className="text-gray-600">
+                Você está conectado neste dispositivo. Pode encerrar todas as outras sessões clicando no botão abaixo.
+              </p>
+            </div>
+            
+            <Button
+              variant="secondary"
+              className="flex items-center gap-2"
+              onClick={encerrarOutrasSessoes}
+            >
+              <span>Encerrar Outras Sessões</span>
             </Button>
           </div>
         </div>
