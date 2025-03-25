@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 const prisma = new PrismaClient();
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   try {
     const session = await getServerSession(authOptions);
     
