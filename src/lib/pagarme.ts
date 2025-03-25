@@ -75,6 +75,9 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
     const areaCode = phone?.substring(0, 2);
     const number = phone?.substring(2);
 
+    // Converter valor para centavos
+    const amountInCents = Math.round(amount * 100);
+
     const requestBody = {
       code: orderId,
       customer: {
@@ -92,7 +95,7 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
         } : undefined
       },
       items: items.map((item, index) => ({
-        amount: item.amount,
+        amount: Math.round(item.amount * 100), // Converter para centavos
         description: item.name,
         quantity: item.quantity,
         code: `ITEM_${index + 1}`,
@@ -169,6 +172,8 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
         status: lastTransaction.status,
         error: lastTransaction.error,
         message: lastTransaction.message,
+        details: lastTransaction.details,
+        gateway_response: lastTransaction.gateway_response,
       });
       throw new Error(`Falha na transação: ${lastTransaction.message || 'Erro desconhecido'}`);
     }
