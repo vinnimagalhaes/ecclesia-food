@@ -3,6 +3,9 @@ import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { sendEmail } from '@/lib/email';
 
+// Força esta rota a ser sempre dinâmica
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
