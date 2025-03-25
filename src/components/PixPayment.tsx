@@ -35,6 +35,19 @@ export function PixPayment({
         orderId,
       });
 
+      // Validar dados antes de enviar
+      if (!amount || amount <= 0) {
+        throw new Error('Valor do pagamento inválido');
+      }
+
+      if (!customer.name || !customer.email || !customer.document_number) {
+        throw new Error('Dados do cliente incompletos');
+      }
+
+      if (!orderId) {
+        throw new Error('ID do pedido não fornecido');
+      }
+
       const response = await fetch('/api/payments/pix', {
         method: 'POST',
         headers: {
@@ -55,6 +68,7 @@ export function PixPayment({
       }
 
       if (!data.data?.charges?.[0]?.last_transaction?.qr_code) {
+        console.error('Resposta completa:', data);
         throw new Error('QR Code não encontrado na resposta');
       }
 

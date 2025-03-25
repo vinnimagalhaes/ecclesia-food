@@ -40,6 +40,8 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
           name: customer.name,
           email: customer.email,
           document: customer.document_number,
+          type: 'individual',
+          document_type: 'cpf',
         },
         items: [
           {
@@ -54,9 +56,17 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
             payment_method: 'pix',
             pix: {
               expires_in: 3600, // 1 hora
+              additional_information: [
+                {
+                  name: 'Pedido',
+                  value: orderId,
+                },
+              ],
             },
           },
         ],
+        closed: true,
+        status: 'pending',
       }),
     });
 

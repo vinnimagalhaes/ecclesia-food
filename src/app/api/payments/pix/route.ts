@@ -14,10 +14,27 @@ export async function POST(request: Request) {
       orderId,
     });
 
-    if (!amount || !customer || !orderId) {
-      console.log('API Payments/PIX: Erro - Dados incompletos');
+    // Validações
+    if (!amount || amount <= 0) {
+      console.log('API Payments/PIX: Erro - Valor inválido');
       return NextResponse.json(
-        { error: 'Dados incompletos' },
+        { error: 'Valor do pagamento inválido' },
+        { status: 400 }
+      );
+    }
+
+    if (!customer || !customer.name || !customer.email || !customer.document_number) {
+      console.log('API Payments/PIX: Erro - Dados do cliente incompletos');
+      return NextResponse.json(
+        { error: 'Dados do cliente incompletos' },
+        { status: 400 }
+      );
+    }
+
+    if (!orderId) {
+      console.log('API Payments/PIX: Erro - ID do pedido não fornecido');
+      return NextResponse.json(
+        { error: 'ID do pedido não fornecido' },
         { status: 400 }
       );
     }
