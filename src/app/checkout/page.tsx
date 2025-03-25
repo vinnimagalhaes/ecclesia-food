@@ -25,6 +25,7 @@ type FormularioCheckout = {
   nome: string;
   email: string;
   telefone: string;
+  documento: string; // CPF ou CNPJ
   metodoPagamento: 'dinheiro' | 'cartao' | 'pix';
   observacoes: string;
 };
@@ -49,6 +50,7 @@ export default function CheckoutPage() {
     nome: '',
     email: '',
     telefone: '',
+    documento: '',
     metodoPagamento: 'dinheiro',
     observacoes: ''
   });
@@ -211,9 +213,16 @@ export default function CheckoutPage() {
   async function enviarPedido(e: React.FormEvent) {
     e.preventDefault();
     
-    // Validar apenas nome e telefone como obrigatórios
-    if (!formulario.nome || !formulario.telefone) {
+    // Validar campos obrigatórios
+    if (!formulario.nome || !formulario.telefone || !formulario.documento) {
       setError('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    // Validar formato do documento (CPF ou CNPJ)
+    const documentoLimpo = formulario.documento.replace(/\D/g, '');
+    if (documentoLimpo.length !== 11 && documentoLimpo.length !== 14) {
+      setError('CPF ou CNPJ inválido. Digite apenas números.');
       return;
     }
     
@@ -245,9 +254,10 @@ export default function CheckoutPage() {
         cliente: formulario.nome,
         email: formulario.email || undefined,
         telefone: formulario.telefone,
+        documento: formulario.documento,
         formaPagamento: formulario.metodoPagamento,
         total: total,
-        eventId: itens[0]?.eventId, // Usar o ID do evento do primeiro item
+        eventId: itens[0]?.eventId,
         itens: itens.map(item => ({
           nome: item.nome,
           quantidade: item.quantidade,
@@ -255,7 +265,6 @@ export default function CheckoutPage() {
           productId: item.produtoId
         })),
         observacoes: formulario.observacoes,
-        // Adicionar informações do PIX se for o método de pagamento selecionado
         pixInfo: formulario.metodoPagamento === 'pix' ? {
           chavePix: configPagamento?.chavePix,
           nomeChavePix: configPagamento?.nomeChavePix,
@@ -403,6 +412,21 @@ export default function CheckoutPage() {
                     value={formulario.telefone}
                     onChange={(e) => atualizarFormulario('telefone', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="documento" className="block text-sm font-medium text-gray-700 mb-1">
+                    CPF/CNPJ *
+                  </label>
+                  <input
+                    type="text"
+                    id="documento"
+                    value={formulario.documento}
+                    onChange={(e) => atualizarFormulario('documento', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="Digite apenas números"
                     required
                   />
                 </div>

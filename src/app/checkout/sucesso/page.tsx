@@ -16,7 +16,10 @@ interface UltimoPedido {
     name: string;
     email: string;
     document_number: string;
+    phone?: string;
   };
+  documento?: string;
+  telefone?: string;
 }
 
 export default function SucessoPage() {
@@ -94,7 +97,8 @@ export default function SucessoPage() {
                 customer={pedido.customer || {
                   name: pedido.cliente,
                   email: 'cliente@exemplo.com',
-                  document_number: '000.000.000-00'
+                  document_number: pedido.documento || '000.000.000-00',
+                  phone: pedido.telefone
                 }}
                 orderId={pedido.id}
                 onSuccess={() => {
