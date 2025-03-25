@@ -20,6 +20,7 @@ interface UltimoPedido {
   };
   documento?: string;
   telefone?: string;
+  email?: string;
 }
 
 export default function SucessoPage() {
@@ -96,7 +97,7 @@ export default function SucessoPage() {
                 amount={pedido.total * 100} // Converter para centavos
                 customer={pedido.customer || {
                   name: pedido.cliente,
-                  email: 'cliente@exemplo.com',
+                  email: pedido.email || 'cliente@exemplo.com',
                   document_number: pedido.documento || '000.000.000-00',
                   phone: pedido.telefone
                 }}

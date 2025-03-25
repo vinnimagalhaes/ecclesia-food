@@ -304,8 +304,17 @@ export default function CheckoutPage() {
           total: total,
           data: new Date().toISOString(),
           cliente: formulario.nome,
+          email: formulario.email,
+          telefone: formulario.telefone,
+          documento: formulario.documento,
           itensQuantidade: itens.length,
-          formaPagamento: formulario.metodoPagamento
+          formaPagamento: formulario.metodoPagamento,
+          customer: {
+            name: formulario.nome,
+            email: formulario.email || 'cliente@exemplo.com',
+            document_number: formulario.documento,
+            phone: formulario.telefone
+          }
         }));
       }
       
