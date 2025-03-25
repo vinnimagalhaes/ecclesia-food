@@ -9,8 +9,15 @@ if (!PAGARME_API_KEY) {
   throw new Error('PAGARME_API_KEY não está definida nas variáveis de ambiente');
 }
 
+// Validar formato da chave
+if (!PAGARME_API_KEY.startsWith('sk_')) {
+  console.error('PAGARME_API_KEY deve começar com "sk_"');
+  throw new Error('PAGARME_API_KEY inválida');
+}
+
 console.log('Iniciando conexão com API da Pagar.me...');
 console.log('API Key presente:', !!PAGARME_API_KEY);
+console.log('Ambiente:', PAGARME_API_KEY.startsWith('sk_test_') ? 'Teste' : 'Produção');
 
 interface Customer {
   name: string;
@@ -50,9 +57,16 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
       customer: {
         name: customer.name,
         email: customer.email,
-        document: customer.document_number,
+        document: customer.document_number.replace(/\D/g, ''), // Remove caracteres não numéricos
         type: 'individual',
         document_type: 'cpf',
+        phones: {
+          mobile_phone: {
+            country_code: '55',
+            area_code: '11',
+            number: '999999999'
+          }
+        }
       },
       items: [
         {
@@ -82,10 +96,14 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
 
     console.log('Enviando requisição para Pagar.me:', JSON.stringify(requestBody, null, 2));
 
+    // Criar o token de autenticação
+    const authToken = Buffer.from(PAGARME_API_KEY + ':').toString('base64');
+    console.log('Token de autenticação gerado:', authToken.substring(0, 10) + '...');
+
     const response = await fetch(`${PAGARME_API_URL}/orders`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${Buffer.from(PAGARME_API_KEY + ':').toString('base64')}`,
+        'Authorization': `Basic ${authToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
@@ -95,6 +113,11 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
     console.log('Resposta da Pagar.me:', JSON.stringify(data, null, 2));
 
     if (!response.ok) {
+      console.error('Erro na resposta da Pagar.me:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: data,
+      });
       throw new Error(data.message || 'Erro ao criar pagamento');
     }
 
@@ -109,10 +132,13 @@ export async function getTransactionStatus(orderId: string) {
   try {
     console.log('Verificando status do pedido:', orderId);
 
+    // Criar o token de autenticação
+    const authToken = Buffer.from(PAGARME_API_KEY + ':').toString('base64');
+
     const response = await fetch(`${PAGARME_API_URL}/orders/${orderId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Basic ${Buffer.from(PAGARME_API_KEY + ':').toString('base64')}`,
+        'Authorization': `Basic ${authToken}`,
         'Content-Type': 'application/json',
       },
     });
@@ -121,6 +147,11 @@ export async function getTransactionStatus(orderId: string) {
     console.log('Resposta da Pagar.me:', JSON.stringify(data, null, 2));
 
     if (!response.ok) {
+      console.error('Erro na resposta da Pagar.me:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: data,
+      });
       throw new Error(data.message || 'Erro ao verificar status');
     }
 

@@ -22,31 +22,37 @@ export function PixPayment({
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [error, setError] = useState<string>('');
+  const [paymentId, setPaymentId] = useState<string>('');
 
   useEffect(() => {
-    createPayment();
+    handlePayment();
   }, []);
 
-  const createPayment = async () => {
+  const handlePayment = async () => {
     try {
+      setIsLoading(true);
+      setError('');
+
+      // Validar dados do cliente
+      if (!customer.name || !customer.email || !customer.document_number) {
+        throw new Error('Dados do cliente incompletos');
+      }
+
+      // Validar valor
+      if (!amount || amount <= 0) {
+        throw new Error('Valor do pagamento inválido');
+      }
+
+      // Validar ID do pedido
+      if (!orderId) {
+        throw new Error('ID do pedido não fornecido');
+      }
+
       console.log('Iniciando criação de pagamento PIX:', {
         amount,
         customer,
         orderId,
       });
-
-      // Validar dados antes de enviar
-      if (!amount || amount <= 0) {
-        throw new Error('Valor do pagamento inválido');
-      }
-
-      if (!customer.name || !customer.email || !customer.document_number) {
-        throw new Error('Dados do cliente incompletos');
-      }
-
-      if (!orderId) {
-        throw new Error('ID do pedido não fornecido');
-      }
 
       const response = await fetch('/api/payments/pix', {
         method: 'POST',
@@ -55,7 +61,11 @@ export function PixPayment({
         },
         body: JSON.stringify({
           amount,
-          customer,
+          customer: {
+            name: customer.name,
+            email: customer.email,
+            document_number: customer.document_number.replace(/\D/g, ''), // Remove caracteres não numéricos
+          },
           orderId,
         }),
       });
@@ -67,29 +77,27 @@ export function PixPayment({
         throw new Error(data.error || 'Erro ao criar pagamento');
       }
 
-      if (!data.data?.charges?.[0]?.last_transaction?.qr_code) {
-        console.error('Resposta completa:', data);
-        throw new Error('QR Code não encontrado na resposta');
+      if (!data.qr_code) {
+        throw new Error('QR code não encontrado na resposta');
       }
 
-      setQrCode(data.data.charges[0].last_transaction.qr_code);
-      setIsLoading(false);
-      startStatusCheck(orderId);
-    } catch (error) {
-      console.error('Erro detalhado:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar pagamento PIX';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      setQrCode(data.qr_code);
+      setPaymentId(data.id);
+      startStatusCheck();
+    } catch (err) {
+      console.error('Erro ao criar pagamento:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao criar pagamento');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  const startStatusCheck = (id: string) => {
+  const startStatusCheck = () => {
     setIsCheckingStatus(true);
     const interval = setInterval(async () => {
       try {
-        console.log('Verificando status do pedido:', id);
-        const response = await fetch(`/api/payments/pix?transactionId=${id}`);
+        console.log('Verificando status do pedido:', paymentId);
+        const response = await fetch(`/api/payments/pix?transactionId=${paymentId}`);
         const data = await response.json();
         console.log('Status do pedido:', data);
 
@@ -129,7 +137,7 @@ export function PixPayment({
           <p className="text-red-700">{error}</p>
         </div>
         <button
-          onClick={createPayment}
+          onClick={handlePayment}
           className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
         >
           Tentar novamente
