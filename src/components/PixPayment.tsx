@@ -7,6 +7,7 @@ interface PixPaymentProps {
     name: string;
     email: string;
     document_number: string;
+    phone?: string;
   };
   orderId: string;
   onSuccess?: () => void;
@@ -65,6 +66,7 @@ export function PixPayment({
             name: customer.name,
             email: customer.email,
             document_number: customer.document_number.replace(/\D/g, ''), // Remove caracteres não numéricos
+            phone: customer.phone,
           },
           orderId,
         }),
