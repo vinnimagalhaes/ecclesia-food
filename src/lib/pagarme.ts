@@ -53,11 +53,12 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
       throw new Error('Valor do pagamento inválido');
     }
 
-    if (!customer.name || !customer.email || !customer.document_number) {
+    if (!customer.name || !customer.email || !customer.document_number || !customer.phone) {
       console.error('Dados do cliente incompletos:', {
         name: customer.name,
         email: customer.email,
-        document_number: customer.document_number
+        document_number: customer.document_number,
+        phone: customer.phone
       });
       throw new Error('Dados do cliente incompletos');
     }
@@ -71,9 +72,9 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
     }
 
     // Formatar o telefone para o formato da Pagar.me
-    const phone = customer.phone?.replace(/\D/g, '');
-    const areaCode = phone?.substring(0, 2);
-    const number = phone?.substring(2);
+    const phone = customer.phone.replace(/\D/g, '');
+    const areaCode = phone.substring(0, 2);
+    const number = phone.substring(2);
 
     // Converter valor para centavos
     const amountInCents = Math.round(amount * 100);
@@ -86,13 +87,13 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
         document: customer.document_number.replace(/\D/g, ''),
         type: 'individual',
         document_type: 'cpf',
-        phones: phone ? {
+        phones: {
           mobile_phone: {
             country_code: '55',
             area_code: areaCode,
             number: number
           }
-        } : undefined
+        }
       },
       items: items.map((item, index) => ({
         amount: Math.round(item.amount * 100), // Converter para centavos
