@@ -117,6 +117,8 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
         status: response.status,
         statusText: response.statusText,
         data: data,
+        errors: data.errors,
+        message: data.message,
       });
       throw new Error(data.message || 'Erro ao criar pagamento');
     }
@@ -138,6 +140,16 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
 
     const lastTransaction = charge.last_transaction;
     console.log('Última transação:', JSON.stringify(lastTransaction, null, 2));
+
+    // Verificar status da transação
+    if (lastTransaction.status === 'failed') {
+      console.error('Transação falhou:', {
+        status: lastTransaction.status,
+        error: lastTransaction.error,
+        message: lastTransaction.message,
+      });
+      throw new Error(`Falha na transação: ${lastTransaction.message || 'Erro desconhecido'}`);
+    }
 
     // Verificar se temos o QR code
     if (!lastTransaction.qr_code && !lastTransaction.qr_code_url) {

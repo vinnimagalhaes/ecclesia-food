@@ -45,7 +45,10 @@ export async function POST(request: Request) {
     if (!paymentData.qr_code) {
       console.error('QR code não encontrado na resposta:', paymentData);
       return NextResponse.json(
-        { error: 'QR code não encontrado na resposta' },
+        { 
+          error: 'QR code não encontrado na resposta',
+          details: paymentData
+        },
         { status: 500 }
       );
     }
@@ -56,11 +59,16 @@ export async function POST(request: Request) {
       qr_code_url: paymentData.qr_code_url,
       expires_at: paymentData.expires_at,
       status: paymentData.status,
+      charge_id: paymentData.charges?.[0]?.id,
+      transaction_id: paymentData.charges?.[0]?.last_transaction?.id,
     });
   } catch (error) {
     console.error('Erro ao processar pagamento:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erro ao processar pagamento' },
+      { 
+        error: error instanceof Error ? error.message : 'Erro ao processar pagamento',
+        details: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
