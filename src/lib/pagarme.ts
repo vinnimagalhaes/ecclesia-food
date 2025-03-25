@@ -128,13 +128,20 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
     }
 
     const charge = data.charges[0];
+    console.log('Charge encontrado:', JSON.stringify(charge, null, 2));
+
+    // Verificar se temos a última transação
     if (!charge.last_transaction) {
       console.error('Charge não contém last_transaction:', charge);
       throw new Error('Resposta inválida da Pagar.me: last_transaction não encontrado');
     }
 
-    if (!charge.last_transaction.qr_code) {
-      console.error('Last transaction não contém qr_code:', charge.last_transaction);
+    const lastTransaction = charge.last_transaction;
+    console.log('Última transação:', JSON.stringify(lastTransaction, null, 2));
+
+    // Verificar se temos o QR code
+    if (!lastTransaction.qr_code && !lastTransaction.qr_code_url) {
+      console.error('Last transaction não contém qr_code ou qr_code_url:', lastTransaction);
       throw new Error('Resposta inválida da Pagar.me: qr_code não encontrado');
     }
 
@@ -142,9 +149,9 @@ export async function createPixPayment({ amount, customer, orderId }: PaymentReq
       id: data.id,
       status: data.status,
       charges: data.charges,
-      qr_code: charge.last_transaction.qr_code,
-      qr_code_url: charge.last_transaction.qr_code_url,
-      expires_at: charge.last_transaction.expires_at,
+      qr_code: lastTransaction.qr_code || lastTransaction.qr_code_url,
+      qr_code_url: lastTransaction.qr_code_url,
+      expires_at: lastTransaction.expires_at,
     };
   } catch (error) {
     console.error('Erro ao criar pagamento:', error);
