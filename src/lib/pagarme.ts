@@ -174,6 +174,8 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
         data,
         errors: data.errors,
         message: data.message,
+        details: data.details,
+        gateway_response: data.gateway_response,
       });
       throw new Error(data.message || 'Erro ao criar pagamento na Pagar.me');
     }
