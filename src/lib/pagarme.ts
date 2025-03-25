@@ -53,7 +53,12 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
       throw new Error('Valor do pagamento inválido');
     }
 
-    if (!customer.name || !customer.email || !customer.document_number || !customer.phone) {
+    if (!customer.name || !customer.email || !customer.document_number) {
+      console.error('Dados do cliente incompletos:', {
+        name: customer.name,
+        email: customer.email,
+        document_number: customer.document_number
+      });
       throw new Error('Dados do cliente incompletos');
     }
 
@@ -66,9 +71,9 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
     }
 
     // Formatar o telefone para o formato da Pagar.me
-    const phone = customer.phone.replace(/\D/g, '');
-    const areaCode = phone.substring(0, 2);
-    const number = phone.substring(2);
+    const phone = customer.phone?.replace(/\D/g, '');
+    const areaCode = phone?.substring(0, 2);
+    const number = phone?.substring(2);
 
     const requestBody = {
       code: orderId,
@@ -78,13 +83,13 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
         document: customer.document_number.replace(/\D/g, ''),
         type: 'individual',
         document_type: 'cpf',
-        phones: {
+        phones: phone ? {
           mobile_phone: {
             country_code: '55',
             area_code: areaCode,
             number: number
           }
-        }
+        } : undefined
       },
       items: items.map((item, index) => ({
         amount: item.amount,
