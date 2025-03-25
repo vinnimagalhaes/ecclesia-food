@@ -117,6 +117,7 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
       ],
       closed: true,
       status: 'pending',
+      amount: amountInCents, // Adicionar o valor total em centavos
     };
 
     console.log('Enviando requisição para Pagar.me:', JSON.stringify(requestBody, null, 2));
@@ -176,7 +177,7 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
         details: lastTransaction.details,
         gateway_response: lastTransaction.gateway_response,
       });
-      throw new Error(`Falha na transação: ${lastTransaction.message || 'Erro desconhecido'}`);
+      throw new Error(`Falha na transação: ${lastTransaction.message || lastTransaction.error || 'Erro desconhecido'}`);
     }
 
     // Verificar se temos o QR code
