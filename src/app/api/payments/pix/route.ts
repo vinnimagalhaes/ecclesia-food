@@ -3,63 +3,51 @@ import { createPixPayment, getTransactionStatus } from '@/lib/pagarme';
 
 export async function POST(request: Request) {
   try {
-    console.log('API Payments/PIX: Iniciando processamento POST');
+    console.log('Recebida requisição de pagamento PIX');
     
     const body = await request.json();
-    const { amount, customer, orderId } = body;
+    console.log('Dados recebidos:', JSON.stringify(body, null, 2));
 
-    console.log('Recebendo requisição de pagamento PIX:', {
-      amount,
-      customer,
-      orderId,
-    });
-
-    // Validações
-    if (!amount || amount <= 0) {
-      console.log('API Payments/PIX: Erro - Valor inválido');
+    // Validar dados
+    if (!body.amount || body.amount <= 0) {
+      console.error('Valor inválido:', body.amount);
       return NextResponse.json(
         { error: 'Valor do pagamento inválido' },
         { status: 400 }
       );
     }
 
-    if (!customer || !customer.name || !customer.email || !customer.document_number) {
-      console.log('API Payments/PIX: Erro - Dados do cliente incompletos');
+    if (!body.customer?.name || !body.customer?.email || !body.customer?.document_number) {
+      console.error('Dados do cliente incompletos:', body.customer);
       return NextResponse.json(
         { error: 'Dados do cliente incompletos' },
         { status: 400 }
       );
     }
 
-    if (!orderId) {
-      console.log('API Payments/PIX: Erro - ID do pedido não fornecido');
+    if (!body.orderId) {
+      console.error('ID do pedido não fornecido');
       return NextResponse.json(
         { error: 'ID do pedido não fornecido' },
         { status: 400 }
       );
     }
 
-    console.log('API Payments/PIX: Chamando createPixPayment...');
+    console.log('Dados validados, criando pagamento...');
+    
     const payment = await createPixPayment({
-      amount,
-      customer,
-      orderId,
+      amount: body.amount,
+      customer: body.customer,
+      orderId: body.orderId,
     });
-    console.log('API Payments/PIX: Resposta do createPixPayment recebida');
 
-    return NextResponse.json(payment);
+    console.log('Pagamento criado com sucesso:', JSON.stringify(payment, null, 2));
+
+    return NextResponse.json({ data: payment });
   } catch (error) {
-    console.error('Erro ao processar pagamento PIX:', error);
-    
-    // Formatar erro para log mais detalhado
-    const errorDetail = error instanceof Error 
-      ? { message: error.message, stack: error.stack } 
-      : { error };
-    
-    console.log('API Payments/PIX: Detalhes completos do erro:', JSON.stringify(errorDetail));
-    
+    console.error('Erro detalhado na criação do pagamento:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erro ao processar pagamento' },
+      { error: error instanceof Error ? error.message : 'Erro ao criar pagamento' },
       { status: 500 }
     );
   }
@@ -67,38 +55,27 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    console.log('API Payments/PIX: Iniciando processamento GET');
-    
     const { searchParams } = new URL(request.url);
     const transactionId = searchParams.get('transactionId');
 
-    console.log('API Payments/PIX: Verificando status da transação:', transactionId);
+    console.log('Verificando status do pagamento:', transactionId);
 
     if (!transactionId) {
-      console.log('API Payments/PIX: Erro - ID da transação não fornecido');
+      console.error('ID da transação não fornecido');
       return NextResponse.json(
         { error: 'ID da transação não fornecido' },
         { status: 400 }
       );
     }
 
-    console.log('API Payments/PIX: Chamando getTransactionStatus...');
     const status = await getTransactionStatus(transactionId);
-    console.log('API Payments/PIX: Resposta do getTransactionStatus recebida');
+    console.log('Status do pagamento:', JSON.stringify(status, null, 2));
 
-    return NextResponse.json(status);
+    return NextResponse.json({ data: status });
   } catch (error) {
-    console.error('Erro ao verificar status do pagamento:', error);
-    
-    // Formatar erro para log mais detalhado
-    const errorDetail = error instanceof Error 
-      ? { message: error.message, stack: error.stack } 
-      : { error };
-    
-    console.log('API Payments/PIX: Detalhes completos do erro:', JSON.stringify(errorDetail));
-    
+    console.error('Erro ao verificar status:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erro ao verificar status do pagamento' },
+      { error: error instanceof Error ? error.message : 'Erro ao verificar status' },
       { status: 500 }
     );
   }
