@@ -311,7 +311,7 @@ export default function CheckoutPage() {
           formaPagamento: formulario.metodoPagamento,
           customer: {
             name: formulario.nome,
-            email: formulario.email || 'cliente@exemplo.com',
+            email: formulario.email,
             document_number: formulario.documento,
             phone: formulario.telefone
           }
