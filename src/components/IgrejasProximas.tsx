@@ -47,6 +47,12 @@ export function IgrejasProximas({ igrejas, onLocationChange }: IgrejasProximasPr
         if (error.message.includes('permission denied') || error.message.includes('permission')) {
           setPermissionDenied(true);
           setError('Permissão de localização negada');
+        } else if (error.message.includes('API Mapbox não está configurada')) {
+          setError('Serviço de geolocalização indisponível no momento');
+          console.error('A chave da API Mapbox não está configurada corretamente');
+        } else if (error.message.includes('Erro na API de geocoding: 401')) {
+          setError('Serviço de geolocalização indisponível no momento');
+          console.error('Erro de autenticação na API Mapbox (401)');
         } else {
           setError('Não foi possível obter sua localização');
         }

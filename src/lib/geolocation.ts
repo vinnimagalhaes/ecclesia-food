@@ -6,6 +6,11 @@
 // API Key do Mapbox - no ambiente real, deve estar em variáveis de ambiente
 const MAPBOX_API_KEY = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || '';
 
+// Log para verificar se a chave está definida (apenas para debug)
+if (typeof window !== 'undefined') {
+  console.log('Mapbox API Key definida:', MAPBOX_API_KEY ? 'Sim' : 'Não');
+}
+
 /**
  * Interface para os dados de localização obtidos
  */
@@ -46,6 +51,11 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
  */
 export async function reverseGeocode(latitude: number, longitude: number): Promise<LocationData> {
   try {
+    // Verificar se a chave da API está definida
+    if (!MAPBOX_API_KEY) {
+      throw new Error('Chave da API Mapbox não está configurada');
+    }
+    
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${MAPBOX_API_KEY}&language=pt-BR&types=place,region,country`;
     
     const response = await fetch(url);
