@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Save, Church, CreditCard, User, Settings, Bell } from 'lucide-react';
+import { Save, Church, CreditCard, User, Settings, Bell, Clock, Plus, Trash2, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ConfigPagamento {
@@ -11,6 +11,14 @@ interface ConfigPagamento {
   aceitaPix: boolean;
   chavePix: string;
   tipoPix: string;
+}
+
+// Interface para horário de missa
+interface HorarioMissa {
+  id?: string;
+  dayOfWeek: 'DOMINGO' | 'SEGUNDA' | 'TERCA' | 'QUARTA' | 'QUINTA' | 'SEXTA' | 'SABADO' | 'FERIADO';
+  time: string;
+  notes?: string;
 }
 
 export default function ConfiguracoesPage() {
@@ -43,6 +51,29 @@ export default function ConfiguracoesPage() {
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [alterandoSenha, setAlterandoSenha] = useState(false);
+
+  // Estado para horários de missa
+  const [horariosMissa, setHorariosMissa] = useState<HorarioMissa[]>([]);
+  const [novoHorario, setNovoHorario] = useState<HorarioMissa>({
+    dayOfWeek: 'DOMINGO',
+    time: '10:00',
+    notes: ''
+  });
+  const [editandoHorarioId, setEditandoHorarioId] = useState<string | null>(null);
+  const [carregandoHorarios, setCarregandoHorarios] = useState(false);
+  const [salvandoHorario, setSalvandoHorario] = useState(false);
+
+  // Mapeamento para os nomes dos dias da semana
+  const diasSemana = {
+    DOMINGO: 'Domingo',
+    SEGUNDA: 'Segunda-feira',
+    TERCA: 'Terça-feira',
+    QUARTA: 'Quarta-feira',
+    QUINTA: 'Quinta-feira',
+    SEXTA: 'Sexta-feira',
+    SABADO: 'Sábado',
+    FERIADO: 'Feriados'
+  };
 
   // Carregar configurações da API ao iniciar
   useEffect(() => {
@@ -77,6 +108,47 @@ export default function ConfiguracoesPage() {
 
     carregarConfiguracoes();
   }, []);
+
+  // Carregar horários de missa
+  useEffect(() => {
+    async function carregarHorariosMissa() {
+      if (!perfilIgreja.nome) return; // Só carrega se tiver perfil
+      
+      try {
+        setCarregandoHorarios(true);
+        // Obtém o ID da igreja a partir da API para buscar os horários
+        const perfilResponse = await fetch('/api/igrejas/current');
+        
+        if (!perfilResponse.ok) {
+          throw new Error('Erro ao obter perfil da igreja');
+        }
+        
+        const perfilData = await perfilResponse.json();
+        const churchId = perfilData.church?.id;
+        
+        if (!churchId) {
+          console.log('Perfil de igreja não encontrado');
+          return;
+        }
+        
+        const response = await fetch(`/api/igrejas/mass-schedules?churchId=${churchId}`);
+        
+        if (!response.ok) {
+          throw new Error('Erro ao carregar horários de missa');
+        }
+        
+        const data = await response.json();
+        setHorariosMissa(data.massSchedules || []);
+      } catch (error) {
+        console.error('Erro ao carregar horários de missa:', error);
+        toast.error('Erro ao carregar horários de missa');
+      } finally {
+        setCarregandoHorarios(false);
+      }
+    }
+    
+    carregarHorariosMissa();
+  }, [perfilIgreja.nome]);
 
   // Handlers para atualizar os estados
   const atualizarPerfilIgreja = (campo: string, valor: string) => {
@@ -340,6 +412,119 @@ export default function ConfiguracoesPage() {
       console.error('Erro ao encerrar sessões:', error);
       toast.error('Ocorreu um erro ao encerrar sessões');
     }
+  };
+
+  // Função para adicionar/atualizar horário de missa
+  const salvarHorarioMissa = async () => {
+    try {
+      setSalvandoHorario(true);
+      
+      // Validações básicas
+      if (!novoHorario.time) {
+        toast.error('O horário é obrigatório');
+        return;
+      }
+      
+      // Obter o ID da igreja
+      const perfilResponse = await fetch('/api/igrejas/current');
+      if (!perfilResponse.ok) {
+        throw new Error('Erro ao obter perfil da igreja');
+      }
+      
+      const perfilData = await perfilResponse.json();
+      const churchId = perfilData.church?.id;
+      
+      if (!churchId) {
+        toast.error('Perfil de igreja não encontrado');
+        return;
+      }
+      
+      if (editandoHorarioId) {
+        // Atualizar horário existente - essa API ainda precisa ser implementada
+        toast.error('Edição de horários ainda não está disponível');
+        // Limpar estado de edição
+        setEditandoHorarioId(null);
+      } else {
+        // Adicionar novo horário
+        const response = await fetch('/api/igrejas/mass-schedules', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...novoHorario,
+            churchId
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erro ao adicionar horário');
+        }
+        
+        const data = await response.json();
+        
+        // Adicionar o novo horário à lista
+        setHorariosMissa(prev => [...prev, data.massSchedule]);
+        
+        // Resetar o formulário
+        setNovoHorario({
+          dayOfWeek: 'DOMINGO',
+          time: '10:00',
+          notes: ''
+        });
+        
+        toast.success('Horário adicionado com sucesso');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar horário:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar horário');
+    } finally {
+      setSalvandoHorario(false);
+    }
+  };
+
+  // Função para excluir horário de missa
+  const excluirHorarioMissa = async (id: string) => {
+    try {
+      const response = await fetch(`/api/igrejas/mass-schedules?id=${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao excluir horário');
+      }
+      
+      // Remover o horário da lista
+      setHorariosMissa(prev => prev.filter(horario => horario.id !== id));
+      toast.success('Horário excluído com sucesso');
+    } catch (error) {
+      console.error('Erro ao excluir horário:', error);
+      toast.error('Erro ao excluir horário');
+    }
+  };
+
+  // Função para preparar edição de horário
+  const prepararEditarHorario = (horario: HorarioMissa) => {
+    setNovoHorario({
+      dayOfWeek: horario.dayOfWeek,
+      time: horario.time,
+      notes: horario.notes || ''
+    });
+    // Garantir que o id não seja undefined
+    if (horario.id) {
+      setEditandoHorarioId(horario.id);
+    }
+  };
+
+  // Função para cancelar edição
+  const cancelarEdicao = () => {
+    setEditandoHorarioId(null);
+    setNovoHorario({
+      dayOfWeek: 'DOMINGO',
+      time: '10:00',
+      notes: ''
+    });
   };
 
   if (loading) {
@@ -848,6 +1033,141 @@ export default function ConfiguracoesPage() {
               <span>Encerrar Outras Sessões</span>
             </Button>
           </div>
+        </div>
+
+        {/* Seção de Horários de Missa */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-center mb-4">
+            <Clock className="h-6 w-6 text-primary-500 mr-2" />
+            <h2 className="text-xl font-semibold">Horários de Missa</h2>
+          </div>
+          
+          <p className="text-gray-600 mb-6">
+            Configure os horários de missa para sua igreja. Estes horários serão exibidos para os usuários no aplicativo.
+          </p>
+          
+          <div className="mb-6 border-b pb-6">
+            <h3 className="font-medium mb-3">Adicionar novo horário</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label htmlFor="dayOfWeek" className="block text-gray-700 text-sm font-medium mb-1">
+                  Dia da semana
+                </label>
+                <select
+                  id="dayOfWeek"
+                  value={novoHorario.dayOfWeek}
+                  onChange={(e) => setNovoHorario({
+                    ...novoHorario,
+                    dayOfWeek: e.target.value as HorarioMissa['dayOfWeek']
+                  })}
+                  className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                >
+                  {Object.entries(diasSemana).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="time" className="block text-gray-700 text-sm font-medium mb-1">
+                  Horário
+                </label>
+                <input
+                  type="time"
+                  id="time"
+                  value={novoHorario.time}
+                  onChange={(e) => setNovoHorario({
+                    ...novoHorario,
+                    time: e.target.value
+                  })}
+                  className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <label htmlFor="notes" className="block text-gray-700 text-sm font-medium mb-1">
+                Observações (opcional)
+              </label>
+              <textarea
+                id="notes"
+                value={novoHorario.notes || ''}
+                onChange={(e) => setNovoHorario({
+                  ...novoHorario,
+                  notes: e.target.value
+                })}
+                placeholder="Ex: Missa com música, Missa das crianças, etc."
+                className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500 h-20 resize-none"
+              />
+            </div>
+            
+            <div className="flex space-x-2">
+              <Button
+                onClick={salvarHorarioMissa}
+                disabled={salvandoHorario}
+                variant="primary"
+                className="flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {editandoHorarioId ? 'Atualizar Horário' : 'Adicionar Horário'}
+              </Button>
+              
+              {editandoHorarioId && (
+                <Button
+                  onClick={cancelarEdicao}
+                  variant="outline"
+                >
+                  Cancelar
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          <h3 className="font-medium mb-3">Horários cadastrados</h3>
+          
+          {carregandoHorarios ? (
+            <div className="text-center py-8">
+              <div className="w-10 h-10 border-t-4 border-primary-500 border-solid rounded-full animate-spin mx-auto"></div>
+              <p className="mt-2 text-gray-600">Carregando horários...</p>
+            </div>
+          ) : horariosMissa.length === 0 ? (
+            <div className="text-center py-6 bg-gray-50 rounded-lg">
+              <Clock className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-600">Nenhum horário de missa cadastrado</p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {horariosMissa.map((horario) => (
+                <div key={horario.id} className="py-3 flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-gray-800">
+                      {diasSemana[horario.dayOfWeek]} às {horario.time}
+                    </p>
+                    {horario.notes && (
+                      <p className="text-gray-600 text-sm mt-1">{horario.notes}</p>
+                    )}
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => prepararEditarHorario(horario)}
+                      className="text-blue-600 hover:text-blue-800 p-1"
+                      title="Editar"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => excluirHorarioMissa(horario.id!)}
+                      className="text-red-600 hover:text-red-800 p-1"
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
