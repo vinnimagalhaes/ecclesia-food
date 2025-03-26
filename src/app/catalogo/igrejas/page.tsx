@@ -22,7 +22,7 @@ export default function CatalogoIgrejasPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredIgrejas, setFilteredIgrejas] = useState<PerfilIgreja[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [userLocation, setUserLocation] = useState<LocationData | null>(null);
+  const [, setUserLocation] = useState<LocationData | null>(null);
 
   // Função para buscar igrejas
   const fetchIgrejas = async (showLoadingState = true) => {
