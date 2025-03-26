@@ -11,9 +11,9 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials, _req) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null;
+          throw new Error('Email e senha são obrigatórios');
         }
 
         const user = await prisma.user.findUnique({
@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
-          return null;
+          throw new Error('Usuário não encontrado ou sem senha');
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -32,7 +32,16 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
-          return null;
+          throw new Error('Senha inválida');
+        }
+        
+        if (user.isActive === false) {
+          throw new Error('Usuário inativo');
+        }
+        
+        // Verificar se o email foi confirmado
+        if (!user.emailVerified) {
+          throw new Error('Email não verificado. Por favor, verifique seu email antes de fazer login.');
         }
 
         return {
@@ -40,7 +49,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          isActive: user.isActive ?? true
+          isActive: user.isActive ?? true,
+          emailVerified: user.emailVerified
         };
       }
     })
@@ -55,12 +65,16 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
+        token.isActive = user.isActive;
+        token.emailVerified = user.emailVerified;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.role = token.role as "MEMBER" | "ADMIN";
+        session.user.isActive = token.isActive as boolean;
+        session.user.emailVerified = token.emailVerified as Date | null;
       }
       return session;
     }
