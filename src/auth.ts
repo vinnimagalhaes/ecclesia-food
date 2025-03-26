@@ -11,6 +11,7 @@ declare module 'next-auth' {
     email: string;
     role: UserRole;
     isActive: boolean;
+    emailVerified: Date | null;
   }
 
   interface Session {
@@ -21,6 +22,7 @@ declare module 'next-auth' {
       image?: string | null;
       role: UserRole;
       isActive: boolean;
+      emailVerified: Date | null;
     }
   }
 }
@@ -30,6 +32,7 @@ declare module 'next-auth/jwt' {
     id: string;
     role: UserRole;
     isActive: boolean;
+    emailVerified: Date | null;
   }
 }
 
@@ -66,13 +69,19 @@ export const authOptions: NextAuthOptions = {
         if (user.isActive === false) {
           throw new Error('Usuário inativo');
         }
+        
+        // Verificar se o email foi confirmado
+        if (!user.emailVerified) {
+          throw new Error('Email não verificado. Por favor, verifique seu email antes de fazer login.');
+        }
 
         return {
           id: user.id,
           name: user.name || '',
           email: user.email,
           role: user.role,
-          isActive: user.isActive || true
+          isActive: user.isActive || true,
+          emailVerified: user.emailVerified
         };
       }
     })
@@ -83,6 +92,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.isActive = user.isActive;
+        token.emailVerified = user.emailVerified;
       }
       return token;
     },
@@ -91,6 +101,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
         session.user.isActive = token.isActive as boolean;
+        session.user.emailVerified = token.emailVerified as Date | null;
       }
       return session;
     }

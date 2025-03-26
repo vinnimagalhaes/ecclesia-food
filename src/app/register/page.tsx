@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,8 +23,8 @@ export default function RegisterPage() {
     };
 
     try {
-      // 1. Registrar o usuário
-      const response = await fetch('/api/register', {
+      // Registrar o usuário
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,33 +32,58 @@ export default function RegisterPage() {
         body: JSON.stringify(data),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+        throw new Error(result.message || 'Erro ao criar conta');
       }
 
-      // 2. Fazer login automaticamente
-      const signInResult = await signIn('credentials', {
-        redirect: false,
-        email: data.email,
-        password: data.password,
-      });
-
-      if (signInResult?.error) {
-        throw new Error('Erro ao fazer login automático');
-      }
-
-      toast.success('Conta criada com sucesso!');
+      // Armazenar o email para exibir na mensagem de sucesso
+      setUserEmail(data.email);
+      setRegistrationSuccess(true);
+      toast.success('Conta criada com sucesso! Verifique seu email para ativar sua conta.');
       
-      // 3. Redirecionar para o onboarding
-      router.push('/register/onboarding');
     } catch (error) {
       console.error('Erro:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao criar conta');
-      router.push('/login');
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (registrationSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md text-center">
+          <div>
+            <h1 className="text-3xl font-bold text-primary-600">Ecclesia Food</h1>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900">Verificação de Email</h2>
+          </div>
+          
+          <div className="mt-6">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+              <svg className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="mt-4 text-lg text-gray-600">Conta criada com sucesso!</p>
+            <p className="mt-2 text-sm text-gray-500">
+              Enviamos um email de verificação para <strong>{userEmail}</strong>.
+              <br />Por favor, verifique sua caixa de entrada e clique no link para ativar sua conta.
+            </p>
+            
+            <div className="mt-6">
+              <Link 
+                href="/login" 
+                className="font-medium text-primary-600 hover:text-primary-500 focus:outline-none"
+              >
+                Voltar para login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

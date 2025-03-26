@@ -6,11 +6,49 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
+// Componente para reenviar o email de verificação
+function ResendVerificationEmail({ email }: { email: string }) {
+  const [isSending, setIsSending] = useState(false);
+  
+  const handleResend = async () => {
+    setIsSending(true);
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      
+      const data = await response.json();
+      toast.success(data.message || 'Email de verificação reenviado com sucesso');
+    } catch (error) {
+      console.error('Erro ao reenviar email:', error);
+      toast.error('Erro ao reenviar email de verificação');
+    } finally {
+      setIsSending(false);
+    }
+  };
+  
+  return (
+    <button
+      onClick={handleResend}
+      disabled={isSending}
+      className="font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:underline"
+    >
+      {isSending ? 'Enviando...' : 'Reenviar email de verificação'}
+    </button>
+  );
+}
+
 // Componente que usa o searchParams
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [emailNotVerified, setEmailNotVerified] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -32,7 +70,14 @@ function LoginForm() {
         router.push(callbackUrl);
         toast.success('Login realizado com sucesso!');
       } else {
-        toast.error('Credenciais inválidas');
+        // Verificar se o erro é de email não verificado
+        if (result.error.includes('Email não verificado')) {
+          setEmailNotVerified(true);
+          setUnverifiedEmail(email);
+          toast.error('Email não verificado. Por favor, verifique sua caixa de entrada ou solicite um novo email.');
+        } else {
+          toast.error('Credenciais inválidas');
+        }
         setIsLoading(false);
       }
     } catch (error) {
@@ -70,6 +115,28 @@ function LoginForm() {
           />
         </div>
       </div>
+
+      {emailNotVerified && (
+        <div className="rounded-md bg-yellow-50 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">Email não verificado</h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>
+                  Você precisa verificar seu email antes de fazer login.
+                  <br />
+                  <ResendVerificationEmail email={unverifiedEmail} />
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-end">
         <div className="text-sm">
