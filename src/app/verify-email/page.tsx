@@ -38,9 +38,9 @@ function VerifyEmailContent() {
           setMessage(data.message || 'Email verificado com sucesso!');
           toast.success('Email verificado com sucesso!');
           
-          // Redirecionar para login após 3 segundos
+          // Redirecionar para página de login com callback para o onboarding de 3 passos
           setTimeout(() => {
-            router.push('/login');
+            router.push('/login?callbackUrl=/register/onboarding');
           }, 3000);
         } else {
           setStatus('error');
@@ -75,7 +75,7 @@ function VerifyEmailContent() {
             </svg>
           </div>
           <p className="mt-4 text-lg text-gray-600">{message}</p>
-          <p className="mt-2 text-sm text-gray-500">Você será redirecionado para a página de login em alguns segundos...</p>
+          <p className="mt-2 text-sm text-gray-500">Você será redirecionado para a página de login em alguns segundos. Após o login, você concluirá a configuração da sua conta.</p>
         </div>
       )}
       
