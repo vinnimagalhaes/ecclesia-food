@@ -5,6 +5,8 @@ import { Search, Church, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AppHeader } from '@/components/ui/AppHeader';
 import { AppListItem } from '@/components/ui/AppListItem';
+import { IgrejasProximas } from '@/components/IgrejasProximas';
+import { LocationData } from '@/lib/geolocation';
 
 interface PerfilIgreja {
   id: string;
@@ -20,6 +22,7 @@ export default function CatalogoIgrejasPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredIgrejas, setFilteredIgrejas] = useState<PerfilIgreja[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [userLocation, setUserLocation] = useState<LocationData | null>(null);
 
   // Função para buscar igrejas
   const fetchIgrejas = async (showLoadingState = true) => {
@@ -105,6 +108,19 @@ export default function CatalogoIgrejasPage() {
     return texto.toLowerCase().replace(/\s+/g, '-');
   };
 
+  // Função para lidar com a mudança da localização do usuário
+  const handleLocationChange = (location: LocationData | null) => {
+    setUserLocation(location);
+    
+    if (location && location.cidade) {
+      // Se a localização for detectada, filtra por cidade e atualiza a busca
+      setSearchTerm(location.cidade);
+    } else {
+      // Se a localização for resetada, limpa o termo de busca
+      setSearchTerm('');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -165,6 +181,12 @@ export default function CatalogoIgrejasPage() {
 
       {/* Conteúdo principal */}
       <div className="flex-1 p-4">
+        {/* Componente de igrejas próximas */}
+        <IgrejasProximas 
+          igrejas={igrejas}
+          onLocationChange={handleLocationChange}
+        />
+        
         <div className="flex justify-between items-center mb-4">
           <p className="text-gray-600 font-medium">
             {filteredIgrejas.length} {filteredIgrejas.length === 1 ? 'igreja encontrada' : 'igrejas encontradas'}
