@@ -92,7 +92,7 @@ export function findNearestCity(latitude: number, longitude: number): LocationDa
 
   // Encontra a cidade mais próxima das coordenadas
   for (const city of CITIES_DATABASE) {
-    const [cityLat, cityLon, cityName, stateName] = city;
+    const [cityLat, cityLon, _, stateName] = city;
     const distance = getDistance(latitude, longitude, cityLat, cityLon);
     
     if (distance < minDistance) {
