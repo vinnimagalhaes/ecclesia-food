@@ -44,12 +44,12 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'text' },
         password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials, _req) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Email e senha são obrigatórios');
         }
 
-        const user: any = await db.user.findUnique({
+        const user = await db.user.findUnique({
           where: { email: credentials.email }
         });
 
@@ -77,10 +77,10 @@ export const authOptions: NextAuthOptions = {
 
         return {
           id: user.id,
-          name: user.name || '',
+          name: user.name,
           email: user.email,
           role: user.role,
-          isActive: user.isActive || true,
+          isActive: user.isActive,
           emailVerified: user.emailVerified
         };
       }
