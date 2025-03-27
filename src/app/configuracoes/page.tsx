@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Save, Church, CreditCard, User, Settings, Bell, Clock, Plus, Trash2, Edit2, Pencil } from 'lucide-react';
+import { Save, Church, CreditCard, User, Settings, Bell, Clock, Plus, Trash2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ConfigPagamento {
