@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 /**
  * GET - Busca o perfil da igreja do usuário logado
  */
-export async function GET(req: Request) {
+export async function GET() {
   try {
     // Verificar autenticação
     const session = await getServerSession(authOptions);
