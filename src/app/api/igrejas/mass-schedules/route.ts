@@ -41,7 +41,7 @@ export async function GET(req: Request) {
       // Buscar igrejas na cidade especificada
       const churches = await prisma.church.findMany({
         where: {
-          cidade: {
+          city: {
             contains: cidade,
             mode: 'insensitive'  // Case insensitive
           }
@@ -109,8 +109,8 @@ export async function GET(req: Request) {
         include: {
           church: {
             select: {
-              nome: true,
-              cidade: true
+              name: true,
+              city: true
             }
           }
         }
@@ -122,8 +122,8 @@ export async function GET(req: Request) {
       const results = massSchedules.map(schedule => ({
         ...schedule,
         igrejaInfo: {
-          nome: schedule.church.nome,
-          cidade: schedule.church.cidade
+          nome: schedule.church.name,
+          cidade: schedule.church.city
         }
       }));
 
