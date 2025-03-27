@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, Users, RefreshCw, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, Users, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AppHeader } from '@/components/ui/AppHeader';
 import { AppIconLocation } from '@/components/ui/AppIconLocation';
@@ -33,7 +33,6 @@ export default function CatalogoEventosIgrejaPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [nomeIgreja, setNomeIgreja] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Decodificar parâmetros da URL
   const cidade = decodeURIComponent(params.cidade);
@@ -46,8 +45,6 @@ export default function CatalogoEventosIgrejaPage({
       
       if (showLoadingState) {
         setLoading(true);
-      } else {
-        setIsRefreshing(true);
       }
       
       setError('');
@@ -118,7 +115,6 @@ export default function CatalogoEventosIgrejaPage({
       setError('Não foi possível carregar os eventos. Tente novamente.');
     } finally {
       setLoading(false);
-      setIsRefreshing(false);
     }
   };
   
@@ -166,22 +162,6 @@ export default function CatalogoEventosIgrejaPage({
 
       {/* Conteúdo principal */}
       <div className="flex-1 p-4">
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-gray-600 font-medium">
-            {eventos.length} {eventos.length === 1 ? 'evento disponível' : 'eventos disponíveis'}
-          </p>
-          <Button
-            onClick={() => fetchEventos(false)}
-            variant="outline"
-            size="sm"
-            disabled={isRefreshing}
-            className="flex items-center gap-1"
-          >
-            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
-            <span className="text-xs">{isRefreshing ? 'Atualizando' : 'Atualizar'}</span>
-          </Button>
-        </div>
-
         {/* Exibe erro se houver */}
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mb-4">
@@ -195,13 +175,6 @@ export default function CatalogoEventosIgrejaPage({
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             </div>
-            <Button
-              onClick={() => fetchEventos()}
-              variant="primary"
-              className="mt-4 w-full"
-            >
-              Tentar novamente
-            </Button>
           </div>
         )}
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Church, RefreshCw, Heart, Clock } from 'lucide-react';
+import { Search, Church, Heart, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AppHeader } from '@/components/ui/AppHeader';
 import { AppListItem } from '@/components/ui/AppListItem';
@@ -358,16 +358,6 @@ export default function CatalogoIgrejasPage() {
           <p className="text-gray-600 font-medium">
             {filteredIgrejas.length} {filteredIgrejas.length === 1 ? 'igreja encontrada' : 'igrejas encontradas'}
           </p>
-          <Button
-            onClick={() => fetchIgrejas(false)}
-            variant="outline"
-            size="sm"
-            disabled={isRefreshing}
-            className="flex items-center gap-1"
-          >
-            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
-            <span className="text-xs">{isRefreshing ? 'Atualizando' : 'Atualizar'}</span>
-          </Button>
         </div>
 
         {/* Conteúdo de acordo com a aba ativa */}
