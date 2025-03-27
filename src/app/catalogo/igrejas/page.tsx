@@ -26,7 +26,6 @@ export default function CatalogoIgrejasPage() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredIgrejas, setFilteredIgrejas] = useState<PerfilIgreja[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [, setUserLocation] = useState<LocationData | null>(null);
   // Nova variável de estado para controle das abas
   const [activeTab, setActiveTab] = useState<TabType>('todas');
@@ -40,8 +39,6 @@ export default function CatalogoIgrejasPage() {
     try {
       if (showLoadingState) {
         setLoading(true);
-      } else {
-        setIsRefreshing(true);
       }
       setError('');
 
@@ -101,7 +98,6 @@ export default function CatalogoIgrejasPage() {
       setFilteredIgrejas([]);
     } finally {
       setLoading(false);
-      setIsRefreshing(false);
     }
   };
 
