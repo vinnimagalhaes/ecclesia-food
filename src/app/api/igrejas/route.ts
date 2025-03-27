@@ -7,13 +7,6 @@ export const revalidate = 0;
 
 const prisma = new PrismaClient();
 
-interface IgrejaPerfil {
-  id: string;
-  nome: string;
-  cidade: string;
-  estado: string;
-}
-
 export async function GET() {
   const logs: string[] = ['GET /api/igrejas - Iniciando'];
   
