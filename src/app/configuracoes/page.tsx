@@ -1140,42 +1140,48 @@ export default function ConfiguracoesPage() {
             <div className="mt-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Horários cadastrados</h3>
               <div className="grid grid-cols-7 gap-4">
-                {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((dia) => (
-                  <div key={dia} className="bg-white rounded-lg p-4 shadow-sm">
-                    <h4 className="font-medium text-gray-900 mb-2">{dia}</h4>
-                    <div className="space-y-2">
-                      {horariosMissa
-                        .filter((h) => h.dayOfWeek === dia.toUpperCase())
-                        .map((horario) => (
-                          <div
-                            key={horario.id}
-                            className="flex items-center justify-between bg-gray-50 rounded-lg p-2"
-                          >
-                            <span className="text-sm text-gray-600">
-                              {horario.time}
-                            </span>
-                            <div className="flex items-center space-x-2">
-                              <button
-                                onClick={() => prepararEditarHorario(horario)}
-                                className="text-primary-600 hover:text-primary-700"
-                              >
-                                <Pencil size={16} />
-                              </button>
-                              <button
-                                onClick={() => excluirHorarioMissa(horario.id!)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((dia, index) => {
+                  // Mapeamento para os valores reais no enum
+                  const diasEnum = ['DOMINGO', 'SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO'];
+                  const diaEnum = diasEnum[index];
+                  
+                  return (
+                    <div key={dia} className="bg-white rounded-lg p-4 shadow-sm">
+                      <h4 className="font-medium text-gray-900 mb-2">{dia}</h4>
+                      <div className="space-y-2">
+                        {horariosMissa
+                          .filter((h) => h.dayOfWeek === diaEnum)
+                          .map((horario) => (
+                            <div
+                              key={horario.id}
+                              className="flex items-center justify-between bg-gray-50 rounded-lg p-2"
+                            >
+                              <span className="text-sm text-gray-600">
+                                {horario.time}
+                              </span>
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => prepararEditarHorario(horario)}
+                                  className="text-primary-600 hover:text-primary-700"
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                                <button
+                                  onClick={() => excluirHorarioMissa(horario.id!)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      {horariosMissa.filter((h) => h.dayOfWeek === dia.toUpperCase()).length === 0 && (
-                        <p className="text-sm text-gray-500 italic">Nenhum horário cadastrado</p>
-                      )}
+                          ))}
+                        {horariosMissa.filter((h) => h.dayOfWeek === diaEnum).length === 0 && (
+                          <p className="text-sm text-gray-500 italic">Nenhum horário cadastrado</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
