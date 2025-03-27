@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { ArrowRight, ChevronRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { AppIconLocation } from './AppIconLocation';
 
@@ -48,7 +48,7 @@ export function AppListItem({
           <p className="text-gray-500 text-sm mt-1">{subtitle}</p>
         )}
       </div>
-      {rightIcon}
+      {showArrow && rightIcon}
     </>
   );
 
