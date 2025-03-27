@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { PrismaClient } from '@prisma/client';
 
 // Configuração para tornar a rota dinâmica
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+const prisma = new PrismaClient();
 
 interface IgrejaPerfil {
   id: string;
@@ -16,50 +18,29 @@ export async function GET() {
   const logs: string[] = ['GET /api/igrejas - Iniciando'];
   
   try {
-    // Buscar diretamente do modelo Church em vez de SystemConfig
-    const igrejas = await db.church.findMany({
+    console.log('Buscando todas as igrejas...');
+    
+    const igrejas = await prisma.church.findMany({
       select: {
         id: true,
         name: true,
         city: true,
         state: true,
-        userId: true,
-        user: {
-          select: {
-            id: true,
-            emailVerified: true
-          }
-        }
+      },
+      orderBy: {
+        name: 'asc'
       }
     });
+
+    console.log('Igrejas encontradas:', igrejas);
     
-    logs.push(`Igrejas encontradas: ${igrejas.length}`);
-    
-    // Processar e filtrar os perfis
-    const igrejasProcessadas = igrejas
-      .filter((igreja) => {
-        const isVerified = igreja.user?.emailVerified;
-        if (!isVerified) {
-          logs.push(`Igreja ${igreja.id} foi filtrada por não estar verificada`);
-        }
-        return isVerified;
-      })
-      .map((igreja): IgrejaPerfil => {
-        return {
-          id: igreja.userId,
-          nome: igreja.name,
-          cidade: igreja.city,
-          estado: igreja.state
-        };
-      })
-      .filter((igreja): igreja is IgrejaPerfil => {
-        const isValid = Boolean(igreja.nome && igreja.cidade);
-        if (!isValid) {
-          logs.push(`Igreja removida por dados inválidos: ${JSON.stringify(igreja)}`);
-        }
-        return isValid;
-      })
-      .sort((a, b) => a.nome.localeCompare(b.nome));
+    // Mapear os campos para o formato esperado pelo frontend
+    const igrejasProcessadas = igrejas.map(igreja => ({
+      id: igreja.id,
+      nome: igreja.name,
+      cidade: igreja.city,
+      estado: igreja.state
+    }));
     
     logs.push(`\nTotal de igrejas após processamento: ${igrejasProcessadas.length}`);
     
@@ -83,9 +64,9 @@ export async function GET() {
       { headers }
     );
   } catch (error) {
-    logs.push(`Erro ao buscar igrejas: ${error}`);
+    console.error('Erro ao buscar igrejas:', error);
     return NextResponse.json(
-      { error: 'Erro ao buscar igrejas', logs },
+      { error: 'Erro ao buscar igrejas' },
       { status: 500 }
     );
   }
