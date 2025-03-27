@@ -182,21 +182,12 @@ export function HorariosMissa({ igreja, filtros }: HorariosMissaProps) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      <div className="flex justify-between items-center mb-4">
+      <div className="mb-4">
         <h3 className="text-lg font-medium text-gray-900">
           {igreja 
             ? `Horários de Missa - ${igreja.nome}`
             : `Horários de Missa em ${filtros?.cidade}`}
         </h3>
-        <Button 
-          onClick={fetchHorarios}
-          variant="outline"
-          size="sm"
-          className="text-gray-500"
-        >
-          <RefreshCw size={14} className="mr-1" />
-          <span className="text-xs">Atualizar</span>
-        </Button>
       </div>
       
       {semHorarios ? (
