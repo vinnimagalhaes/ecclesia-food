@@ -29,8 +29,6 @@ export default function CatalogoIgrejasPage() {
   const [, setUserLocation] = useState<LocationData | null>(null);
   // Nova variável de estado para controle das abas
   const [activeTab, setActiveTab] = useState<TabType>('todas');
-  // Estado para igrejas favoritas
-  const [igrejasFavoritas, setIgrejasFavoritas] = useState<PerfilIgreja[]>([]);
   // Estado para a igreja selecionada na aba de horários
   const [selectedIgreja, setSelectedIgreja] = useState<PerfilIgreja | null>(null);
 
@@ -83,9 +81,6 @@ export default function CatalogoIgrejasPage() {
       
       setIgrejas(igrejasComFavoritos);
       setFilteredIgrejas(igrejasComFavoritos);
-      
-      // Atualizar lista de favoritos
-      updateFavoritasList(igrejasComFavoritos);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Não foi possível carregar a lista de igrejas.';
       console.error('Erro detalhado:', {
@@ -114,12 +109,6 @@ export default function CatalogoIgrejasPage() {
     localStorage.setItem('igrejasFavoritas', JSON.stringify(favoritos));
   };
 
-  // Função para atualizar a lista de igrejas favoritas
-  const updateFavoritasList = (igrejasLista: PerfilIgreja[]) => {
-    const favoritas = igrejasLista.filter(igreja => igreja.favorita);
-    setIgrejasFavoritas(favoritas);
-  };
-
   // Função para alternar o status de favorita de uma igreja
   const toggleFavorita = (id: string) => {
     // Atualizar lista de igrejas
@@ -143,9 +132,6 @@ export default function CatalogoIgrejasPage() {
       .map(igreja => igreja.id);
     
     saveFavoritos(favoritos);
-    
-    // Atualizar lista de favoritas
-    updateFavoritasList(updatedIgrejas);
   };
 
   // Carregar dados iniciais
