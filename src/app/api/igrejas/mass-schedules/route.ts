@@ -16,7 +16,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const churchId = searchParams.get('churchId');
 
+    console.log('GET /api/igrejas/mass-schedules - churchId:', churchId);
+
     if (!churchId) {
+      console.error('ID da igreja não informado');
       return NextResponse.json(
         { error: 'ID da igreja não informado' },
         { status: 400 }
@@ -28,7 +31,10 @@ export async function GET(req: Request) {
       where: { id: churchId },
     });
 
+    console.log('Igreja encontrada:', church);
+
     if (!church) {
+      console.error('Igreja não encontrada:', churchId);
       return NextResponse.json(
         { error: 'Igreja não encontrada' },
         { status: 404 }
@@ -43,6 +49,8 @@ export async function GET(req: Request) {
         { time: 'asc' }
       ]
     });
+
+    console.log('Horários encontrados:', massSchedules);
 
     return NextResponse.json({ massSchedules });
   } catch (error) {
@@ -63,6 +71,7 @@ export async function POST(req: Request) {
     // Verificar autenticação
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
+      console.error('Usuário não autenticado');
       return NextResponse.json(
         { error: 'Não autorizado' },
         { status: 401 }
@@ -70,8 +79,10 @@ export async function POST(req: Request) {
     }
 
     const { churchId, dayOfWeek, time, notes } = await req.json();
+    console.log('POST /api/igrejas/mass-schedules - Dados recebidos:', { churchId, dayOfWeek, time, notes });
 
     if (!churchId || !dayOfWeek || !time) {
+      console.error('Dados obrigatórios não informados:', { churchId, dayOfWeek, time });
       return NextResponse.json(
         { error: 'Dados obrigatórios não informados' },
         { status: 400 }
@@ -83,7 +94,10 @@ export async function POST(req: Request) {
       where: { id: churchId },
     });
 
+    console.log('Igreja encontrada:', church);
+
     if (!church) {
+      console.error('Igreja não encontrada:', churchId);
       return NextResponse.json(
         { error: 'Igreja não encontrada' },
         { status: 404 }
@@ -91,6 +105,11 @@ export async function POST(req: Request) {
     }
 
     if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN' && church.userId !== session.user.id) {
+      console.error('Usuário não autorizado a gerenciar esta igreja:', {
+        userId: session.user.id,
+        churchUserId: church.userId,
+        userRole: session.user.role
+      });
       return NextResponse.json(
         { error: 'Não autorizado a gerenciar esta igreja' },
         { status: 403 }
@@ -106,6 +125,8 @@ export async function POST(req: Request) {
         churchId
       }
     });
+
+    console.log('Horário criado com sucesso:', massSchedule);
 
     return NextResponse.json({ massSchedule });
   } catch (error) {
@@ -126,6 +147,7 @@ export async function DELETE(req: Request) {
     // Verificar autenticação
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
+      console.error('Usuário não autenticado');
       return NextResponse.json(
         { error: 'Não autorizado' },
         { status: 401 }
@@ -136,7 +158,10 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
+    console.log('DELETE /api/igrejas/mass-schedules - id:', id);
+
     if (!id) {
+      console.error('ID do horário não informado');
       return NextResponse.json(
         { error: 'ID do horário não informado' },
         { status: 400 }
@@ -149,7 +174,10 @@ export async function DELETE(req: Request) {
       include: { church: true }
     });
 
+    console.log('Horário encontrado:', massSchedule);
+
     if (!massSchedule) {
+      console.error('Horário não encontrado:', id);
       return NextResponse.json(
         { error: 'Horário não encontrado' },
         { status: 404 }
@@ -158,6 +186,11 @@ export async function DELETE(req: Request) {
 
     // Verificar permissão
     if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN' && massSchedule.church.userId !== session.user.id) {
+      console.error('Usuário não autorizado a gerenciar esta igreja:', {
+        userId: session.user.id,
+        churchUserId: massSchedule.church.userId,
+        userRole: session.user.role
+      });
       return NextResponse.json(
         { error: 'Não autorizado a gerenciar esta igreja' },
         { status: 403 }
@@ -168,6 +201,8 @@ export async function DELETE(req: Request) {
     await prisma.massSchedule.delete({
       where: { id }
     });
+
+    console.log('Horário excluído com sucesso:', id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -44,23 +44,40 @@ export function HorariosMissa({ igreja }: HorariosMissaProps) {
 
   // Função para buscar horários de missa
   const fetchHorarios = async () => {
-    if (!igreja) return;
+    if (!igreja) {
+      console.log('Nenhuma igreja selecionada');
+      return;
+    }
     
     setLoading(true);
     setError(null);
     
     try {
+      console.log('Buscando horários para igreja:', igreja.id);
       const response = await fetch(`/api/igrejas/mass-schedules?churchId=${igreja.id}`);
       
       if (!response.ok) {
-        throw new Error(`Erro ao carregar horários: ${response.status}`);
+        const errorData = await response.json();
+        console.error('Erro na resposta da API:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(`Erro ao carregar horários: ${response.status} - ${errorData.error || response.statusText}`);
       }
       
       const data = await response.json();
-      setHorarios(data.massSchedules || []);
+      console.log('Dados recebidos:', data);
+      
+      if (!data.massSchedules) {
+        console.warn('Nenhum horário encontrado para a igreja');
+        setHorarios([]);
+      } else {
+        setHorarios(data.massSchedules);
+      }
     } catch (err) {
       console.error('Erro ao carregar horários de missa:', err);
-      setError('Não foi possível carregar os horários de missa');
+      setError(err instanceof Error ? err.message : 'Não foi possível carregar os horários de missa');
     } finally {
       setLoading(false);
     }
@@ -69,6 +86,7 @@ export function HorariosMissa({ igreja }: HorariosMissaProps) {
   // Buscar horários quando a igreja mudar
   useEffect(() => {
     if (igreja) {
+      console.log('Igreja selecionada mudou:', igreja);
       fetchHorarios();
     } else {
       setHorarios([]);
