@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Calendar, Clock, Users, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { AppHeader } from '@/components/ui/AppHeader';
 import { AppIconLocation } from '@/components/ui/AppIconLocation';
 
