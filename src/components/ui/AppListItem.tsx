@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { AppIconLocation } from './AppIconLocation';
 
@@ -12,6 +12,7 @@ interface AppListItemProps {
   rightIcon?: ReactNode;
   className?: string;
   onClick?: () => void;
+  showArrow?: boolean;
 }
 
 export function AppListItem({
@@ -23,6 +24,7 @@ export function AppListItem({
   rightIcon = <ArrowRight size={20} className="text-gray-400" />,
   className = '',
   onClick,
+  showArrow = true,
 }: AppListItemProps) {
   const content = (
     <>

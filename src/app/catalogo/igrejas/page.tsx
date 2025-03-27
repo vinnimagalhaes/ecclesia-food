@@ -410,6 +410,7 @@ export default function CatalogoIgrejasPage() {
                     title={igreja.nome}
                     location={`${igreja.cidade}${igreja.estado ? ` - ${igreja.estado}` : ''}`}
                     icon={<Church size={24} className="text-primary-500" />}
+                    showArrow={false}
                   />
                 </div>
               ))}
