@@ -10,7 +10,7 @@ import { LocationData } from '@/lib/geolocation';
 import { HorariosMissa } from '@/components/HorariosMissa';
 
 // Tipos de abas disponíveis
-type TabType = 'todas' | 'favoritas' | 'horarios';
+type TabType = 'todas' | 'horarios';
 
 interface PerfilIgreja {
   id: string;
@@ -130,7 +130,7 @@ export default function CatalogoIgrejasPage() {
     setIgrejas(updatedIgrejas);
     
     // Atualizar lista filtrada se necessário
-    if (activeTab === 'todas' || (activeTab === 'favoritas' && searchTerm)) {
+    if (activeTab === 'todas') {
       const updatedFiltered = filteredIgrejas.map(igreja => 
         igreja.id === id ? { ...igreja, favorita: !igreja.favorita } : igreja
       );
@@ -167,18 +167,6 @@ export default function CatalogoIgrejasPage() {
         );
         setFilteredIgrejas(filtered);
       }
-    } else if (activeTab === 'favoritas') {
-      // Na aba "Favoritas", mostra apenas as favoritas, com filtro de busca se aplicável
-      if (!searchTerm.trim()) {
-        setFilteredIgrejas(igrejasFavoritas);
-      } else {
-        const searchTermLower = searchTerm.toLowerCase();
-        const filtered = igrejasFavoritas.filter(igreja => 
-          igreja.nome.toLowerCase().includes(searchTermLower) ||
-          igreja.cidade.toLowerCase().includes(searchTermLower)
-        );
-        setFilteredIgrejas(filtered);
-      }
     } else if (activeTab === 'horarios') {
       // Na aba "Horários", mostra todas as igrejas com horários (por enquanto, todas)
       if (!searchTerm.trim()) {
@@ -192,7 +180,7 @@ export default function CatalogoIgrejasPage() {
         setFilteredIgrejas(filtered);
       }
     }
-  }, [activeTab, igrejas, igrejasFavoritas, searchTerm]);
+  }, [activeTab, igrejas, searchTerm]);
 
   // Função para formatar URL
   const formatarParaURL = (texto: string) => {
@@ -322,21 +310,7 @@ export default function CatalogoIgrejasPage() {
               onClick={() => setActiveTab('todas')}
             >
               <Church size={18} />
-              <span>Todas as Igrejas</span>
-            </button>
-            <button 
-              className={`px-4 py-2 flex items-center gap-1.5 ${activeTab === 'favoritas' 
-                ? 'text-primary-500 border-b-2 border-primary-500 font-medium' 
-                : 'text-gray-500'}`}
-              onClick={() => setActiveTab('favoritas')}
-            >
-              <Heart size={18} />
-              <span>Favoritas</span>
-              {igrejasFavoritas.length > 0 && (
-                <span className="ml-1 bg-primary-100 text-primary-700 rounded-full text-xs px-2 py-0.5">
-                  {igrejasFavoritas.length}
-                </span>
-              )}
+              <span>Igrejas</span>
             </button>
             <button 
               className={`px-4 py-2 flex items-center gap-1.5 ${activeTab === 'horarios' 
@@ -365,16 +339,10 @@ export default function CatalogoIgrejasPage() {
             <div className="bg-white rounded-xl shadow-sm p-8 text-center mt-4">
               <Church className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {activeTab === 'favoritas' 
-                  ? (searchTerm ? 'Nenhuma igreja favorita encontrada' : 'Nenhuma igreja favorita')
-                  : (searchTerm ? 'Nenhuma igreja encontrada' : 'Nenhuma igreja cadastrada')}
+                Nenhuma igreja encontrada
               </h3>
               <p className="text-gray-600">
-                {activeTab === 'favoritas' && !searchTerm
-                  ? 'Adicione igrejas aos favoritos para facilitar o acesso'
-                  : (searchTerm 
-                    ? 'Tente buscar com outros termos'
-                    : 'Em breve novas igrejas serão adicionadas.')}
+                Em breve novas igrejas serão adicionadas.
               </p>
             </div>
           ) : (
