@@ -31,6 +31,10 @@ export default function CatalogoIgrejasPage() {
   const [activeTab, setActiveTab] = useState<TabType>('todas');
   // Estado para a igreja selecionada na aba de horários
   const [selectedIgreja, setSelectedIgreja] = useState<PerfilIgreja | null>(null);
+  // Estados para os horários de missa
+  const [horariosModoView, setHorariosModoView] = useState<'inicial' | 'minha-cidade' | 'outras-cidades'>('inicial');
+  const [diaSelecionado, setDiaSelecionado] = useState<string>('hoje');
+  const [horarioSelecionado, setHorarioSelecionado] = useState<string>('');
 
   // Função para buscar igrejas
   const fetchIgrejas = async (showLoadingState = true) => {
@@ -180,44 +184,171 @@ export default function CatalogoIgrejasPage() {
     if (location && location.cidade) {
       // Se a localização for detectada, filtra por cidade e atualiza a busca
       setSearchTerm(location.cidade);
+      
+      // Se estiver na aba de horários e tiver clicado em "Horários na minha cidade"
+      if (activeTab === 'horarios' && horariosModoView === 'minha-cidade') {
+        setHorariosModoView('minha-cidade');
+      }
     } else {
       // Se a localização for resetada, limpa o termo de busca
       setSearchTerm('');
     }
   };
 
+  // Função para obter o dia da semana atual
+  const obterDiaDaSemana = () => {
+    const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const hoje = new Date().getDay();
+    return diasSemana[hoje];
+  };
+
+  // Função para obter a lista ordenada de dias da semana, começando com o dia atual
+  const obterDiasDaSemanaOrdenados = () => {
+    const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const hoje = new Date().getDay();
+    const diaAtual = diasSemana[hoje];
+
+    return [
+      { valor: 'hoje', nome: `Hoje (${diaAtual})` },
+      ...diasSemana.map(dia => ({ valor: dia.toLowerCase(), nome: dia }))
+    ];
+  };
+
   // Conteúdo da aba de horários
   const renderHorariosTab = () => {
-    return (
-      <div>
-        {/* Seletor de igreja */}
-        <div className="mb-4">
-          <label htmlFor="igreja-select" className="block text-sm font-medium text-gray-700 mb-1">
-            Selecione uma igreja para ver os horários de missa
-          </label>
-          <select
-            id="igreja-select"
-            value={selectedIgreja?.id || ''}
-            onChange={(e) => {
-              const selectedId = e.target.value;
-              const igreja = igrejas.find(i => i.id === selectedId) || null;
-              setSelectedIgreja(igreja);
-            }}
-            className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+    if (horariosModoView === 'inicial') {
+      return (
+        <div className="flex flex-col gap-4 mt-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-2">Selecione uma opção:</h2>
+          <Button
+            onClick={() => setHorariosModoView('minha-cidade')}
+            variant="primary"
+            className="w-full py-3"
           >
-            <option value="">Selecione uma igreja</option>
-            {igrejas.map((igreja) => (
-              <option key={igreja.id} value={igreja.id}>
-                {igreja.nome} ({igreja.cidade})
-              </option>
-            ))}
-          </select>
+            Horários na minha cidade
+          </Button>
+          <Button
+            onClick={() => setHorariosModoView('outras-cidades')}
+            variant="outline"
+            className="w-full py-3"
+          >
+            Consultar outras cidades
+          </Button>
         </div>
+      );
+    }
 
-        {/* Componente de horários */}
-        <HorariosMissa igreja={selectedIgreja} />
-      </div>
-    );
+    if (horariosModoView === 'minha-cidade') {
+      return (
+        <div className="mt-4">
+          {/* Filtros */}
+          <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-3">Filtros</h3>
+            
+            {/* Filtro de horário */}
+            <div className="mb-4">
+              <label htmlFor="horario-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                Horário
+              </label>
+              <select
+                id="horario-filter"
+                value={horarioSelecionado}
+                onChange={(e) => setHorarioSelecionado(e.target.value)}
+                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">Todos os horários</option>
+                <option value="manha">Manhã (até 12h)</option>
+                <option value="tarde">Tarde (12h às 18h)</option>
+                <option value="noite">Noite (após 18h)</option>
+              </select>
+            </div>
+            
+            {/* Filtro de dia da semana */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Dia da semana
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {obterDiasDaSemanaOrdenados().map((dia) => (
+                  <button
+                    key={dia.valor}
+                    onClick={() => setDiaSelecionado(dia.valor)}
+                    className={`py-2 px-3 text-left rounded-md ${
+                      diaSelecionado === dia.valor
+                        ? 'bg-primary-100 text-primary-700 font-medium'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {dia.nome}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Lista de horários filtrados */}
+          <HorariosMissa 
+            igreja={null} 
+            filtros={{ 
+              cidade: searchTerm, 
+              dia: diaSelecionado === 'hoje' ? obterDiaDaSemana().toLowerCase() : diaSelecionado,
+              horario: horarioSelecionado
+            }} 
+          />
+
+          <Button
+            onClick={() => setHorariosModoView('inicial')}
+            variant="outline"
+            className="mt-4 w-full"
+          >
+            Voltar
+          </Button>
+        </div>
+      );
+    }
+
+    if (horariosModoView === 'outras-cidades') {
+      return (
+        <div>
+          {/* Seletor de igreja */}
+          <div className="mb-4 mt-4">
+            <label htmlFor="igreja-select" className="block text-sm font-medium text-gray-700 mb-1">
+              Selecione uma igreja para ver os horários de missa
+            </label>
+            <select
+              id="igreja-select"
+              value={selectedIgreja?.id || ''}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const igreja = igrejas.find(i => i.id === selectedId) || null;
+                setSelectedIgreja(igreja);
+              }}
+              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">Selecione uma igreja</option>
+              {igrejas.map((igreja) => (
+                <option key={igreja.id} value={igreja.id}>
+                  {igreja.nome} ({igreja.cidade})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Componente de horários */}
+          <HorariosMissa igreja={selectedIgreja} />
+
+          <Button
+            onClick={() => setHorariosModoView('inicial')}
+            variant="outline"
+            className="mt-4 w-full"
+          >
+            Voltar
+          </Button>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   if (loading) {

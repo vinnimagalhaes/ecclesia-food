@@ -33,19 +33,27 @@ interface Igreja {
   estado?: string;
 }
 
-interface HorariosMissaProps {
-  igreja: Igreja | null;
+// Interface para filtros
+interface Filtros {
+  cidade?: string;
+  dia?: string;
+  horario?: string;
 }
 
-export function HorariosMissa({ igreja }: HorariosMissaProps) {
+interface HorariosMissaProps {
+  igreja: Igreja | null;
+  filtros?: Filtros;
+}
+
+export function HorariosMissa({ igreja, filtros }: HorariosMissaProps) {
   const [horarios, setHorarios] = useState<HorarioMissa[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Função para buscar horários de missa
   const fetchHorarios = async () => {
-    if (!igreja) {
-      console.log('Nenhuma igreja selecionada');
+    if (!igreja && !filtros?.cidade) {
+      console.log('Nenhuma igreja ou cidade selecionada');
       return;
     }
     
@@ -53,8 +61,27 @@ export function HorariosMissa({ igreja }: HorariosMissaProps) {
     setError(null);
     
     try {
-      console.log('Buscando horários para igreja:', igreja.id);
-      const response = await fetch(`/api/igrejas/mass-schedules?churchId=${igreja.id}`);
+      let apiUrl = '/api/igrejas/mass-schedules';
+      let params = new URLSearchParams();
+      
+      if (igreja) {
+        params.append('churchId', igreja.id);
+      } else if (filtros?.cidade) {
+        params.append('cidade', filtros.cidade);
+      }
+      
+      if (filtros?.dia) {
+        params.append('dia', filtros.dia);
+      }
+      
+      if (filtros?.horario) {
+        params.append('horario', filtros.horario);
+      }
+      
+      const url = `${apiUrl}?${params.toString()}`;
+      console.log('Buscando horários:', url);
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -70,7 +97,7 @@ export function HorariosMissa({ igreja }: HorariosMissaProps) {
       console.log('Dados recebidos:', data);
       
       if (!data.massSchedules) {
-        console.warn('Nenhum horário encontrado para a igreja');
+        console.warn('Nenhum horário encontrado');
         setHorarios([]);
       } else {
         setHorarios(data.massSchedules);
@@ -83,26 +110,28 @@ export function HorariosMissa({ igreja }: HorariosMissaProps) {
     }
   };
 
-  // Buscar horários quando a igreja mudar
+  // Buscar horários quando a igreja ou os filtros mudarem
   useEffect(() => {
-    if (igreja) {
-      console.log('Igreja selecionada mudou:', igreja);
+    if (igreja || filtros?.cidade) {
+      console.log('Igreja ou filtros mudaram:', { igreja, filtros });
       fetchHorarios();
     } else {
       setHorarios([]);
     }
-  }, [igreja]);
+  }, [igreja, filtros]);
 
-  // Se não houver igreja selecionada
-  if (!igreja) {
+  // Se não houver igreja ou cidade selecionada
+  if (!igreja && !filtros?.cidade) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-6 text-center">
         <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-2" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Selecione uma igreja
+          {filtros ? "Selecione uma cidade" : "Selecione uma igreja"}
         </h3>
         <p className="text-gray-600">
-          Escolha uma igreja na lista para ver os horários de missa
+          {filtros 
+            ? "Escolha uma cidade ou use sua localização atual" 
+            : "Escolha uma igreja na lista para ver os horários de missa"}
         </p>
       </div>
     );
@@ -153,7 +182,9 @@ export function HorariosMissa({ igreja }: HorariosMissaProps) {
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium text-gray-900">
-          Horários de Missa - {igreja.nome}
+          {igreja 
+            ? `Horários de Missa - ${igreja.nome}`
+            : `Horários de Missa em ${filtros?.cidade}`}
         </h3>
         <Button 
           onClick={fetchHorarios}
@@ -170,7 +201,8 @@ export function HorariosMissa({ igreja }: HorariosMissaProps) {
         <div className="text-center py-8">
           <Clock className="mx-auto h-10 w-10 text-gray-400 mb-3" />
           <p className="text-gray-600">
-            Não há horários de missa disponíveis para esta igreja
+            Não há horários de missa disponíveis 
+            {igreja ? ` para esta igreja` : ` nesta cidade${filtros?.dia ? ` no dia selecionado` : ''}`}
           </p>
         </div>
       ) : (
