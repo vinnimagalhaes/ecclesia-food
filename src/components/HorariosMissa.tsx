@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, AlertCircle, RefreshCw } from 'lucide-react';
+import { Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 // Constantes para os dias da semana
