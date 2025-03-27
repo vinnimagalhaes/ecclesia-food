@@ -131,15 +131,10 @@ export function HorariosMissa({ igreja, filtros }: HorariosMissaProps) {
   if (!igreja && !filtros?.cidade) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-        <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-2" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          {filtros ? "Selecione uma cidade" : "Selecione uma igreja"}
-        </h3>
-        <p className="text-gray-600">
-          {filtros 
-            ? "Escolha uma cidade ou use sua localização atual" 
-            : "Escolha uma igreja na lista para ver os horários de missa"}
-        </p>
+        <div className="flex justify-center">
+          <div className="w-10 h-10 border-t-4 border-primary-500 border-solid rounded-full animate-spin"></div>
+          <p className="ml-3 text-gray-600">Aguardando localização...</p>
+        </div>
       </div>
     );
   }

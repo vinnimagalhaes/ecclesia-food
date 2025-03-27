@@ -8,6 +8,7 @@ import { AppListItem } from '@/components/ui/AppListItem';
 import { IgrejasProximas } from '@/components/IgrejasProximas';
 import { LocationData } from '@/lib/geolocation';
 import { HorariosMissa } from '@/components/HorariosMissa';
+import { toast } from 'sonner';
 
 // Tipos de abas disponíveis
 type TabType = 'todas' | 'horarios';
@@ -35,6 +36,7 @@ export default function CatalogoIgrejasPage() {
   const [horariosModoView, setHorariosModoView] = useState<'inicial' | 'minha-cidade' | 'outras-cidades'>('inicial');
   const [diaSelecionado, setDiaSelecionado] = useState<string>('hoje');
   const [horarioSelecionado, setHorarioSelecionado] = useState<string>('');
+  const [solicitandoLocalizacao, setSolicitandoLocalizacao] = useState(false);
 
   // Função para buscar igrejas
   const fetchIgrejas = async (showLoadingState = true) => {
@@ -214,6 +216,30 @@ export default function CatalogoIgrejasPage() {
     ];
   };
 
+  // Função para solicitar a localização do usuário
+  const solicitarLocalizacao = () => {
+    setSolicitandoLocalizacao(true);
+    setHorariosModoView('minha-cidade');
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // A localização foi obtida com sucesso, será processada pelo componente IgrejasProximas
+          console.log("Localização obtida com sucesso");
+          setSolicitandoLocalizacao(false);
+        },
+        (error) => {
+          console.error("Erro ao obter localização:", error);
+          toast.error("Não foi possível obter sua localização. Por favor, permita o acesso à sua localização.");
+          setSolicitandoLocalizacao(false);
+        }
+      );
+    } else {
+      toast.error("Seu navegador não suporta geolocalização.");
+      setSolicitandoLocalizacao(false);
+    }
+  };
+
   // Conteúdo da aba de horários
   const renderHorariosTab = () => {
     if (horariosModoView === 'inicial') {
@@ -221,16 +247,24 @@ export default function CatalogoIgrejasPage() {
         <div className="flex flex-col gap-4 mt-6">
           <h2 className="text-lg font-medium text-gray-900 mb-2">Selecione uma opção:</h2>
           <Button
-            onClick={() => setHorariosModoView('minha-cidade')}
+            onClick={solicitarLocalizacao}
             variant="primary"
             className="w-full py-3"
+            disabled={solicitandoLocalizacao}
           >
-            Horários na minha cidade
+            {solicitandoLocalizacao ? 
+              <div className="flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
+                <span>Obtendo localização...</span>
+              </div> : 
+              "Horários na minha cidade"
+            }
           </Button>
           <Button
             onClick={() => setHorariosModoView('outras-cidades')}
             variant="outline"
             className="w-full py-3"
+            disabled={solicitandoLocalizacao}
           >
             Consultar outras cidades
           </Button>
@@ -239,6 +273,28 @@ export default function CatalogoIgrejasPage() {
     }
 
     if (horariosModoView === 'minha-cidade') {
+      // Se não temos cidade na busca e não estamos solicitando localização, voltar para a tela inicial
+      if (!searchTerm && !solicitandoLocalizacao) {
+        return (
+          <div className="flex flex-col items-center justify-center py-8">
+            <p className="text-gray-600 mb-4">Para ver os horários, precisamos da sua localização</p>
+            <Button 
+              onClick={solicitarLocalizacao} 
+              variant="primary"
+              className="mb-4"
+            >
+              Permitir acesso à localização
+            </Button>
+            <Button
+              onClick={() => setHorariosModoView('inicial')}
+              variant="outline"
+            >
+              Voltar
+            </Button>
+          </div>
+        );
+      }
+
       return (
         <div className="mt-4">
           {/* Filtros */}
