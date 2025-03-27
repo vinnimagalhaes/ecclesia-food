@@ -223,7 +223,7 @@ export default function CatalogoIgrejasPage() {
     
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        (_position) => {
           // A localização foi obtida com sucesso, será processada pelo componente IgrejasProximas
           console.log("Localização obtida com sucesso");
           setSolicitandoLocalizacao(false);
