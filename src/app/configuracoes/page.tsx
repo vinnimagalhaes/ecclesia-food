@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Save, Church, CreditCard, User, Settings, Bell, Clock, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Save, Church, CreditCard, User, Settings, Bell, Clock, Plus, Trash2, Edit2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ConfigPagamento {
@@ -1137,35 +1137,46 @@ export default function ConfiguracoesPage() {
               <p className="text-gray-600">Nenhum horário de missa cadastrado</p>
             </div>
           ) : (
-            <div className="divide-y">
-              {horariosMissa.map((horario) => (
-                <div key={horario.id} className="py-3 flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-gray-800">
-                      {diasSemana[horario.dayOfWeek]} às {horario.time}
-                    </p>
-                    {horario.notes && (
-                      <p className="text-gray-600 text-sm mt-1">{horario.notes}</p>
-                    )}
+            <div className="mt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Horários cadastrados</h3>
+              <div className="grid grid-cols-7 gap-4">
+                {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((dia) => (
+                  <div key={dia} className="bg-white rounded-lg p-4 shadow-sm">
+                    <h4 className="font-medium text-gray-900 mb-2">{dia}</h4>
+                    <div className="space-y-2">
+                      {horariosMissa
+                        .filter((h) => h.dayOfWeek === dia.toUpperCase())
+                        .map((horario) => (
+                          <div
+                            key={horario.id}
+                            className="flex items-center justify-between bg-gray-50 rounded-lg p-2"
+                          >
+                            <span className="text-sm text-gray-600">
+                              {horario.time}
+                            </span>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => prepararEditarHorario(horario)}
+                                className="text-primary-600 hover:text-primary-700"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                onClick={() => excluirHorarioMissa(horario.id!)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      {horariosMissa.filter((h) => h.dayOfWeek === dia.toUpperCase()).length === 0 && (
+                        <p className="text-sm text-gray-500 italic">Nenhum horário cadastrado</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => prepararEditarHorario(horario)}
-                      className="text-blue-600 hover:text-blue-800 p-1"
-                      title="Editar"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => excluirHorarioMissa(horario.id!)}
-                      className="text-red-600 hover:text-red-800 p-1"
-                      title="Excluir"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
