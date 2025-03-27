@@ -8,51 +8,164 @@ export const dynamic = 'force-dynamic';
 const prisma = new PrismaClient();
 
 /**
- * GET - Busca horários de missa de uma igreja específica
+ * GET - Busca horários de missa de uma igreja específica ou por cidade
  */
 export async function GET(req: Request) {
   try {
-    // Obter churchId da URL
+    // Obter parâmetros da URL
     const { searchParams } = new URL(req.url);
     const churchId = searchParams.get('churchId');
+    const tipoBusca = searchParams.get('tipoBusca');
+    const cidade = searchParams.get('cidade');
+    const dia = searchParams.get('dia');
+    const horario = searchParams.get('horario');
 
-    console.log('GET /api/igrejas/mass-schedules - churchId:', churchId);
-
-    if (!churchId) {
-      console.error('ID da igreja não informado');
-      return NextResponse.json(
-        { error: 'ID da igreja não informado' },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se a igreja existe
-    const church = await prisma.church.findUnique({
-      where: { id: churchId },
+    console.log('GET /api/igrejas/mass-schedules - Parâmetros:', {
+      churchId,
+      tipoBusca,
+      cidade,
+      dia,
+      horario
     });
 
-    console.log('Igreja encontrada:', church);
+    // Verificar se a busca é por cidade ou por igreja
+    if (tipoBusca === 'cidade') {
+      if (!cidade) {
+        console.error('Nome da cidade não informado');
+        return NextResponse.json(
+          { error: 'Nome da cidade não informado' },
+          { status: 400 }
+        );
+      }
 
-    if (!church) {
-      console.error('Igreja não encontrada:', churchId);
-      return NextResponse.json(
-        { error: 'Igreja não encontrada' },
-        { status: 404 }
-      );
+      // Buscar igrejas na cidade especificada
+      const churches = await prisma.church.findMany({
+        where: {
+          cidade: {
+            contains: cidade,
+            mode: 'insensitive'  // Case insensitive
+          }
+        }
+      });
+
+      console.log(`Encontradas ${churches.length} igrejas na cidade:`, cidade);
+
+      if (churches.length === 0) {
+        console.log('Nenhuma igreja encontrada na cidade:', cidade);
+        return NextResponse.json({ massSchedules: [] });
+      }
+
+      // Preparar condições de busca para os horários
+      const whereCondition: any = {
+        churchId: {
+          in: churches.map(church => church.id)
+        }
+      };
+
+      // Adicionar filtro de dia da semana se especificado
+      if (dia) {
+        // Converter o nome do dia para o formato da enum no banco (DOMINGO, SEGUNDA, etc.)
+        const dayMap: Record<string, string> = {
+          'domingo': 'DOMINGO',
+          'segunda': 'SEGUNDA',
+          'terça': 'TERCA',
+          'quarta': 'QUARTA',
+          'quinta': 'QUINTA',
+          'sexta': 'SEXTA',
+          'sábado': 'SABADO'
+        };
+        
+        const dayValue = dayMap[dia.toLowerCase()];
+        if (dayValue) {
+          whereCondition.dayOfWeek = dayValue;
+        }
+      }
+
+      // Adicionar filtro de horário se especificado
+      if (horario) {
+        if (horario === 'manha') {
+          whereCondition.time = {
+            lt: '12:00'
+          };
+        } else if (horario === 'tarde') {
+          whereCondition.time = {
+            gte: '12:00',
+            lt: '18:00'
+          };
+        } else if (horario === 'noite') {
+          whereCondition.time = {
+            gte: '18:00'
+          };
+        }
+      }
+
+      // Buscar horários de missa
+      const massSchedules = await prisma.massSchedule.findMany({
+        where: whereCondition,
+        orderBy: [
+          { dayOfWeek: 'asc' },
+          { time: 'asc' }
+        ],
+        include: {
+          church: {
+            select: {
+              nome: true,
+              cidade: true
+            }
+          }
+        }
+      });
+
+      console.log(`Encontrados ${massSchedules.length} horários de missa`);
+
+      // Transformar os resultados para incluir o nome e cidade da igreja
+      const results = massSchedules.map(schedule => ({
+        ...schedule,
+        igrejaInfo: {
+          nome: schedule.church.nome,
+          cidade: schedule.church.cidade
+        }
+      }));
+
+      return NextResponse.json({ massSchedules: results });
+    } else {
+      // Busca por ID da igreja (comportamento original)
+      if (!churchId) {
+        console.error('ID da igreja não informado');
+        return NextResponse.json(
+          { error: 'ID da igreja não informado' },
+          { status: 400 }
+        );
+      }
+
+      // Verificar se a igreja existe
+      const church = await prisma.church.findUnique({
+        where: { id: churchId },
+      });
+
+      console.log('Igreja encontrada:', church);
+
+      if (!church) {
+        console.error('Igreja não encontrada:', churchId);
+        return NextResponse.json(
+          { error: 'Igreja não encontrada' },
+          { status: 404 }
+        );
+      }
+
+      // Buscar horários de missa da igreja
+      const massSchedules = await prisma.massSchedule.findMany({
+        where: { churchId },
+        orderBy: [
+          { dayOfWeek: 'asc' },
+          { time: 'asc' }
+        ]
+      });
+
+      console.log('Horários encontrados:', massSchedules);
+
+      return NextResponse.json({ massSchedules });
     }
-
-    // Buscar horários de missa da igreja
-    const massSchedules = await prisma.massSchedule.findMany({
-      where: { churchId },
-      orderBy: [
-        { dayOfWeek: 'asc' },
-        { time: 'asc' }
-      ]
-    });
-
-    console.log('Horários encontrados:', massSchedules);
-
-    return NextResponse.json({ massSchedules });
   } catch (error) {
     console.error('Erro ao obter horários de missa:', error);
     return NextResponse.json(

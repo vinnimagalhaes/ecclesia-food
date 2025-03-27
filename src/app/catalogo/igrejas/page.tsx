@@ -265,24 +265,21 @@ export default function CatalogoIgrejasPage() {
             
             {/* Filtro de dia da semana */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="dia-semana-filter" className="block text-sm font-medium text-gray-700 mb-1">
                 Dia da semana
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <select
+                id="dia-semana-filter"
+                value={diaSelecionado}
+                onChange={(e) => setDiaSelecionado(e.target.value)}
+                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              >
                 {obterDiasDaSemanaOrdenados().map((dia) => (
-                  <button
-                    key={dia.valor}
-                    onClick={() => setDiaSelecionado(dia.valor)}
-                    className={`py-2 px-3 text-left rounded-md ${
-                      diaSelecionado === dia.valor
-                        ? 'bg-primary-100 text-primary-700 font-medium'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
+                  <option key={dia.valor} value={dia.valor}>
                     {dia.nome}
-                  </button>
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
 

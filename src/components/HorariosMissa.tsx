@@ -23,6 +23,10 @@ interface HorarioMissa {
   dayOfWeek: keyof typeof DIAS_SEMANA;
   time: string;
   notes?: string | null;
+  igrejaInfo?: {
+    nome: string;
+    cidade: string;
+  };
 }
 
 // Interface para igreja
@@ -66,8 +70,11 @@ export function HorariosMissa({ igreja, filtros }: HorariosMissaProps) {
       
       if (igreja) {
         params.append('churchId', igreja.id);
+        console.log('Buscando horários para igreja específica:', igreja.id);
       } else if (filtros?.cidade) {
         params.append('cidade', filtros.cidade);
+        params.append('tipoBusca', 'cidade');
+        console.log('Buscando horários por cidade:', filtros.cidade);
       }
       
       if (filtros?.dia) {
@@ -79,7 +86,7 @@ export function HorariosMissa({ igreja, filtros }: HorariosMissaProps) {
       }
       
       const url = `${apiUrl}?${params.toString()}`;
-      console.log('Buscando horários:', url);
+      console.log('URL completa da busca:', url);
       
       const response = await fetch(url);
       
@@ -222,6 +229,11 @@ export function HorariosMissa({ igreja, filtros }: HorariosMissaProps) {
                       <Clock size={16} className="text-primary-500 mt-0.5 mr-2 flex-shrink-0" />
                       <div>
                         <p className="text-gray-900">{horario.time}</p>
+                        {horario.igrejaInfo && !igreja && (
+                          <p className="text-sm text-primary-600 font-medium mt-0.5">
+                            {horario.igrejaInfo.nome}
+                          </p>
+                        )}
                         {horario.notes && (
                           <p className="text-sm text-gray-500 mt-0.5">{horario.notes}</p>
                         )}
