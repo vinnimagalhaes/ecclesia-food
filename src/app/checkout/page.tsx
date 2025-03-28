@@ -254,7 +254,12 @@ export default function CheckoutPage() {
         cliente: formulario.nome,
         email: formulario.email || undefined,
         telefone: formulario.telefone,
-        documento: formulario.documento,
+        customer: {
+          name: formulario.nome,
+          email: formulario.email || '',
+          document: formulario.documento,
+          phone: formulario.telefone,
+        },
         formaPagamento: formulario.metodoPagamento,
         total: total,
         eventId: itens[0]?.eventId,
