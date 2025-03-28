@@ -88,7 +88,21 @@ export default function PagarMeDiagnosticoPage() {
       return suggestions; // Não podemos sugerir mais nada com uma chave em formato inválido
     }
 
-    if (!basicResult?.teste_conexao) {
+    // Verificar se os testes avançados encontraram endpoints funcionais
+    const endpointsFuncionais = debugResult?.detalhes?.endpointsFuncionais || [];
+    const endpointsPrioritarios = debugResult?.detalhes?.endpointsPrioritariosFuncionais || [];
+    
+    if (endpointsPrioritarios.length > 0) {
+      suggestions.push({
+        problema: 'Restrições de acesso a endpoints específicos',
+        solucao: `Sua chave API está funcionando corretamente com os endpoints: ${endpointsPrioritarios.join(', ')}. Continue usando o método Basic Auth com estes endpoints para a integração.`
+      });
+    } else if (endpointsFuncionais.length > 0) {
+      suggestions.push({
+        problema: 'Endpoint merchants/me não acessível',
+        solucao: `Sua chave API funciona apenas com endpoints não-prioritários. Isso pode indicar limitações da sua conta ou permissões da chave API. Tente usar apenas os endpoints que funcionam: ${endpointsFuncionais.join(', ')}.`
+      });
+    } else if (!basicResult?.teste_conexao) {
       suggestions.push({
         problema: 'Erro de autenticação com a API',
         solucao: 'Verifique se a chave API está correta e se a conta está ativa no painel da Pagar.me.'
@@ -136,10 +150,19 @@ export default function PagarMeDiagnosticoPage() {
       }
     }
 
+    // Se nenhuma sugestão específica foi adicionada, adicione uma geral
     if (suggestions.length === 0) {
       suggestions.push({
         problema: 'Outro problema não identificado',
         solucao: 'Entre em contato com o suporte da Pagar.me para verificar o status da sua conta e da integração.'
+      });
+    }
+
+    // Adicionar uma sugestão sobre uso do Basic Auth se o teste avançado indica que ele funciona
+    if (debugResult?.detalhes?.sucessos > 0) {
+      suggestions.push({
+        problema: 'Método de autenticação correto',
+        solucao: 'Utilize sempre o método Basic Auth para autenticação com a API da Pagar.me, que é o método que está funcionando corretamente com sua chave.'
       });
     }
 

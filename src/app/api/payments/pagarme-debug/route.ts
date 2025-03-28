@@ -65,99 +65,85 @@ export async function GET() {
     addLog(`Ambiente da chave API: ${resultado.api_key_ambiente}`);
 
     // 3. Testar diferentes endpoints e métodos de autenticação
-    addLog('Testando diferentes endpoints e métodos de autenticação...');
+    addLog('Testando diferentes endpoints com método Basic Auth (método recomendado)...');
     
-    // Array de endpoints para testar
+    // Array de endpoints para testar - priorizando os endpoints que sabemos que funcionam
     const endpoints = [
-      { url: `/merchants/me`, nome: 'merchants/me' },
-      { url: `/customers`, nome: 'customers (listagem)' },
-      { url: `/orders`, nome: 'orders (listagem)' }
+      { url: `/customers`, nome: 'customers (listagem)', prioritario: true },
+      { url: `/orders`, nome: 'orders (listagem)', prioritario: true },
+      { url: `/merchants/me`, nome: 'merchants/me', prioritario: false }
     ];
     
-    // Métodos de autenticação
-    const authMethods = [
-      { 
-        nome: 'Basic Auth', 
-        headers: () => ({
-          'Authorization': `Basic ${Buffer.from(PAGARME_API_KEY + ':').toString('base64')}`,
-          'Content-Type': 'application/json',
-        })
-      },
-      { 
-        nome: 'Bearer Token', 
-        headers: () => ({
-          'Authorization': `Bearer ${PAGARME_API_KEY}`,
-          'Content-Type': 'application/json',
-        })
-      },
-      { 
-        nome: 'Api-Key no Header', 
-        headers: () => ({
-          'api-key': PAGARME_API_KEY,
-          'Content-Type': 'application/json',
-        })
-      }
-    ];
+    // Preparar o token de autenticação Basic Auth
+    const authToken = Buffer.from(PAGARME_API_KEY + ':').toString('base64');
     
     const resultados = [];
     
-    // Testar cada combinação de endpoint e método de autenticação
+    // Testar cada endpoint usando Basic Auth, que é o método que funciona
     for (const endpoint of endpoints) {
-      addLog(`Testando endpoint: ${endpoint.nome}`);
+      addLog(`Testando endpoint: ${endpoint.nome}${endpoint.prioritario ? ' (prioritário)' : ''}`);
       
-      for (const authMethod of authMethods) {
-        addLog(`  - Usando método de autenticação: ${authMethod.nome}`);
+      try {
+        const response = await fetch(`${PAGARME_API_URL}${endpoint.url}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Basic ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
         
+        const statusText = response.statusText;
+        const status = response.status;
+        
+        let responseData;
         try {
-          const response = await fetch(`${PAGARME_API_URL}${endpoint.url}`, {
-            method: 'GET',
-            headers: authMethod.headers(),
-          });
-          
-          const statusText = response.statusText;
-          const status = response.status;
-          
-          let responseData;
-          try {
-            responseData = await response.json();
-          } catch (e) {
-            responseData = { error: 'Não foi possível parsear a resposta como JSON' };
-          }
-          
-          addLog(`    - Status: ${status} ${statusText}`);
-          
-          resultados.push({
-            endpoint: endpoint.nome,
-            authMethod: authMethod.nome,
-            status,
-            statusText,
-            success: response.ok,
-            data: responseData
-          });
-          
-          // Se encontramos um método que funciona, podemos marcar como sucesso
-          if (response.ok) {
-            resultado.teste_conexao = true;
-          }
-        } catch (error) {
-          addLog(`    - Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-          
-          resultados.push({
-            endpoint: endpoint.nome,
-            authMethod: authMethod.nome,
-            error: error instanceof Error ? error.message : 'Erro desconhecido',
-            success: false
-          });
+          responseData = await response.json();
+        } catch (e) {
+          responseData = { error: 'Não foi possível parsear a resposta como JSON' };
         }
+        
+        addLog(`  - Status: ${status} ${statusText}`);
+        
+        resultados.push({
+          endpoint: endpoint.nome,
+          authMethod: 'Basic Auth',
+          status,
+          statusText,
+          success: response.ok,
+          prioritario: endpoint.prioritario,
+          data: responseData
+        });
+        
+        // Se encontramos um endpoint prioritário que funciona, podemos marcar como sucesso
+        if (response.ok && endpoint.prioritario) {
+          resultado.teste_conexao = true;
+          addLog(`  - Endpoint prioritário funcionando!`);
+        }
+      } catch (error) {
+        addLog(`  - Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        
+        resultados.push({
+          endpoint: endpoint.nome,
+          authMethod: 'Basic Auth',
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+          success: false,
+          prioritario: endpoint.prioritario
+        });
       }
     }
     
     // Verificar se algum teste foi bem-sucedido
     const sucessos = resultados.filter(r => r.success);
+    const sucessosPrioritarios = resultados.filter(r => r.success && r.prioritario);
     
     if (sucessos.length > 0) {
-      resultado.mensagem = `Conexão estabelecida com sucesso em ${sucessos.length} de ${resultados.length} testes`;
-      addLog(`Conexão estabelecida com sucesso em ${sucessos.length} endpoints/métodos`);
+      if (sucessosPrioritarios.length > 0) {
+        resultado.mensagem = `Conexão estabelecida com sucesso em ${sucessosPrioritarios.length} endpoints prioritários`;
+        addLog(`Conexão estabelecida com sucesso em ${sucessosPrioritarios.length} endpoints prioritários`);
+      } else {
+        resultado.mensagem = `Conexão estabelecida, mas apenas em endpoints não-prioritários`;
+        addLog(`Conexão estabelecida, mas apenas em endpoints não-prioritários`);
+      }
     } else {
       resultado.mensagem = 'Todos os testes de conexão falharam';
       addLog('Todos os testes de conexão falharam');
@@ -175,10 +161,19 @@ export async function GET() {
       }
     }
     
+    // Adicionar conclusão sobre qual método funciona
+    if (sucessosPrioritarios.length > 0) {
+      addLog('CONCLUSÃO: Use o método Basic Auth com os endpoints /customers e /orders para integração');
+      resultado.mensagem += '. Recomendação: Continuar usando Basic Auth com os endpoints /customers e /orders para integração.';
+    }
+    
     resultado.detalhes = {
       testes: resultados,
       sucessos: sucessos.length,
-      total: resultados.length
+      sucessosPrioritarios: sucessosPrioritarios.length,
+      total: resultados.length,
+      endpointsFuncionais: sucessos.map(s => s.endpoint),
+      endpointsPrioritariosFuncionais: sucessosPrioritarios.map(s => s.endpoint)
     };
     
     return NextResponse.json(resultado);

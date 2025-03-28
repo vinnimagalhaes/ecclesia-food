@@ -39,12 +39,12 @@ export async function GET() {
     resultado.api_key_valida = true;
     resultado.api_key_ambiente = PAGARME_API_KEY.startsWith('sk_test_') ? 'Teste' : 'Produção';
 
-    // 3. Testar conexão com a API da Pagar.me - Método 1: Basic Auth
+    // 3. Testar conexão com a API da Pagar.me - usando Basic Auth com endpoints funcionais
     try {
       const authToken = Buffer.from(PAGARME_API_KEY + ':').toString('base64');
 
-      // Fazer uma solicitação simples para verificar a conexão
-      const response = await fetch(`${PAGARME_API_URL}/merchants/me`, {
+      // Fazer uma solicitação para o endpoint customers que sabemos que funciona
+      const response = await fetch(`${PAGARME_API_URL}/customers`, {
         method: 'GET',
         headers: {
           'Authorization': `Basic ${authToken}`,
@@ -55,16 +55,16 @@ export async function GET() {
       const data = await response.json();
       
       if (!response.ok) {
-        console.log('Tentativa 1 (Basic Auth) falhou:', response.status, response.statusText);
+        console.log('Teste com /customers falhou:', response.status, response.statusText);
         
-        // Se o método 1 falhar, tente o método 2: Bearer Token
+        // Tentar com o endpoint orders como backup
         try {
-          console.log('Tentando método 2: Bearer Token');
+          console.log('Tentando endpoint /orders');
           
-          const response2 = await fetch(`${PAGARME_API_URL}/merchants/me`, {
+          const response2 = await fetch(`${PAGARME_API_URL}/orders`, {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${PAGARME_API_KEY}`,
+              'Authorization': `Basic ${authToken}`,
               'Content-Type': 'application/json',
             },
           });
@@ -72,16 +72,16 @@ export async function GET() {
           const data2 = await response2.json();
           
           if (!response2.ok) {
-            console.log('Tentativa 2 (Bearer Token) também falhou:', response2.status, response2.statusText);
+            console.log('Teste com /orders também falhou:', response2.status, response2.statusText);
             
-            resultado.mensagem = 'Erro na resposta da Pagar.me (ambos os métodos de autenticação falharam)';
+            resultado.mensagem = 'Erro na resposta da Pagar.me (ambos os endpoints testados falharam)';
             resultado.detalhes = {
-              basicAuth: {
+              customers: {
                 status: response.status,
                 statusText: response.statusText,
                 data: data
               },
-              bearerToken: {
+              orders: {
                 status: response2.status,
                 statusText: response2.statusText,
                 data: data2
@@ -90,27 +90,27 @@ export async function GET() {
             return NextResponse.json(resultado);
           }
           
-          // Conexão bem-sucedida com Bearer Token
+          // Conexão bem-sucedida com /orders
           resultado.teste_conexao = true;
-          resultado.mensagem = 'Conexão com a Pagar.me estabelecida com sucesso (usando Bearer Token)';
+          resultado.mensagem = 'Conexão com a Pagar.me estabelecida com sucesso (endpoint /orders)';
           resultado.detalhes = {
-            metodo: 'Bearer Token',
-            merchant: {
-              id: data2.id,
-              name: data2.name,
-              status: data2.status
+            metodo: 'Basic Auth',
+            endpoint: '/orders',
+            response: {
+              status: response2.status,
+              data: data2.data ? { count: data2.data.length } : {}
             }
           };
           
           return NextResponse.json(resultado);
         } catch (error2) {
-          resultado.mensagem = 'Erro ao testar conexão com a Pagar.me (ambos os métodos falharam)';
+          resultado.mensagem = 'Erro ao testar conexão com a Pagar.me (ambos os endpoints falharam)';
           resultado.detalhes = {
-            basicAuth: {
+            customers: {
               status: response.status,
               data: data
             },
-            bearerToken: {
+            orders: {
               error: error2 instanceof Error ? error2.message : 'Erro desconhecido'
             }
           };
@@ -118,15 +118,15 @@ export async function GET() {
         }
       }
 
-      // Conexão bem-sucedida com Basic Auth
+      // Conexão bem-sucedida com /customers
       resultado.teste_conexao = true;
-      resultado.mensagem = 'Conexão com a Pagar.me estabelecida com sucesso (usando Basic Auth)';
+      resultado.mensagem = 'Conexão com a Pagar.me estabelecida com sucesso (endpoint /customers)';
       resultado.detalhes = {
         metodo: 'Basic Auth',
-        merchant: {
-          id: data.id,
-          name: data.name,
-          status: data.status
+        endpoint: '/customers',
+        response: {
+          status: response.status,
+          data: data.data ? { count: data.data.length } : {}
         }
       };
 
