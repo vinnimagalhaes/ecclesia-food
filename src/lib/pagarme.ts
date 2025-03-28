@@ -24,6 +24,7 @@ interface Customer {
   email: string;
   document_number: string;
   phone: string;
+  [key: string]: string;
 }
 
 interface PaymentRequest {
@@ -55,9 +56,18 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
     }
 
     // Validar dados do cliente
-    if (!customer.name || !customer.email || !customer.document_number || !customer.phone) {
-      console.error('Dados do cliente incompletos:', customer);
-      throw new Error('Dados do cliente incompletos');
+    if (!customer || typeof customer !== 'object') {
+      console.error('Dados do cliente inválidos:', customer);
+      throw new Error('Dados do cliente inválidos');
+    }
+
+    // Validar campos obrigatórios do cliente
+    const requiredFields = ['name', 'email', 'document_number', 'phone'];
+    const missingFields = requiredFields.filter(field => !customer[field]);
+    
+    if (missingFields.length > 0) {
+      console.error('Campos obrigatórios faltando:', missingFields);
+      throw new Error(`Campos obrigatórios faltando: ${missingFields.join(', ')}`);
     }
 
     // Formatar o telefone

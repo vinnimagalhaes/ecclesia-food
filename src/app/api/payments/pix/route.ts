@@ -52,10 +52,24 @@ export async function POST(request: Request) {
     console.log('Pedido encontrado:', JSON.stringify(order, null, 2));
 
     // Validar dados do cliente
-    if (!body.customer?.name || !body.customer?.email || !body.customer?.document || !body.customer?.phone) {
-      console.error('Dados do cliente incompletos:', body.customer);
+    if (!body.customer) {
+      console.error('Dados do cliente não fornecidos');
       return NextResponse.json(
-        { error: 'Dados do cliente incompletos' },
+        { error: 'Dados do cliente não fornecidos' },
+        { status: 400 }
+      );
+    }
+
+    console.log('Dados do cliente recebidos:', JSON.stringify(body.customer, null, 2));
+
+    // Validar campos obrigatórios
+    const requiredFields = ['name', 'email', 'document', 'phone'];
+    const missingFields = requiredFields.filter(field => !body.customer[field]);
+    
+    if (missingFields.length > 0) {
+      console.error('Campos obrigatórios faltando:', missingFields);
+      return NextResponse.json(
+        { error: `Campos obrigatórios faltando: ${missingFields.join(', ')}` },
         { status: 400 }
       );
     }
