@@ -105,7 +105,7 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
     console.log('Telefone separado:', { areaCode, number });
 
     // Converter valor para centavos
-    const amountInCents = amount;
+    const amountInCents = Math.round(amount * 100);
 
     const requestBody = {
       code: orderId,
@@ -124,7 +124,7 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
         }
       },
       items: items.map((item, index) => ({
-        amount: item.amount, // Removendo a conversão para centavos
+        amount: Math.round(item.amount * 100), // Convertendo para centavos
         description: item.name,
         quantity: item.quantity,
         code: `ITEM_${index + 1}`,
@@ -145,7 +145,7 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
       ],
       closed: true,
       status: 'pending',
-      amount: amountInCents, // Usando o valor sem conversão
+      amount: amountInCents, // Usando o valor em centavos
     };
 
     console.log('Enviando requisição para Pagar.me:', JSON.stringify(requestBody, null, 2));
