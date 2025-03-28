@@ -67,12 +67,13 @@ export function PixPayment({
         throw new Error('ID do pedido não fornecido');
       }
 
-      console.log('Iniciando criação de pagamento PIX:', {
+      console.log('Payload enviado para a API:', {
         amount,
         customer: {
-          ...customer,
-          phone,
-          document_number: document
+          name: customer.name,
+          email: customer.email,
+          document,
+          phone
         },
         orderId,
       });

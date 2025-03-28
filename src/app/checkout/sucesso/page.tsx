@@ -19,6 +19,7 @@ interface UltimoPedido {
     phone?: string;
   };
   documento?: string;
+  document_number?: string;
   telefone?: string;
   email?: string;
 }
@@ -37,6 +38,7 @@ export default function SucessoPage() {
 
     try {
       const ultimoPedido = JSON.parse(ultimoPedidoStr);
+      console.log('Dados recebidos do localStorage:', ultimoPedido);
       setPedido(ultimoPedido);
     } catch (error) {
       console.error('Erro ao carregar informações do pedido:', error);
@@ -98,7 +100,7 @@ export default function SucessoPage() {
                 customer={pedido.customer || {
                   name: pedido.cliente,
                   email: pedido.email || '',
-                  document: pedido.documento || '',
+                  document: pedido.documento || pedido.document_number || '',
                   phone: pedido.telefone || ''
                 }}
                 orderId={pedido.id}
