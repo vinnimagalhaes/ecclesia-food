@@ -39,6 +39,23 @@ export function PixPayment({
         throw new Error('Dados do cliente incompletos');
       }
 
+      // Validar telefone do cliente
+      if (!customer.phone) {
+        throw new Error('Telefone do cliente não fornecido. Este campo é obrigatório para pagamento PIX.');
+      }
+
+      // Limpar telefone para conter apenas números
+      const phone = customer.phone.replace(/\D/g, '');
+      if (phone.length < 10) {
+        throw new Error('Telefone do cliente inválido. O número deve ter pelo menos 10 dígitos.');
+      }
+
+      // Limpar documento para conter apenas números
+      const document = customer.document_number.replace(/\D/g, '');
+      if (document.length !== 11 && document.length !== 14) {
+        throw new Error('Documento do cliente inválido. CPF deve ter 11 dígitos e CNPJ 14 dígitos.');
+      }
+
       // Validar valor
       if (!amount || amount <= 0) {
         throw new Error('Valor do pagamento inválido');
@@ -51,7 +68,11 @@ export function PixPayment({
 
       console.log('Iniciando criação de pagamento PIX:', {
         amount,
-        customer,
+        customer: {
+          ...customer,
+          phone,
+          document_number: document
+        },
         orderId,
       });
 
@@ -65,8 +86,8 @@ export function PixPayment({
           customer: {
             name: customer.name,
             email: customer.email,
-            document_number: customer.document_number.replace(/\D/g, ''), // Remove caracteres não numéricos
-            phone: customer.phone,
+            document_number: document,
+            phone: phone,
           },
           orderId,
         }),
@@ -76,7 +97,9 @@ export function PixPayment({
       console.log('Resposta da API:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar pagamento');
+        const errorMessage = data.error || 'Erro ao criar pagamento';
+        console.error('Erro na resposta da API:', errorMessage, data.details);
+        throw new Error(errorMessage);
       }
 
       if (!data.qr_code) {
