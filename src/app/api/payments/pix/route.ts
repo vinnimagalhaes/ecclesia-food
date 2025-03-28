@@ -75,7 +75,10 @@ export async function POST(request: Request) {
     }
 
     // Validar documento (aceita tanto 'document' quanto 'documento')
-    if (!body.customer.document && !body.customer.documento) {
+    const document = body.customer.document || body.customer.documento;
+    console.log('Documento recebido:', document);
+
+    if (!document) {
       console.error('Documento não fornecido');
       return NextResponse.json(
         { error: 'Documento do cliente não fornecido' },
@@ -94,9 +97,9 @@ export async function POST(request: Request) {
     }
 
     // Validar documento
-    const document = (body.customer.document || body.customer.documento).replace(/\D/g, '');
-    if (document.length !== 11) {
-      console.error('Documento inválido:', document);
+    const formattedDocument = document.replace(/\D/g, '');
+    if (formattedDocument.length !== 11) {
+      console.error('Documento inválido:', formattedDocument);
       return NextResponse.json(
         { error: 'Documento do cliente inválido' },
         { status: 400 }
@@ -127,7 +130,7 @@ export async function POST(request: Request) {
       customer: {
         name: body.customer.name,
         email: body.customer.email,
-        document_number: document,
+        document_number: formattedDocument,
         phone: phone,
       },
       orderId: order.id,
@@ -143,7 +146,7 @@ export async function POST(request: Request) {
       customer: {
         name: body.customer.name,
         email: body.customer.email,
-        document_number: document,
+        document_number: formattedDocument,
         phone: phone,
       },
       orderId: order.id,
