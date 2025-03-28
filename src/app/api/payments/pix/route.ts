@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     }
 
     // Buscar pedido no banco
-    const order = await prisma.order.findUnique({
+    const order = await prisma.sale.findUnique({
       where: { id: body.orderId },
       include: {
         items: {
@@ -109,9 +109,9 @@ export async function POST(request: Request) {
       },
       orderId: order.id,
       items: order.items.map(item => ({
-        name: item.product.name,
-        amount: item.price,
-        quantity: item.quantity,
+        name: item.nome,
+        amount: item.precoUnitario,
+        quantity: item.quantidade,
       })),
     });
 
@@ -125,25 +125,27 @@ export async function POST(request: Request) {
       },
       orderId: order.id,
       items: order.items.map(item => ({
-        name: item.product.name,
-        amount: item.price,
-        quantity: item.quantity,
+        name: item.nome,
+        amount: item.precoUnitario,
+        quantity: item.quantidade,
       })),
     });
 
     console.log('Pagamento PIX criado com sucesso:', JSON.stringify(payment, null, 2));
 
     // Atualizar pedido com o ID do pagamento
-    await prisma.order.update({
+    await prisma.sale.update({
       where: { id: order.id },
       data: {
-        paymentId: payment.id,
-        paymentStatus: 'PENDING',
-        paymentMethod: 'PIX',
-        paymentDetails: {
-          qrCode: payment.qr_code,
-          qrCodeUrl: payment.qr_code_url,
-          expiresAt: payment.expires_at,
+        metadata: {
+          paymentId: payment.id,
+          paymentStatus: 'PENDING',
+          paymentMethod: 'PIX',
+          paymentDetails: {
+            qrCode: payment.qr_code,
+            qrCodeUrl: payment.qr_code_url,
+            expiresAt: payment.expires_at,
+          },
         },
       },
     });
