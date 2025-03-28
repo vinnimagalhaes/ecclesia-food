@@ -100,6 +100,7 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
       throw new Error('Telefone do cliente inválido');
     }
 
+    // Extrair DDD e número do telefone
     const areaCode = phone.substring(0, 2);
     const number = phone.substring(2);
     console.log('Telefone separado:', { areaCode, number });
@@ -108,14 +109,30 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
     const amountInCents = Math.round(amount * 100);
     console.log('Valor convertido para centavos:', amountInCents);
 
+    // Formatar documento
+    const document = customer.document_number.replace(/\D/g, '');
+    if (document.length !== 11) {
+      console.error('Documento inválido:', document);
+      throw new Error('Documento do cliente inválido');
+    }
+
     const requestBody = {
-      code: orderId,
+      items: items.map((item, index) => ({
+        amount: Math.round(item.amount * 100), // Convertendo para centavos
+        description: item.name,
+        quantity: item.quantity,
+        code: `ITEM_${index + 1}`,
+      })),
       customer: {
         name: customer.name,
         email: customer.email,
-        document: customer.document_number.replace(/\D/g, ''),
         type: 'individual',
-        document_type: 'cpf',
+        documents: [
+          {
+            type: 'cpf',
+            number: document
+          }
+        ],
         phones: {
           mobile_phone: {
             country_code: '55',
@@ -124,29 +141,18 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
           }
         }
       },
-      items: items.map((item, index) => ({
-        amount: Math.round(item.amount * 100), // Convertendo para centavos
-        description: item.name,
-        quantity: item.quantity,
-        code: `ITEM_${index + 1}`,
-      })),
       payments: [
         {
           payment_method: 'pix',
           pix: {
-            expires_in: expiresIn,
-            additional_information: [
-              {
-                name: 'Pedido',
-                value: orderId,
-              },
-            ],
+            expires_in: expiresIn
           },
-        },
+          amount: amountInCents
+        }
       ],
+      code: orderId,
       closed: true,
-      status: 'pending',
-      amount: amountInCents, // Usando o valor em centavos
+      status: 'pending'
     };
 
     console.log('Enviando requisição para Pagar.me:', JSON.stringify(requestBody, null, 2));
