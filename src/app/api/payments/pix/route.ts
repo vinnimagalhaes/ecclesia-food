@@ -63,13 +63,22 @@ export async function POST(request: Request) {
     console.log('Dados do cliente recebidos:', JSON.stringify(body.customer, null, 2));
 
     // Validar campos obrigatórios
-    const requiredFields = ['name', 'email', 'document', 'phone'];
+    const requiredFields = ['name', 'email', 'phone'];
     const missingFields = requiredFields.filter(field => !body.customer[field]);
     
     if (missingFields.length > 0) {
       console.error('Campos obrigatórios faltando:', missingFields);
       return NextResponse.json(
         { error: `Campos obrigatórios faltando: ${missingFields.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Validar documento (aceita tanto 'document' quanto 'documento')
+    if (!body.customer.document && !body.customer.documento) {
+      console.error('Documento não fornecido');
+      return NextResponse.json(
+        { error: 'Documento do cliente não fornecido' },
         { status: 400 }
       );
     }
@@ -85,7 +94,7 @@ export async function POST(request: Request) {
     }
 
     // Validar documento
-    const document = body.customer.document.replace(/\D/g, '');
+    const document = (body.customer.document || body.customer.documento).replace(/\D/g, '');
     if (document.length !== 11) {
       console.error('Documento inválido:', document);
       return NextResponse.json(
