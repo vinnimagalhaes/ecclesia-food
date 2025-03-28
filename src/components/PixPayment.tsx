@@ -6,7 +6,8 @@ interface PixPaymentProps {
   customer: {
     name: string;
     email: string;
-    document_number: string;
+    document_number?: string;
+    document?: string;
     phone?: string;
   };
   orderId: string;
@@ -35,7 +36,7 @@ export function PixPayment({
       setError('');
 
       // Validar dados do cliente
-      if (!customer.name || !customer.email || !customer.document_number) {
+      if (!customer.name || !customer.email || (!customer.document_number && !customer.document)) {
         throw new Error('Dados do cliente incompletos');
       }
 
@@ -51,7 +52,7 @@ export function PixPayment({
       }
 
       // Limpar documento para conter apenas números
-      const document = customer.document_number.replace(/\D/g, '');
+      const document = (customer.document_number || customer.document || '').replace(/\D/g, '');
       if (document.length !== 11 && document.length !== 14) {
         throw new Error('Documento do cliente inválido. CPF deve ter 11 dígitos e CNPJ 14 dígitos.');
       }
@@ -86,7 +87,7 @@ export function PixPayment({
           customer: {
             name: customer.name,
             email: customer.email,
-            document_number: document,
+            document: document,
             phone: phone,
           },
           orderId,

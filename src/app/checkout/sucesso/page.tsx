@@ -98,7 +98,7 @@ export default function SucessoPage() {
                 customer={pedido.customer || {
                   name: pedido.cliente,
                   email: pedido.email || '',
-                  document_number: pedido.documento || '',
+                  document: pedido.documento || '',
                   phone: pedido.telefone || ''
                 }}
                 orderId={pedido.id}
