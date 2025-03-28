@@ -106,6 +106,7 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
 
     // Converter valor para centavos
     const amountInCents = Math.round(amount * 100);
+    console.log('Valor convertido para centavos:', amountInCents);
 
     const requestBody = {
       code: orderId,
@@ -177,7 +178,18 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
         details: data.details,
         gateway_response: data.gateway_response,
       });
-      throw new Error(data.message || 'Erro ao criar pagamento na Pagar.me');
+      
+      // Extrair mensagem de erro mais específica
+      let errorMessage = 'Erro ao criar pagamento na Pagar.me';
+      if (data.message) {
+        errorMessage = data.message;
+      } else if (data.errors && data.errors.length > 0) {
+        errorMessage = data.errors[0].message;
+      } else if (data.details && data.details[0]) {
+        errorMessage = data.details[0].message;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     // Verificar se temos os dados necessários
@@ -207,7 +219,18 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
         details: lastTransaction.details,
         gateway_response: lastTransaction.gateway_response,
       });
-      throw new Error(`Falha na transação: ${lastTransaction.message || lastTransaction.error || 'Erro desconhecido'}`);
+      
+      // Extrair mensagem de erro mais específica
+      let errorMessage = 'Falha na transação';
+      if (lastTransaction.message) {
+        errorMessage = lastTransaction.message;
+      } else if (lastTransaction.error) {
+        errorMessage = lastTransaction.error;
+      } else if (lastTransaction.details && lastTransaction.details[0]) {
+        errorMessage = lastTransaction.details[0].message;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     // Verificar se temos o QR code
