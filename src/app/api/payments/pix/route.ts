@@ -1,28 +1,26 @@
 import { NextResponse } from 'next/server';
 import { createPixPayment, getTransactionStatus } from '@/lib/pagarme';
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
+    console.log('Iniciando processamento de pagamento PIX...');
+    
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      console.error('Usuário não autenticado');
+      return NextResponse.json(
+        { error: 'Usuário não autenticado' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
-    console.log('Dados recebidos para pagamento PIX:', JSON.stringify(body, null, 2));
+    console.log('Dados recebidos:', JSON.stringify(body, null, 2));
 
-    // Validar dados
-    if (!body.amount || body.amount <= 0) {
-      console.error('Valor do pagamento inválido:', body.amount);
-      return NextResponse.json(
-        { error: 'Valor do pagamento inválido' },
-        { status: 400 }
-      );
-    }
-
-    if (!body.customer?.name || !body.customer?.email || !body.customer?.document_number) {
-      console.error('Dados do cliente incompletos:', body.customer);
-      return NextResponse.json(
-        { error: 'Dados do cliente incompletos' },
-        { status: 400 }
-      );
-    }
-
+    // Validar dados do pedido
     if (!body.orderId) {
       console.error('ID do pedido não fornecido');
       return NextResponse.json(
@@ -31,113 +29,138 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validar telefone antes de enviar
-    if (!body.customer?.phone) {
-      console.error('Telefone do cliente não fornecido');
-      return NextResponse.json(
-        { error: 'Telefone do cliente não fornecido. Este campo é obrigatório para criar um pagamento PIX.' },
-        { status: 400 }
-      );
-    }
-
-    // Garantir que o telefone esteja no formato correto
-    const telefone = body.customer.phone.replace(/\D/g, '');
-    if (telefone.length < 10) {
-      console.error('Telefone do cliente inválido:', telefone);
-      return NextResponse.json(
-        { error: 'Telefone do cliente inválido. O número deve ter pelo menos 10 dígitos.' },
-        { status: 400 }
-      );
-    }
-
-    // Garantir que document_number contém apenas números
-    const documento = body.customer.document_number.replace(/\D/g, '');
-    if (documento.length !== 11 && documento.length !== 14) {
-      console.error('Documento do cliente inválido:', documento);
-      return NextResponse.json(
-        { error: 'Documento do cliente inválido. CPF deve ter 11 dígitos e CNPJ 14 dígitos.' },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se items existe, se não, criar um item padrão
-    const items = body.items || [{
-      name: 'Pedido',
-      amount: body.amount,
-      quantity: 1,
-    }];
-
-    console.log('Dados validados com sucesso, enviando para Pagar.me');
-
-    try {
-      // Criar pagamento na Pagar.me
-      const paymentData = await createPixPayment({
-        amount: body.amount,
-        customer: {
-          name: body.customer.name,
-          email: body.customer.email,
-          document_number: documento,
-          phone: telefone,
-        },
-        orderId: body.orderId,
-        items: items,
-        expiresIn: body.expiresIn || 3600, // 1 hora por padrão
-      });
-
-      console.log('Resposta da Pagar.me obtida com sucesso:', paymentData);
-
-      // Verificar se temos o QR code
-      if (!paymentData.qr_code) {
-        console.error('QR code não encontrado na resposta:', paymentData);
-        return NextResponse.json(
-          { 
-            error: 'QR code não encontrado na resposta',
-            details: paymentData
+    // Buscar pedido no banco
+    const order = await prisma.order.findUnique({
+      where: { id: body.orderId },
+      include: {
+        items: {
+          include: {
+            product: true,
           },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json({
-        id: paymentData.id,
-        qr_code: paymentData.qr_code,
-        qr_code_url: paymentData.qr_code_url,
-        expires_at: paymentData.expires_at,
-        status: paymentData.status,
-        charge_id: paymentData.charges?.[0]?.id,
-        transaction_id: paymentData.charges?.[0]?.last_transaction?.id,
-      });
-    } catch (paymentError) {
-      // Tratamento específico para erros da Pagar.me
-      console.error('Erro específico ao criar pagamento na Pagar.me:', paymentError);
-      
-      // Verificar se é um erro da API com detalhes
-      const errorMessage = paymentError instanceof Error ? paymentError.message : 'Erro desconhecido ao processar pagamento';
-      
-      // Extrair detalhes do erro se disponíveis
-      let errorDetails = {};
-      try {
-        if (errorMessage.includes('{')) {
-          const errorJson = errorMessage.substring(errorMessage.indexOf('{'));
-          errorDetails = JSON.parse(errorJson);
-        }
-      } catch (e) {
-        // Ignorar erro de parse
-      }
-      
-      return NextResponse.json(
-        { 
-          error: errorMessage,
-          details: errorDetails
         },
-        { status: 422 }
+      },
+    });
+
+    if (!order) {
+      console.error('Pedido não encontrado:', body.orderId);
+      return NextResponse.json(
+        { error: 'Pedido não encontrado' },
+        { status: 404 }
       );
     }
+
+    console.log('Pedido encontrado:', JSON.stringify(order, null, 2));
+
+    // Validar dados do cliente
+    if (!body.customer?.name || !body.customer?.email || !body.customer?.document || !body.customer?.phone) {
+      console.error('Dados do cliente incompletos:', body.customer);
+      return NextResponse.json(
+        { error: 'Dados do cliente incompletos' },
+        { status: 400 }
+      );
+    }
+
+    // Validar telefone
+    const phone = body.customer.phone.replace(/\D/g, '');
+    if (phone.length < 10) {
+      console.error('Telefone inválido:', phone);
+      return NextResponse.json(
+        { error: 'Telefone do cliente inválido' },
+        { status: 400 }
+      );
+    }
+
+    // Validar documento
+    const document = body.customer.document.replace(/\D/g, '');
+    if (document.length !== 11) {
+      console.error('Documento inválido:', document);
+      return NextResponse.json(
+        { error: 'Documento do cliente inválido' },
+        { status: 400 }
+      );
+    }
+
+    // Validar valor
+    if (!order.total || order.total <= 0) {
+      console.error('Valor do pedido inválido:', order.total);
+      return NextResponse.json(
+        { error: 'Valor do pedido inválido' },
+        { status: 400 }
+      );
+    }
+
+    // Validar itens
+    if (!order.items || order.items.length === 0) {
+      console.error('Pedido sem itens');
+      return NextResponse.json(
+        { error: 'Pedido sem itens' },
+        { status: 400 }
+      );
+    }
+
+    // Criar pagamento PIX
+    console.log('Iniciando criação de pagamento PIX com os dados:', {
+      amount: order.total,
+      customer: {
+        name: body.customer.name,
+        email: body.customer.email,
+        document_number: document,
+        phone: phone,
+      },
+      orderId: order.id,
+      items: order.items.map(item => ({
+        name: item.product.name,
+        amount: item.price,
+        quantity: item.quantity,
+      })),
+    });
+
+    const payment = await createPixPayment({
+      amount: order.total,
+      customer: {
+        name: body.customer.name,
+        email: body.customer.email,
+        document_number: document,
+        phone: phone,
+      },
+      orderId: order.id,
+      items: order.items.map(item => ({
+        name: item.product.name,
+        amount: item.price,
+        quantity: item.quantity,
+      })),
+    });
+
+    console.log('Pagamento PIX criado com sucesso:', JSON.stringify(payment, null, 2));
+
+    // Atualizar pedido com o ID do pagamento
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentId: payment.id,
+        paymentStatus: 'PENDING',
+        paymentMethod: 'PIX',
+        paymentDetails: {
+          qrCode: payment.qr_code,
+          qrCodeUrl: payment.qr_code_url,
+          expiresAt: payment.expires_at,
+        },
+      },
+    });
+
+    return NextResponse.json(payment);
   } catch (error) {
-    console.error('Erro ao processar pagamento:', error);
+    console.error('Erro ao processar pagamento PIX:', error);
+    
+    // Extrair mensagem de erro mais específica
+    let errorMessage = 'Erro ao processar pagamento PIX';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
       { 
-        error: error instanceof Error ? error.message : 'Erro ao processar pagamento',
+        error: errorMessage,
         details: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
