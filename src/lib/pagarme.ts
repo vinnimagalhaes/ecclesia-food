@@ -121,13 +121,11 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
           payment_method: 'pix',
           pix: {
             expires_in: expiresIn
-          },
-          amount: amountInCents
+          }
         }
       ],
       code: orderId,
-      closed: true,
-      status: 'pending'
+      closed: true
     };
 
     console.log('Enviando requisição para Pagar.me:', JSON.stringify(requestBody, null, 2));
