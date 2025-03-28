@@ -43,6 +43,16 @@ export default async function MasterPage() {
           </p>
         </Link>
 
+        <Link 
+          href="/admin/pagarme-diagnostico" 
+          className="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-50"
+        >
+          <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900">Diagnóstico Pagar.me</h5>
+          <p className="font-normal text-gray-700">
+            Verifique e solucione problemas com a integração de pagamentos Pagar.me.
+          </p>
+        </Link>
+
         <div className="block p-6 bg-white border border-gray-200 rounded-lg shadow opacity-50 cursor-not-allowed">
           <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900">Configurações do Sistema</h5>
           <p className="font-normal text-gray-700">

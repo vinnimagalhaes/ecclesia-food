@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, CreditCard, Shield } from 'lucide-react';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -72,6 +72,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
             >
               <span>Configurações</span>
             </Link>
+            
+            {/* Link para diagnóstico Pagar.me - apenas para SUPER_ADMIN */}
+            {session?.user?.role === 'SUPER_ADMIN' && (
+              <Link 
+                href="/admin/pagarme-diagnostico" 
+                className="flex items-center gap-2 px-4 py-2.5 text-yellow-700 bg-yellow-50 hover:bg-yellow-100 rounded-lg mt-2"
+              >
+                <CreditCard size={16} />
+                <span>Diagnóstico Pagar.me</span>
+              </Link>
+            )}
+            
+            {/* Link para painel master - apenas para SUPER_ADMIN */}
+            {session?.user?.role === 'SUPER_ADMIN' && (
+              <Link 
+                href="/master" 
+                className="flex items-center gap-2 px-4 py-2.5 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg mt-2"
+              >
+                <Shield size={16} />
+                <span>Painel Master</span>
+              </Link>
+            )}
           </nav>
 
           {/* User Profile */}
