@@ -82,10 +82,16 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
     const number = phone.substring(2);
 
     // Formatar documento
-    const document = customer.document_number.replace(/\D/g, '');
-    if (document.length !== 11) {
+    const rawDocument = customer.document_number || customer.document;
+    if (!rawDocument) {
+      console.error('Documento do cliente não fornecido:', customer);
+      throw new Error('Documento do cliente não fornecido');
+    }
+
+    const document = rawDocument.replace(/\D/g, '');
+    if (document.length !== 11 && document.length !== 14) {
       console.error('Documento inválido:', document);
-      throw new Error('Documento do cliente inválido');
+      throw new Error('Documento do cliente inválido. Deve ter 11 (CPF) ou 14 (CNPJ) dígitos');
     }
 
     // Converter valor para centavos
@@ -187,6 +193,10 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
     console.log('Última transação:', JSON.stringify(lastTransaction, null, 2));
 
     if (lastTransaction.status === 'failed') {
+      console.log(
+        'DEBUG: Dados completos da transação com falha:',
+        JSON.stringify(lastTransaction, null, 2)
+      );
       console.error('Transação falhou:', {
         status: lastTransaction.status,
         error: lastTransaction.error,
