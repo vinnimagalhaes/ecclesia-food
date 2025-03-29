@@ -29,7 +29,9 @@ export function IgrejasProximas({ igrejas, onLocationChange }: IgrejasProximasPr
     setPermissionDenied(false);
     
     try {
+      console.log('Iniciando detecção de localização...');
       const location = await getUserLocation();
+      console.log('Localização obtida:', location);
       setUserLocation(location);
       onLocationChange(location);
       
@@ -44,11 +46,16 @@ export function IgrejasProximas({ igrejas, onLocationChange }: IgrejasProximasPr
       
       // Verificar se o erro é de permissão negada
       if (error instanceof Error) {
-        if (error.message.includes('permission denied') || error.message.includes('permission')) {
+        const errorMessage = error.message.toLowerCase();
+        if (errorMessage.includes('permission denied') || errorMessage.includes('permissão negada')) {
           setPermissionDenied(true);
           setError('Permissão de localização negada');
+        } else if (errorMessage.includes('gps')) {
+          setError('GPS desativado. Por favor, ative o GPS do seu celular.');
+        } else if (errorMessage.includes('tempo limite')) {
+          setError('Tempo limite excedido. Verifique sua conexão e tente novamente.');
         } else {
-          setError('Não foi possível obter sua localização');
+          setError(error.message);
         }
       } else {
         setError('Erro desconhecido ao obter localização');

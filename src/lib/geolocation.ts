@@ -48,14 +48,50 @@ export interface LocationData {
 export function getCurrentPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
+      console.error('Geolocalização não é suportada pelo navegador');
       reject(new Error('Geolocalização não é suportada pelo seu navegador'));
       return;
     }
 
+    console.log('Solicitando permissão de localização...');
+
     navigator.geolocation.getCurrentPosition(
-      position => resolve(position),
-      error => reject(error),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      position => {
+        console.log('Localização obtida com sucesso:', {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        });
+        resolve(position);
+      },
+      error => {
+        console.error('Erro ao obter localização:', {
+          code: error.code,
+          message: error.message
+        });
+        
+        let errorMessage = 'Erro ao obter localização';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Permissão de localização negada. Por favor, habilite a localização nas configurações do seu navegador.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Informações de localização indisponíveis. Verifique se o GPS está ativado.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Tempo limite excedido ao obter localização. Tente novamente.';
+            break;
+          default:
+            errorMessage = 'Erro desconhecido ao obter localização.';
+        }
+        
+        reject(new Error(errorMessage));
+      },
+      { 
+        enableHighAccuracy: true, 
+        timeout: 10000, 
+        maximumAge: 60000 
+      }
     );
   });
 }
