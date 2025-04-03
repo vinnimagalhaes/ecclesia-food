@@ -23,6 +23,7 @@ export function PixPayment({
 }: PixPaymentProps) {
   const { data: session } = useSession();
   const [qrCode, setQrCode] = useState<string>('');
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [error, setError] = useState<string>('');
@@ -110,19 +111,49 @@ export function PixPayment({
         throw new Error(errorMessage);
       }
 
-      if (!data.qr_code) {
+      // Verificar se temos o ID do pagamento
+      if (!data.id) {
+        console.error('ID do pagamento não encontrado na resposta:', data);
+        throw new Error('ID do pagamento não encontrado na resposta');
+      }
+
+      // Preferir QR Code URL se disponível
+      if (data.qr_code_url) {
+        console.log('Usando QR Code URL:', data.qr_code_url);
+        setQrCodeUrl(data.qr_code_url);
+      } else if (data.qr_code) {
+        // Se não tiver URL, usar o QR Code base64
+        console.log('Usando QR Code base64');
+        try {
+          // Limpar qualquer caractere estranho antes de definir como base64
+          const cleanBase64 = data.qr_code.replace(/\s/g, '');
+          const validBase64 = cleanBase64.match(/^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/);
+          
+          if (validBase64) {
+            setQrCodeUrl(`data:image/png;base64,${cleanBase64}`);
+          } else {
+            console.error('QR Code não é um base64 válido:', data.qr_code);
+            throw new Error('QR Code inválido');
+          }
+        } catch (e) {
+          console.error('Erro ao processar QR Code base64:', e);
+          throw new Error('Erro ao processar QR Code');
+        }
+      } else {
+        console.error('QR code não encontrado na resposta:', data);
         throw new Error('QR code não encontrado na resposta');
       }
 
-      // Verificar se o QR Code é uma URL ou base64
-      let qrCodeUrl = data.qr_code;
-      if (!data.qr_code.startsWith('http')) {
-        qrCodeUrl = `data:image/png;base64,${data.qr_code}`;
-      }
-
-      setQrCode(qrCodeUrl);
+      // Salvar o código PIX para copiar
+      setQrCode(data.qr_code);
       setPaymentId(data.id);
-      startStatusCheck();
+      
+      // Iniciar verificação de status apenas se tivermos o ID
+      if (data.id) {
+        startStatusCheck(data.id);
+      } else {
+        console.error('ID do pagamento não encontrado, não é possível verificar status');
+      }
     } catch (err) {
       console.error('Erro ao criar pagamento:', err);
       setError(err instanceof Error ? err.message : 'Erro ao criar pagamento');
@@ -131,21 +162,23 @@ export function PixPayment({
     }
   };
 
-  const startStatusCheck = () => {
-    if (!paymentId) {
+  const startStatusCheck = (id: string) => {
+    if (!id) {
       console.error('ID do pagamento não disponível');
       return;
     }
 
     setIsCheckingStatus(true);
+    console.log('Iniciando verificação de status para o pagamento:', id);
+    
     const interval = setInterval(async () => {
       try {
         if (!session) {
           throw new Error('Usuário não autenticado');
         }
 
-        console.log('Verificando status do pedido:', paymentId);
-        const response = await fetch(`/api/payments/pix?transactionId=${paymentId}`);
+        console.log('Verificando status do pedido:', id);
+        const response = await fetch(`/api/payments/pix?transactionId=${id}`);
         const data = await response.json();
         console.log('Status do pedido:', data);
 
@@ -198,9 +231,9 @@ export function PixPayment({
     <div className="flex flex-col items-center p-6 space-y-4">
       <h2 className="text-xl font-semibold">Pagamento via PIX</h2>
       <div className="bg-white p-4 rounded-lg shadow-md">
-        {qrCode && (
+        {qrCodeUrl ? (
           <img
-            src={qrCode}
+            src={qrCodeUrl}
             alt="QR Code PIX"
             className="w-64 h-64"
             onError={(e) => {
@@ -208,6 +241,10 @@ export function PixPayment({
               setError('Erro ao carregar QR Code. Por favor, tente novamente.');
             }}
           />
+        ) : (
+          <div className="flex items-center justify-center w-64 h-64 bg-gray-100">
+            <p className="text-gray-500">Não foi possível carregar o QR Code</p>
+          </div>
         )}
       </div>
       <p className="text-sm text-gray-600">
