@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 interface PixPaymentProps {
   amount: number;
@@ -20,6 +21,7 @@ export function PixPayment({
   orderId,
   onSuccess,
 }: PixPaymentProps) {
+  const { data: session } = useSession();
   const [qrCode, setQrCode] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
@@ -34,6 +36,10 @@ export function PixPayment({
     try {
       setIsLoading(true);
       setError('');
+
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
 
       // Validar dados do cliente
       if (!customer.name || !customer.email || (!customer.document_number && !customer.document)) {
@@ -108,7 +114,13 @@ export function PixPayment({
         throw new Error('QR code não encontrado na resposta');
       }
 
-      setQrCode(data.qr_code);
+      // Verificar se o QR Code é uma URL ou base64
+      let qrCodeUrl = data.qr_code;
+      if (!data.qr_code.startsWith('http')) {
+        qrCodeUrl = `data:image/png;base64,${data.qr_code}`;
+      }
+
+      setQrCode(qrCodeUrl);
       setPaymentId(data.id);
       startStatusCheck();
     } catch (err) {
@@ -120,9 +132,18 @@ export function PixPayment({
   };
 
   const startStatusCheck = () => {
+    if (!paymentId) {
+      console.error('ID do pagamento não disponível');
+      return;
+    }
+
     setIsCheckingStatus(true);
     const interval = setInterval(async () => {
       try {
+        if (!session) {
+          throw new Error('Usuário não autenticado');
+        }
+
         console.log('Verificando status do pedido:', paymentId);
         const response = await fetch(`/api/payments/pix?transactionId=${paymentId}`);
         const data = await response.json();
@@ -182,6 +203,10 @@ export function PixPayment({
             src={qrCode}
             alt="QR Code PIX"
             className="w-64 h-64"
+            onError={(e) => {
+              console.error('Erro ao carregar QR Code:', e);
+              setError('Erro ao carregar QR Code. Por favor, tente novamente.');
+            }}
           />
         )}
       </div>

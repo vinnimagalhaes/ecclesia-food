@@ -198,6 +198,14 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Usuário não autenticado' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const transactionId = searchParams.get('transactionId');
 
@@ -208,18 +216,12 @@ export async function GET(request: Request) {
       );
     }
 
-    console.log('Verificando status da transação:', transactionId);
     const status = await getTransactionStatus(transactionId);
-    console.log('Status da transação:', status);
-
-    return NextResponse.json({
-      status: status.status,
-      paid: status.status === 'paid',
-    });
+    return NextResponse.json(status);
   } catch (error) {
-    console.error('Erro ao verificar status:', error);
+    console.error('Erro ao verificar status do pagamento:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erro ao verificar status' },
+      { error: 'Erro ao verificar status do pagamento' },
       { status: 500 }
     );
   }
