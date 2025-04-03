@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 
@@ -25,13 +25,88 @@ export function PixPayment({
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [pixCopyPaste, setPixCopyPaste] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'failed'>('pending');
   const [error, setError] = useState<string>('');
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const paymentIdRef = useRef<string>('');
 
   useEffect(() => {
     handlePayment();
+
+    // Cleanup
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
   }, []);
+
+  const startEventSource = (paymentId: string) => {
+    // Se já existe uma conexão, fechá-la
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    try {
+      console.log('Iniciando SSE para o pagamento:', paymentId);
+      const eventSource = new EventSource(`/api/payment-events?transactionId=${paymentId}`);
+      eventSourceRef.current = eventSource;
+
+      eventSource.onopen = () => {
+        console.log('Conexão SSE estabelecida');
+        setIsConnected(true);
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('Erro na conexão SSE:', error);
+        setIsConnected(false);
+        eventSource.close();
+      };
+
+      eventSource.addEventListener('message', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Evento SSE recebido:', data);
+
+          if (data.type === 'connected') {
+            console.log('Conexão SSE confirmada');
+            setIsConnected(true);
+          } else if (data.type === 'status') {
+            console.log('Status atual do pagamento:', data.data.status);
+            updatePaymentStatus(data.data.status);
+          } else if (data.type === 'payment_update') {
+            console.log('Atualização de pagamento recebida:', data.data);
+            updatePaymentStatus(data.data.status);
+          }
+        } catch (error) {
+          console.error('Erro ao processar evento SSE:', error);
+        }
+      });
+
+      return eventSource;
+    } catch (error) {
+      console.error('Erro ao iniciar EventSource:', error);
+      return null;
+    }
+  };
+
+  const updatePaymentStatus = (status: string) => {
+    if (status === 'PAID' || status === 'paid') {
+      setPaymentStatus('paid');
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+      toast.success('Pagamento confirmado!');
+      onSuccess?.();
+    } else if (status === 'FAILED' || status === 'failed' || status === 'canceled') {
+      setPaymentStatus('failed');
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+      toast.error('Pagamento falhou ou foi cancelado.');
+    }
+  };
 
   const handlePayment = async () => {
     try {
@@ -117,6 +192,9 @@ export function PixPayment({
         throw new Error('ID do pagamento não encontrado na resposta');
       }
 
+      // Salvar o ID do pagamento
+      paymentIdRef.current = data.id;
+
       // Preferir QR Code URL se disponível
       if (data.qr_code_url) {
         console.log('Usando QR Code URL:', data.qr_code_url);
@@ -153,65 +231,14 @@ export function PixPayment({
         console.log('Código PIX copia e cola não encontrado na resposta');
       }
       
-      // Iniciar verificação de status apenas se tivermos o ID
-      if (data.id) {
-        startStatusCheck(data.id);
-      } else {
-        console.error('ID do pagamento não encontrado, não é possível verificar status');
-      }
+      // Iniciar conexão SSE para receber atualizações em tempo real
+      startEventSource(data.id);
     } catch (err) {
       console.error('Erro ao criar pagamento:', err);
       setError(err instanceof Error ? err.message : 'Erro ao criar pagamento');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const startStatusCheck = (id: string) => {
-    if (!id) {
-      console.error('ID do pagamento não disponível');
-      return;
-    }
-
-    setIsCheckingStatus(true);
-    console.log('Iniciando verificação de status para o pagamento:', id);
-    
-    const interval = setInterval(async () => {
-      try {
-        if (!session) {
-          throw new Error('Usuário não autenticado');
-        }
-
-        console.log('Verificando status do pedido:', id);
-        const response = await fetch(`/api/payments/pix?transactionId=${id}`);
-        const data = await response.json();
-        console.log('Status do pedido:', data);
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Erro ao verificar status');
-        }
-
-        const status = data.data?.charges?.[0]?.status;
-        if (status === 'paid') {
-          clearInterval(interval);
-          setIsCheckingStatus(false);
-          setPaymentStatus('paid');
-          toast.success('Pagamento confirmado!');
-          onSuccess?.();
-        } else if (status === 'failed' || status === 'canceled') {
-          clearInterval(interval);
-          setIsCheckingStatus(false);
-          setPaymentStatus('failed');
-          toast.error('Pagamento falhou ou foi cancelado.');
-        }
-      } catch (error) {
-        console.error('Erro ao verificar status:', error);
-        clearInterval(interval);
-        setIsCheckingStatus(false);
-      }
-    }, 5000); // Verifica a cada 5 segundos
-
-    return () => clearInterval(interval);
   };
 
   if (isLoading) {
@@ -255,6 +282,12 @@ export function PixPayment({
       ) : (
         <>
           <h2 className="text-xl font-semibold">Pagamento via PIX</h2>
+          {isConnected && (
+            <div className="bg-green-50 px-3 py-1 rounded-full text-xs text-green-600 flex items-center">
+              <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+              Conectado
+            </div>
+          )}
           <div className="bg-white p-4 rounded-lg shadow-md">
             {qrCodeUrl ? (
               <img
@@ -299,11 +332,9 @@ export function PixPayment({
             </div>
           )}
           
-          {isCheckingStatus && (
-            <p className="text-sm text-primary">
-              Aguardando confirmação do pagamento...
-            </p>
-          )}
+          <p className="text-sm text-primary">
+            Aguardando confirmação do pagamento...
+          </p>
         </>
       )}
     </div>
