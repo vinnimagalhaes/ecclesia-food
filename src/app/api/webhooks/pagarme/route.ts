@@ -29,34 +29,81 @@ function verifyWebhookSignature(signature: string, payload: string, secret: stri
   }
 }
 
+// Verificar autenticação HTTP Basic
+function verifyBasicAuth(authHeader: string | null): boolean {
+  try {
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
+      console.error('Header de autenticação inválido');
+      return false;
+    }
+
+    // Extrair as credenciais (formato: "Basic base64(username:password)")
+    const base64Credentials = authHeader.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+    const [username, password] = credentials.split(':');
+
+    // Obter as credenciais configuradas
+    const configUsername = process.env.PAGARME_WEBHOOK_USERNAME;
+    const configPassword = process.env.PAGARME_WEBHOOK_PASSWORD;
+
+    if (!configUsername || !configPassword) {
+      console.error('Credenciais de webhook não configuradas');
+      return false;
+    }
+
+    // Verificar se as credenciais batem
+    const isValid = username === configUsername && password === configPassword;
+    
+    if (!isValid) {
+      console.error('Credenciais de webhook inválidas');
+    }
+    
+    return isValid;
+  } catch (error) {
+    console.error('Erro ao verificar autenticação básica:', error);
+    return false;
+  }
+}
+
 export async function POST(req: Request) {
   try {
     console.log('Webhook da Pagar.me recebido');
 
-    // Obter a assinatura do header
+    // Verificar autenticação básica
+    const authHeader = req.headers.get('authorization');
+    
+    // Em produção, verificar a autenticação básica
+    if (PAGARME_API_KEY?.startsWith('sk_live_')) {
+      if (!verifyBasicAuth(authHeader)) {
+        return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      }
+    } else {
+      console.log('Pulando verificação de autenticação em ambiente de teste');
+    }
+
+    // Obter a assinatura do header (se existir)
     const signature = req.headers.get('x-hub-signature') || '';
     
     // Obter o payload como texto
     const payload = await req.text();
     console.log('Payload do webhook:', payload);
 
-    // Verificar a assinatura do webhook (se estiver em produção)
-    if (PAGARME_API_KEY?.startsWith('sk_live_')) {
+    // Verificar a assinatura do webhook (se estiver em produção e se a assinatura for fornecida)
+    if (PAGARME_API_KEY?.startsWith('sk_live_') && signature) {
       const webhookSecret = process.env.PAGARME_WEBHOOK_SECRET;
       
-      if (!webhookSecret) {
-        console.error('PAGARME_WEBHOOK_SECRET não está definido nas variáveis de ambiente');
-        return NextResponse.json({ error: 'Configuração de webhook inválida' }, { status: 500 });
-      }
-
-      const isValidSignature = verifyWebhookSignature(signature, payload, webhookSecret);
-      
-      if (!isValidSignature) {
-        console.error('Assinatura do webhook inválida');
-        return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+      if (webhookSecret) {
+        const isValidSignature = verifyWebhookSignature(signature, payload, webhookSecret);
+        
+        if (!isValidSignature) {
+          console.error('Assinatura do webhook inválida');
+          return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+        }
+      } else {
+        console.log('PAGARME_WEBHOOK_SECRET não definido, pulando verificação de assinatura');
       }
     } else {
-      console.log('Pulando verificação de assinatura em ambiente de teste');
+      console.log('Pulando verificação de assinatura em ambiente de teste ou assinatura não fornecida');
     }
 
     // Fazer o parse do payload
