@@ -22,8 +22,8 @@ export function PixPayment({
   onSuccess,
 }: PixPaymentProps) {
   const { data: session } = useSession();
-  const [qrCode, setQrCode] = useState<string>('');
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [pixCopyPaste, setPixCopyPaste] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [error, setError] = useState<string>('');
@@ -144,8 +144,11 @@ export function PixPayment({
         throw new Error('QR code não encontrado na resposta');
       }
 
-      // Salvar o código PIX para copiar
-      setQrCode(data.qr_code);
+      // Salvar o código PIX Copia e Cola se disponível
+      if (data.pix_copy_paste) {
+        setPixCopyPaste(data.pix_copy_paste);
+      }
+
       setPaymentId(data.id);
       
       // Iniciar verificação de status apenas se tivermos o ID
@@ -250,6 +253,30 @@ export function PixPayment({
       <p className="text-sm text-gray-600">
         Escaneie o QR Code com seu aplicativo de pagamento
       </p>
+      
+      {pixCopyPaste && (
+        <div className="mt-4 w-full max-w-md">
+          <p className="text-sm font-medium text-gray-700 mb-1">Ou copie o código PIX:</p>
+          <div className="relative">
+            <input
+              type="text"
+              value={pixCopyPaste}
+              readOnly
+              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-gray-50"
+            />
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(pixCopyPaste);
+                toast.success('Código PIX copiado!');
+              }}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-dark"
+            >
+              Copiar
+            </button>
+          </div>
+        </div>
+      )}
+      
       {isCheckingStatus && (
         <p className="text-sm text-primary">
           Aguardando confirmação do pagamento...
