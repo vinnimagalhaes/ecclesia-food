@@ -26,6 +26,7 @@ export function PixPayment({
   const [pixCopyPaste, setPixCopyPaste] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'failed'>('pending');
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
@@ -143,9 +144,13 @@ export function PixPayment({
         throw new Error('QR code não encontrado na resposta');
       }
 
-      // Salvar o código PIX Copia e Cola se disponível
-      if (data.pix_copy_paste) {
-        setPixCopyPaste(data.pix_copy_paste);
+      // Tentar obter o PIX copia e cola (verificar vários campos possíveis)
+      const pixText = data.pix_copy_paste || data.qr_code_text || data.pix_code || data.pix_text;
+      if (pixText) {
+        console.log('Código PIX copia e cola encontrado:', pixText);
+        setPixCopyPaste(pixText);
+      } else {
+        console.log('Código PIX copia e cola não encontrado na resposta');
       }
       
       // Iniciar verificação de status apenas se tivermos o ID
@@ -190,8 +195,14 @@ export function PixPayment({
         if (status === 'paid') {
           clearInterval(interval);
           setIsCheckingStatus(false);
+          setPaymentStatus('paid');
           toast.success('Pagamento confirmado!');
           onSuccess?.();
+        } else if (status === 'failed' || status === 'canceled') {
+          clearInterval(interval);
+          setIsCheckingStatus(false);
+          setPaymentStatus('failed');
+          toast.error('Pagamento falhou ou foi cancelado.');
         }
       } catch (error) {
         console.error('Erro ao verificar status:', error);
@@ -229,55 +240,71 @@ export function PixPayment({
 
   return (
     <div className="flex flex-col items-center p-6 space-y-4">
-      <h2 className="text-xl font-semibold">Pagamento via PIX</h2>
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        {qrCodeUrl ? (
-          <img
-            src={qrCodeUrl}
-            alt="QR Code PIX"
-            className="w-64 h-64"
-            onError={(e) => {
-              console.error('Erro ao carregar QR Code:', e);
-              setError('Erro ao carregar QR Code. Por favor, tente novamente.');
-            }}
-          />
-        ) : (
-          <div className="flex items-center justify-center w-64 h-64 bg-gray-100">
-            <p className="text-gray-500">Não foi possível carregar o QR Code</p>
+      {paymentStatus === 'paid' ? (
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-        )}
-      </div>
-      <p className="text-sm text-gray-600">
-        Escaneie o QR Code com seu aplicativo de pagamento
-      </p>
-      
-      {pixCopyPaste && (
-        <div className="mt-4 w-full max-w-md">
-          <p className="text-sm font-medium text-gray-700 mb-1">Ou copie o código PIX:</p>
-          <div className="relative">
-            <input
-              type="text"
-              value={pixCopyPaste}
-              readOnly
-              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-gray-50"
-            />
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(pixCopyPaste);
-                toast.success('Código PIX copiado!');
-              }}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-dark"
-            >
-              Copiar
-            </button>
-          </div>
+          <h2 className="text-xl font-semibold text-green-700">Pagamento Confirmado!</h2>
+          <p className="text-gray-600 text-center">
+            Seu pagamento foi processado com sucesso.
+          </p>
         </div>
-      )}
-      
-      {isCheckingStatus && (
-        <p className="text-sm text-primary">
-          Aguardando confirmação do pagamento...
-        </p>
+      ) : (
+        <>
+          <h2 className="text-xl font-semibold">Pagamento via PIX</h2>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            {qrCodeUrl ? (
+              <img
+                src={qrCodeUrl}
+                alt="QR Code PIX"
+                className="w-64 h-64"
+                onError={(e) => {
+                  console.error('Erro ao carregar QR Code:', e);
+                  setError('Erro ao carregar QR Code. Por favor, tente novamente.');
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center w-64 h-64 bg-gray-100">
+                <p className="text-gray-500">Não foi possível carregar o QR Code</p>
+              </div>
+            )}
+          </div>
+          <p className="text-sm text-gray-600">
+            Escaneie o QR Code com seu aplicativo de pagamento
+          </p>
+          
+          {pixCopyPaste && (
+            <div className="mt-4 w-full max-w-md">
+              <p className="text-sm font-medium text-gray-700 mb-1">Ou copie o código PIX:</p>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={pixCopyPaste}
+                  readOnly
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-gray-50"
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(pixCopyPaste);
+                    toast.success('Código PIX copiado!');
+                  }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-dark"
+                >
+                  Copiar
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {isCheckingStatus && (
+            <p className="text-sm text-primary">
+              Aguardando confirmação do pagamento...
+            </p>
+          )}
+        </>
       )}
     </div>
   );
