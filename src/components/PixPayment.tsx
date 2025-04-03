@@ -27,7 +27,6 @@ export function PixPayment({
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [error, setError] = useState<string>('');
-  const [paymentId, setPaymentId] = useState<string>('');
 
   useEffect(() => {
     handlePayment();
@@ -148,8 +147,6 @@ export function PixPayment({
       if (data.pix_copy_paste) {
         setPixCopyPaste(data.pix_copy_paste);
       }
-
-      setPaymentId(data.id);
       
       // Iniciar verificação de status apenas se tivermos o ID
       if (data.id) {
