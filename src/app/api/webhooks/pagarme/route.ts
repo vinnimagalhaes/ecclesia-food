@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { PAGARME_API_KEY } from '@/config/env';
 import crypto from 'crypto';
-import { publishPaymentEvent } from '@/app/api/payment-events/route';
 
 // Verificar a assinatura do webhook da Pagar.me
 function verifyWebhookSignature(signature: string, payload: string, secret: string): boolean {
@@ -190,8 +189,32 @@ export async function POST(req: Request) {
     console.log('Pedido atualizado com sucesso:', { id: sale.id, status: paymentStatus });
 
     // Publicar evento de pagamento para notificar clientes em tempo real
-    await publishPaymentEvent(chargeId, sale.id, paymentStatus);
-    console.log('Evento de pagamento publicado');
+    try {
+      // Fazer uma requisição interna ao endpoint de eventos
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      const response = await fetch(`${baseUrl}/api/payment-events`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Adicionar cabeçalho especial para autenticação interna
+          'x-internal-api-key': process.env.INTERNAL_API_KEY || 'default-internal-key',
+        },
+        body: JSON.stringify({
+          transactionId: chargeId,
+          orderId: sale.id,
+          status: paymentStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Erro ao publicar evento:', await response.text());
+      } else {
+        console.log('Evento de pagamento publicado');
+      }
+    } catch (error) {
+      console.error('Erro ao publicar evento de pagamento:', error);
+      // Continuar o processamento mesmo se falhar a publicação de evento
+    }
 
     // Retornar sucesso
     return NextResponse.json({ 
