@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 // import { PAGARME_API_KEY } from '@/config/env';
 import crypto from 'crypto';
 
+// Comentando função não utilizada para evitar erro de build
+/*
 // Verificar a assinatura do webhook da Pagar.me
 function verifyWebhookSignature(signature: string, payload: string, secret: string): boolean {
   try {
@@ -28,6 +30,7 @@ function verifyWebhookSignature(signature: string, payload: string, secret: stri
     return false;
   }
 }
+*/
 
 // Verificar autenticação HTTP Basic
 function verifyBasicAuth(authHeader: string | null): boolean {
