@@ -12,11 +12,6 @@ interface EventListener {
   lastSent: number;
 }
 
-interface EventData {
-  type: string;
-  data: Record<string, any>;
-}
-
 export async function GET(request: Request) {
   try {
     // Verificar autenticação
