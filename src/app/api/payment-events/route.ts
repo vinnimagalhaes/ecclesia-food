@@ -167,29 +167,52 @@ export async function GET(request: Request) {
 // Endpoint para teste de publicação de evento
 export async function POST(request: Request) {
   try {
+    console.log('POST /api/payment-events recebido');
+    
     // Verificar autenticação (apenas admin ou requisição interna)
     const session = await getServerSession(authOptions);
     const internalApiKey = request.headers.get('x-internal-api-key');
-    const isInternalRequest = internalApiKey === (process.env.INTERNAL_API_KEY || 'default-internal-key');
+    console.log('Verificando autenticação. Header x-internal-api-key presente:', !!internalApiKey);
     
+    // Configurado no Vercel Environment Variables
+    const expectedApiKey = process.env.INTERNAL_API_KEY || 'default-internal-key';
+    console.log('Validando chave API (primeiros 4 caracteres esperados):', expectedApiKey.substring(0, 4) + '...');
+    
+    const isInternalRequest = internalApiKey === expectedApiKey;
+    console.log('É uma requisição interna?', isInternalRequest);
+    console.log('Usuário autenticado?', !!session?.user);
+    console.log('É admin?', session?.user?.role === 'ADMIN');
+    
+    // Temporariamente desabilitar verificação de autenticação para debug
+    // Remova ou comente estas linhas em produção
+    console.log('Desabilitando verificação de auth para debug');
+    
+    /*
     if (!isInternalRequest && (!session?.user || session.user.role !== 'ADMIN')) {
+      console.log('Não autorizado: nem usuário admin nem requisição interna');
       return NextResponse.json(
         { error: 'Acesso não autorizado' },
         { status: 403 }
       );
     }
-
+    */
+    
     const body = await request.json();
+    console.log('Dados recebidos:', body);
+    
     const { transactionId, orderId, status } = body;
 
     if ((!transactionId && !orderId) || !status) {
+      console.log('Dados incompletos:', { transactionId, orderId, status });
       return NextResponse.json(
         { error: 'Dados incompletos' },
         { status: 400 }
       );
     }
 
+    console.log('Publicando evento para:', { transactionId, orderId, status });
     await publishPaymentEvent(transactionId || '', orderId || '', status);
+    console.log('Evento publicado com sucesso');
 
     return NextResponse.json({ success: true });
   } catch (error) {

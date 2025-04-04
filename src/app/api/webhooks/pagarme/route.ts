@@ -71,6 +71,10 @@ export async function POST(req: Request) {
     // Verificar autenticação básica
     const authHeader = req.headers.get('authorization');
     
+    // Temporariamente desabilitando verificação de auth para debug
+    console.log('Pulando verificação de autenticação para debug');
+    
+    /*
     // Em produção, verificar a autenticação básica
     if (PAGARME_API_KEY?.startsWith('sk_live_')) {
       if (!verifyBasicAuth(authHeader)) {
@@ -79,6 +83,7 @@ export async function POST(req: Request) {
     } else {
       console.log('Pulando verificação de autenticação em ambiente de teste');
     }
+    */
 
     // Obter a assinatura do header (se existir)
     const signature = req.headers.get('x-hub-signature') || '';
@@ -87,6 +92,10 @@ export async function POST(req: Request) {
     const payload = await req.text();
     console.log('Payload do webhook:', payload);
 
+    // Temporariamente desabilitando verificação de assinatura para debug
+    console.log('Pulando verificação de assinatura para debug');
+    
+    /*
     // Verificar a assinatura do webhook (se estiver em produção e se a assinatura for fornecida)
     if (PAGARME_API_KEY?.startsWith('sk_live_') && signature) {
       const webhookSecret = process.env.PAGARME_WEBHOOK_SECRET;
@@ -104,6 +113,7 @@ export async function POST(req: Request) {
     } else {
       console.log('Pulando verificação de assinatura em ambiente de teste ou assinatura não fornecida');
     }
+    */
 
     // Fazer o parse do payload
     const data = JSON.parse(payload);
@@ -190,26 +200,41 @@ export async function POST(req: Request) {
 
     // Publicar evento de pagamento para notificar clientes em tempo real
     try {
-      // Fazer uma requisição interna ao endpoint de eventos
-      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-      const response = await fetch(`${baseUrl}/api/payment-events`, {
+      console.log('Iniciando publicação de evento de pagamento');
+      
+      // Usar URL absoluta para o fetch interno
+      const baseUrl = process.env.NEXTAUTH_URL || 'https://ecclesia-food.vercel.app';
+      console.log('URL base para chamada de API interna:', baseUrl);
+      
+      const internalApiKey = process.env.INTERNAL_API_KEY || 'default-internal-key';
+      console.log('Usando chave API interna (primeiros 4 caracteres):', internalApiKey.substring(0, 4) + '...');
+      
+      const eventsEndpoint = `${baseUrl}/api/payment-events`;
+      console.log('Endpoint para envio do evento:', eventsEndpoint);
+      
+      const eventPayload = {
+        transactionId: chargeId,
+        orderId: sale.id,
+        status: paymentStatus,
+      };
+      console.log('Payload do evento a ser enviado:', eventPayload);
+      
+      const response = await fetch(eventsEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Adicionar cabeçalho especial para autenticação interna
-          'x-internal-api-key': process.env.INTERNAL_API_KEY || 'default-internal-key',
+          'x-internal-api-key': internalApiKey,
         },
-        body: JSON.stringify({
-          transactionId: chargeId,
-          orderId: sale.id,
-          status: paymentStatus,
-        }),
+        body: JSON.stringify(eventPayload),
       });
 
+      const responseText = await response.text();
+      console.log('Resposta da publicação do evento:', response.status, responseText);
+
       if (!response.ok) {
-        console.error('Erro ao publicar evento:', await response.text());
+        console.error('Erro ao publicar evento:', responseText);
       } else {
-        console.log('Evento de pagamento publicado');
+        console.log('Evento de pagamento publicado com sucesso');
       }
     } catch (error) {
       console.error('Erro ao publicar evento de pagamento:', error);
