@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 // Comentando a importação não utilizada
 // import { PAGARME_API_KEY } from '@/config/env';
-import crypto from 'crypto';
+// Comentando importação de crypto não utilizada
+// import crypto from 'crypto';
 
 // Comentando função não utilizada para evitar erro de build
 /*
