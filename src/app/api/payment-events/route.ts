@@ -17,16 +17,6 @@ interface EventData {
   data: Record<string, any>;
 }
 
-interface EventPaymentData extends EventData {
-  type: 'payment_update';
-  data: {
-    transactionId: string;
-    orderId: string;
-    status: string;
-    timestamp: string;
-  };
-}
-
 interface EventQueue {
   listeners: EventListener[];
   events: EventData[];
