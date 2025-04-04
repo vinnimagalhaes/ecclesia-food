@@ -33,6 +33,8 @@ function verifyWebhookSignature(signature: string, payload: string, secret: stri
 }
 */
 
+// Comentando função não utilizada para evitar erro de build
+/*
 // Verificar autenticação HTTP Basic
 function verifyBasicAuth(authHeader: string | null): boolean {
   try {
@@ -68,6 +70,7 @@ function verifyBasicAuth(authHeader: string | null): boolean {
     return false;
   }
 }
+*/
 
 export async function POST(req: Request) {
   try {
