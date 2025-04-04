@@ -17,12 +17,6 @@ interface EventData {
   data: Record<string, any>;
 }
 
-interface EventQueue {
-  listeners: EventListener[];
-  events: EventData[];
-  lastUsed: number;
-}
-
 export async function GET(request: Request) {
   try {
     // Verificar autenticação
