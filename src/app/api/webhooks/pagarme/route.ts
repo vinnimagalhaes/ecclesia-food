@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { PAGARME_API_KEY } from '@/config/env';
+// Comentando a importação não utilizada
+// import { PAGARME_API_KEY } from '@/config/env';
 import crypto from 'crypto';
 
 // Verificar a assinatura do webhook da Pagar.me
