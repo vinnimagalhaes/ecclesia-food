@@ -1,4 +1,4 @@
-import { EventData, EventListener, EventPaymentData, EventQueue } from './events';
+import { EventListener, EventPaymentData, EventQueue } from './events';
 
 // Fila de eventos para cada transação
 export const eventQueues: Record<string, EventQueue> = {};
