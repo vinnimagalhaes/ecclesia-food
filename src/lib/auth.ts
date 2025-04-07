@@ -120,7 +120,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     
-    async signIn({ user, account }) {
+    async signIn({ account }) {
       // Permitir login para qualquer provedor que estamos usando
       if (account?.provider === 'google') {
         return true;
