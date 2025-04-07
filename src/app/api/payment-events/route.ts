@@ -14,14 +14,12 @@ interface EventListener {
 
 export async function GET(request: Request) {
   try {
-    // Verificar autenticação
+    // Verificar autenticação (opcional, apenas para log)
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Usuário não autenticado' },
-        { status: 401 }
-      );
-    }
+    console.log('Status da sessão para eventos de pagamento:', session ? 'Autenticado' : 'Não autenticado');
+    
+    // Não exigir autenticação para permitir pagamentos anônimos
+    // Removida a verificação obrigatória de sessão
 
     // Obter o ID da transação
     const { searchParams } = new URL(request.url);
