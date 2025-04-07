@@ -265,11 +265,50 @@ export function PixPayment({
 
       // Tentar obter o PIX copia e cola (verificar vários campos possíveis)
       const pixText = data.pix_copy_paste || data.qr_code_text || data.pix_code || data.pix_text;
+      
       if (pixText) {
         console.log('Código PIX copia e cola encontrado:', pixText);
         setPixCopyPaste(pixText);
       } else {
-        console.log('Código PIX copia e cola não encontrado na resposta');
+        console.log('Código PIX copia e cola não encontrado na resposta padrão, verificando campos aninhados');
+        
+        // Tentar encontrar em campos aninhados
+        if (data.last_transaction) {
+          const nestedPixText = data.last_transaction.qr_code_text || 
+                              data.last_transaction.pix_code_text || 
+                              data.last_transaction.pix_code;
+          
+          if (nestedPixText) {
+            console.log('Código PIX encontrado em last_transaction:', nestedPixText);
+            setPixCopyPaste(nestedPixText);
+          } else if (data.last_transaction.additional_information?.pix_code) {
+            console.log('Código PIX encontrado em additional_information:', data.last_transaction.additional_information.pix_code);
+            setPixCopyPaste(data.last_transaction.additional_information.pix_code);
+          }
+        }
+        
+        // Se ainda não encontrou, procurar em outros lugares
+        if (!pixCopyPaste && data.charges && data.charges.length > 0) {
+          const charge = data.charges[0];
+          if (charge.last_transaction) {
+            const chargePixText = charge.last_transaction.qr_code_text || 
+                                charge.last_transaction.pix_code_text || 
+                                charge.last_transaction.pix_code;
+                                
+            if (chargePixText) {
+              console.log('Código PIX encontrado em charges[0].last_transaction:', chargePixText);
+              setPixCopyPaste(chargePixText);
+            } else if (charge.last_transaction.additional_information?.pix_code) {
+              console.log('Código PIX encontrado em charges[0].additional_information:', charge.last_transaction.additional_information.pix_code);
+              setPixCopyPaste(charge.last_transaction.additional_information.pix_code);
+            }
+          }
+        }
+        
+        // Se ainda não tiver o código PIX, logar aviso
+        if (!pixCopyPaste) {
+          console.warn('Não foi possível encontrar o código PIX para cópia em nenhum campo');
+        }
       }
       
       // Iniciar conexão SSE para receber atualizações em tempo real

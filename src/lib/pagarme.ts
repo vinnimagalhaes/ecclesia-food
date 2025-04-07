@@ -229,6 +229,7 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
       id: charge.id,
       qr_code: lastTransaction.qr_code,
       qr_code_url: lastTransaction.qr_code_url,
+      pix_copy_paste: lastTransaction.qr_code_text || lastTransaction.pix_code_text || lastTransaction.pix_code || lastTransaction.additional_information?.pix_code,
       expires_at: expiresAt.toISOString(),
       status: lastTransaction.status,
       amount: amountInCents,
