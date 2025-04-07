@@ -264,50 +264,30 @@ export function PixPayment({
       }
 
       // Tentar obter o PIX copia e cola (verificar vários campos possíveis)
-      const pixText = data.pix_copy_paste || data.qr_code_text || data.pix_code || data.pix_text;
+      const pixText = data.pix_copy_paste || data.pix_qr_code || data.qr_code;
       
       if (pixText) {
         console.log('Código PIX copia e cola encontrado:', pixText);
         setPixCopyPaste(pixText);
       } else {
-        console.log('Código PIX copia e cola não encontrado na resposta padrão, verificando campos aninhados');
+        console.log('Código PIX copia e cola não encontrado na resposta direta, buscando em campos aninhados');
         
-        // Tentar encontrar em campos aninhados
-        if (data.last_transaction) {
-          const nestedPixText = data.last_transaction.qr_code_text || 
-                              data.last_transaction.pix_code_text || 
-                              data.last_transaction.pix_code;
-          
-          if (nestedPixText) {
-            console.log('Código PIX encontrado em last_transaction:', nestedPixText);
-            setPixCopyPaste(nestedPixText);
-          } else if (data.last_transaction.additional_information?.pix_code) {
-            console.log('Código PIX encontrado em additional_information:', data.last_transaction.additional_information.pix_code);
-            setPixCopyPaste(data.last_transaction.additional_information.pix_code);
-          }
-        }
-        
-        // Se ainda não encontrou, procurar em outros lugares
-        if (!pixCopyPaste && data.charges && data.charges.length > 0) {
-          const charge = data.charges[0];
-          if (charge.last_transaction) {
-            const chargePixText = charge.last_transaction.qr_code_text || 
-                                charge.last_transaction.pix_code_text || 
-                                charge.last_transaction.pix_code;
-                                
-            if (chargePixText) {
-              console.log('Código PIX encontrado em charges[0].last_transaction:', chargePixText);
-              setPixCopyPaste(chargePixText);
-            } else if (charge.last_transaction.additional_information?.pix_code) {
-              console.log('Código PIX encontrado em charges[0].additional_information:', charge.last_transaction.additional_information.pix_code);
-              setPixCopyPaste(charge.last_transaction.additional_information.pix_code);
+        // Se os dados vierem diretamente da Pagar.me (estrutura aninhada)
+        if (data.charges && data.charges.length > 0) {
+          const lastTransaction = data.charges[0].last_transaction;
+          if (lastTransaction) {
+            const nestedPixText = lastTransaction.pix_qr_code;
+            if (nestedPixText) {
+              console.log('Código PIX copia e cola encontrado em charges[0].last_transaction.pix_qr_code:', nestedPixText);
+              setPixCopyPaste(nestedPixText);
             }
           }
         }
         
-        // Se ainda não tiver o código PIX, logar aviso
+        // Se ainda não encontrou o código
         if (!pixCopyPaste) {
-          console.warn('Não foi possível encontrar o código PIX para cópia em nenhum campo');
+          console.warn('Não foi possível encontrar o código PIX copia e cola em nenhum campo');
+          console.log('Estrutura completa da resposta:', JSON.stringify(data, null, 2));
         }
       }
       
@@ -398,22 +378,25 @@ export function PixPayment({
             <div className="mt-4 w-full max-w-md">
               <p className="text-sm font-medium text-gray-700 mb-1">Ou copie o código PIX:</p>
               <div className="relative">
-                <input
-                  type="text"
+                <textarea
                   value={pixCopyPaste}
                   readOnly
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-gray-50"
+                  rows={3}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-gray-50 text-xs"
                 />
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(pixCopyPaste);
                     toast.success('Código PIX copiado!');
                   }}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-dark"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-dark bg-white px-2 py-1 rounded border border-gray-200 shadow-sm text-sm font-medium"
                 >
                   Copiar
                 </button>
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Cole este código em seu aplicativo bancário na opção "PIX Copia e Cola"
+              </p>
             </div>
           )}
           

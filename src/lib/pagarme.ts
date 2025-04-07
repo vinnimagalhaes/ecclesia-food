@@ -225,11 +225,19 @@ export async function createPixPayment({ amount, customer, orderId, items, expir
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
 
+    // Log detalhado dos campos da última transação
+    console.log('Campos disponíveis na última transação PIX:', Object.keys(lastTransaction));
+    
+    // Log específico para o campo do código PIX
+    console.log('Campo pix_qr_code:', lastTransaction.pix_qr_code);
+    console.log('Campo qr_code:', lastTransaction.qr_code);
+
     return {
       id: charge.id,
       qr_code: lastTransaction.qr_code,
-      qr_code_url: lastTransaction.qr_code_url,
-      pix_copy_paste: lastTransaction.qr_code_text || lastTransaction.pix_code_text || lastTransaction.pix_code || lastTransaction.additional_information?.pix_code,
+      qr_code_url: lastTransaction.qr_code_url || lastTransaction.pix_qr_code_url,
+      // Priorizar o campo pix_qr_code conforme documentação da Pagar.me
+      pix_copy_paste: lastTransaction.pix_qr_code || lastTransaction.qr_code,
       expires_at: expiresAt.toISOString(),
       status: lastTransaction.status,
       amount: amountInCents,
