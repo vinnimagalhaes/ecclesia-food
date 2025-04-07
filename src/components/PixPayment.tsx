@@ -376,22 +376,21 @@ export function PixPayment({
           
           {pixCopyPaste && (
             <div className="mt-4 w-full max-w-md">
-              <p className="text-sm font-medium text-gray-700 mb-1">Ou copie o código PIX:</p>
-              <div className="relative">
-                <textarea
-                  value={pixCopyPaste}
-                  readOnly
-                  rows={3}
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-gray-50 text-xs"
-                />
+              <p className="text-sm font-medium text-gray-700 mb-1">Ou use o código PIX:</p>
+              <div className="flex items-center space-x-2">
+                <div className="flex-1 bg-gray-50 px-3 py-2 rounded-md border border-gray-300 overflow-hidden">
+                  <p className="text-xs text-gray-600 truncate">
+                    {pixCopyPaste}
+                  </p>
+                </div>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(pixCopyPaste);
                     toast.success('Código PIX copiado!');
                   }}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-dark bg-white px-2 py-1 rounded border border-gray-200 shadow-sm text-sm font-medium"
+                  className="whitespace-nowrap px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors"
                 >
-                  Copiar
+                  Copiar PIX
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
