@@ -5,6 +5,7 @@ import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -118,6 +119,22 @@ export const authOptions: NextAuthOptions = {
         session.user.emailVerified = token.emailVerified as Date | null;
       }
       return session;
+    },
+    
+    async redirect({ url, baseUrl }) {
+      // Verificar se a URL está tentando redirecionar para o login
+      if (url.includes('/login')) {
+        // Redirecionar para o dashboard em vez disso
+        return `${baseUrl}/dashboard`;
+      }
+      
+      // Redirecionar para URL padrão se estiver no mesmo domínio
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      
+      // Caso contrário, redirecione para o baseUrl
+      return baseUrl;
     },
     
     async signIn({ account }) {
