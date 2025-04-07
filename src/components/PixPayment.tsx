@@ -402,21 +402,6 @@ export function PixPayment({
           <p className="text-sm text-primary">
             Aguardando confirmação do pagamento...
           </p>
-          
-          <button
-            onClick={() => {
-              toast.info('Verificando status do pagamento...');
-              if (paymentIdRef.current) {
-                if (eventSourceRef.current) {
-                  eventSourceRef.current.close();
-                }
-                startEventSource(paymentIdRef.current);
-              }
-            }}
-            className="mt-2 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-          >
-            Verificar status
-          </button>
         </>
       )}
     </div>
