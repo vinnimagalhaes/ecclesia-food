@@ -342,15 +342,10 @@ export function PixPayment({
       ) : (
         <>
           <h2 className="text-xl font-semibold">Pagamento via PIX</h2>
-          {isConnected ? (
+          {isConnected && (
             <div className="bg-green-50 px-3 py-1 rounded-full text-xs text-green-600 flex items-center">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
               Conectado
-            </div>
-          ) : (
-            <div className="bg-yellow-50 px-3 py-1 rounded-full text-xs text-yellow-600 flex items-center">
-              <span className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span>
-              Reconectando...
             </div>
           )}
           <div className="bg-white p-4 rounded-lg shadow-md">
