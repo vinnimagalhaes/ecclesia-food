@@ -228,22 +228,59 @@ export async function POST(req: Request) {
       };
       console.log('Payload do evento a ser enviado:', eventPayload);
       
-      const response = await fetch(eventsEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-internal-api-key': internalApiKey,
-        },
-        body: JSON.stringify(eventPayload),
-      });
+      // Adicionar opção de timeout e retry
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos de timeout
+      
+      let success = false;
+      let attempts = 0;
+      const maxAttempts = 3;
+      
+      while (!success && attempts < maxAttempts) {
+        attempts++;
+        console.log(`Tentativa ${attempts} de ${maxAttempts} para publicar evento`);
+        
+        try {
+          const response = await fetch(eventsEndpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-internal-api-key': internalApiKey,
+            },
+            body: JSON.stringify(eventPayload),
+            signal: controller.signal
+          });
 
-      const responseText = await response.text();
-      console.log('Resposta da publicação do evento:', response.status, responseText);
+          const responseText = await response.text();
+          console.log(`Resposta da publicação do evento (tentativa ${attempts}):`, response.status, responseText);
 
-      if (!response.ok) {
-        console.error('Erro ao publicar evento:', responseText);
-      } else {
-        console.log('Evento de pagamento publicado com sucesso');
+          if (!response.ok) {
+            console.error(`Erro ao publicar evento (tentativa ${attempts}):`, responseText);
+            if (attempts < maxAttempts) {
+              // Esperar antes de tentar novamente (exponential backoff)
+              const delay = Math.min(1000 * Math.pow(2, attempts), 10000);
+              console.log(`Aguardando ${delay}ms antes de tentar novamente`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+            }
+          } else {
+            console.log('Evento de pagamento publicado com sucesso');
+            success = true;
+          }
+        } catch (fetchError) {
+          console.error(`Erro de rede ao publicar evento (tentativa ${attempts}):`, fetchError);
+          if (attempts < maxAttempts) {
+            // Esperar antes de tentar novamente
+            const delay = Math.min(1000 * Math.pow(2, attempts), 10000);
+            console.log(`Aguardando ${delay}ms antes de tentar novamente`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+      
+      clearTimeout(timeoutId);
+      
+      if (!success) {
+        console.error(`Falha ao publicar evento após ${maxAttempts} tentativas`);
       }
     } catch (error) {
       console.error('Erro ao publicar evento de pagamento:', error);

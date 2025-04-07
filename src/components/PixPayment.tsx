@@ -61,13 +61,22 @@ export function PixPayment({
       eventSource.onerror = (error) => {
         console.error('Erro na conexão SSE:', error);
         setIsConnected(false);
-        eventSource.close();
+        
+        // Em vez de fechar imediatamente, tentar reconectar
+        setTimeout(() => {
+          console.log('Tentando reconectar SSE...');
+          // Se ainda estiver no mesmo estado, tentar reconectar
+          if (paymentStatus === 'pending' && paymentIdRef.current === paymentId) {
+            startEventSource(paymentId);
+          }
+        }, 5000);
       };
 
       eventSource.addEventListener('message', (event) => {
         try {
+          console.log('Evento SSE bruto recebido:', event.data);
           const data = JSON.parse(event.data);
-          console.log('Evento SSE recebido:', data);
+          console.log('Evento SSE processado:', data);
 
           if (data.type === 'connected') {
             console.log('Conexão SSE confirmada');
@@ -78,6 +87,10 @@ export function PixPayment({
           } else if (data.type === 'payment_update') {
             console.log('Atualização de pagamento recebida:', data.data);
             updatePaymentStatus(data.data.status);
+          } else if (data.type === 'ping') {
+            console.log('Ping recebido:', data);
+          } else {
+            console.log('Tipo de evento desconhecido:', data.type);
           }
         } catch (error) {
           console.error('Erro ao processar evento SSE:', error);
@@ -87,24 +100,52 @@ export function PixPayment({
       return eventSource;
     } catch (error) {
       console.error('Erro ao iniciar EventSource:', error);
+      
+      // Tentar reconectar após um tempo
+      setTimeout(() => {
+        if (paymentStatus === 'pending') {
+          console.log('Tentando reconectar após erro...');
+          startEventSource(paymentId);
+        }
+      }, 5000);
+      
       return null;
     }
   };
 
   const updatePaymentStatus = (status: string) => {
-    if (status === 'PAID' || status === 'paid') {
+    console.log('Atualizando status do pagamento:', status);
+    const normalizedStatus = status.toUpperCase();
+    
+    if (normalizedStatus === 'PAID' || normalizedStatus === 'CONFIRMED') {
+      console.log('Pagamento confirmado!');
       setPaymentStatus('paid');
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
+      
+      // Fechar conexão SSE apenas após confirmar que o estado foi atualizado
+      setTimeout(() => {
+        if (eventSourceRef.current) {
+          console.log('Fechando conexão SSE após pagamento confirmado');
+          eventSourceRef.current.close();
+        }
+        // Chamar callback de sucesso
+        onSuccess?.();
+      }, 500);
+      
       toast.success('Pagamento confirmado!');
-      onSuccess?.();
-    } else if (status === 'FAILED' || status === 'failed' || status === 'canceled') {
+    } else if (normalizedStatus === 'FAILED' || normalizedStatus === 'CANCELED' || normalizedStatus === 'CANCELLED') {
+      console.log('Pagamento falhou ou foi cancelado');
       setPaymentStatus('failed');
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
+      
+      setTimeout(() => {
+        if (eventSourceRef.current) {
+          console.log('Fechando conexão SSE após pagamento falhar');
+          eventSourceRef.current.close();
+        }
+      }, 500);
+      
       toast.error('Pagamento falhou ou foi cancelado.');
+    } else {
+      console.log('Status de pagamento não processado:', normalizedStatus);
     }
   };
 
@@ -282,10 +323,15 @@ export function PixPayment({
       ) : (
         <>
           <h2 className="text-xl font-semibold">Pagamento via PIX</h2>
-          {isConnected && (
+          {isConnected ? (
             <div className="bg-green-50 px-3 py-1 rounded-full text-xs text-green-600 flex items-center">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
               Conectado
+            </div>
+          ) : (
+            <div className="bg-yellow-50 px-3 py-1 rounded-full text-xs text-yellow-600 flex items-center">
+              <span className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span>
+              Reconectando...
             </div>
           )}
           <div className="bg-white p-4 rounded-lg shadow-md">
@@ -335,6 +381,21 @@ export function PixPayment({
           <p className="text-sm text-primary">
             Aguardando confirmação do pagamento...
           </p>
+          
+          <button
+            onClick={() => {
+              toast.info('Verificando status do pagamento...');
+              if (paymentIdRef.current) {
+                if (eventSourceRef.current) {
+                  eventSourceRef.current.close();
+                }
+                startEventSource(paymentIdRef.current);
+              }
+            }}
+            className="mt-2 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+          >
+            Verificar status
+          </button>
         </>
       )}
     </div>
