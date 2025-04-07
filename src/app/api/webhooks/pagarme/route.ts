@@ -77,7 +77,8 @@ export async function POST(req: Request) {
     console.log('Webhook da Pagar.me recebido');
 
     // Verificar autenticação básica
-    const authHeader = req.headers.get('authorization');
+    // Removendo variável não utilizada que causa erro no build
+    // const authHeader = req.headers.get('authorization');
     
     // Temporariamente desabilitando verificação de auth para debug
     console.log('Pulando verificação de autenticação para debug');
@@ -94,7 +95,7 @@ export async function POST(req: Request) {
     */
 
     // Obter a assinatura do header (se existir)
-    const signature = req.headers.get('x-hub-signature') || '';
+    // const signature = req.headers.get('x-hub-signature') || '';
     
     // Obter o payload como texto
     const payload = await req.text();
