@@ -154,9 +154,9 @@ export function PixPayment({
       setIsLoading(true);
       setError('');
 
-      if (!session) {
-        throw new Error('Usuário não autenticado');
-      }
+      // Remover verificação obrigatória de autenticação
+      // Pagamentos podem ser feitos por usuários não autenticados
+      console.log('Status da sessão:', session ? 'Autenticado' : 'Não autenticado');
 
       // Validar dados do cliente
       if (!customer.name || !customer.email || (!customer.document_number && !customer.document)) {

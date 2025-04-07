@@ -8,14 +8,12 @@ export async function POST(request: Request) {
   try {
     console.log('Iniciando processamento de pagamento PIX...');
     
+    // Verificar sessão, mas não exigir que esteja autenticado
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      console.error('Usuário não autenticado');
-      return NextResponse.json(
-        { error: 'Usuário não autenticado' },
-        { status: 401 }
-      );
-    }
+    console.log('Status da sessão:', session ? 'Autenticado' : 'Não autenticado');
+    
+    // Removendo verificação obrigatória de autenticação para permitir pagamentos anônimos
+    // Compras podem ser feitas por usuários não autenticados
 
     const body = await request.json();
     console.log('Dados recebidos:', JSON.stringify(body, null, 2));
@@ -198,13 +196,11 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    // Verificar sessão, mas não exigir que esteja autenticado
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Usuário não autenticado' },
-        { status: 401 }
-      );
-    }
+    console.log('Verificação de status - Status da sessão:', session ? 'Autenticado' : 'Não autenticado');
+    
+    // Removendo verificação obrigatória de autenticação para permitir verificações anônimas
 
     const { searchParams } = new URL(request.url);
     const transactionId = searchParams.get('transactionId');
