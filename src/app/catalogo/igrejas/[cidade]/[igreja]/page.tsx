@@ -156,7 +156,6 @@ export default function CatalogoEventosIgrejaPage({
         subtitle={`Eventos em ${formatarCidade(cidade)}`}
         showBackButton={true}
         backUrl="/catalogo/igrejas"
-        sticky={true}
       />
 
       {/* Conteúdo principal */}
