@@ -442,11 +442,10 @@ export default function CatalogoIgrejasPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden m-0 p-0 max-w-full">
       {/* Header com barra de pesquisa */}
-      <AppHeader 
-        title="Catálogo de Igrejas"
+      <AppHeader
+        title="Igrejas"
         subtitle="Encontre eventos e produtos das igrejas participantes"
         showHomeButton
-        sticky={true}
       >
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
