@@ -43,7 +43,6 @@ export default function DiagnosticoPIXPage() {
       <AppHeader 
         title="Diagnóstico PIX" 
         showBackButton={true}
-        sticky={true}
       />
       
       <div className="flex-1 p-4">
