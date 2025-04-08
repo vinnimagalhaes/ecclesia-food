@@ -299,11 +299,10 @@ export default function EventoDetalhesPage({
     <div className="flex flex-col min-h-screen bg-gray-50 overflow-hidden pb-24 m-0 p-0 max-w-full">
       {/* Cabeçalho Fixo */}
       <AppHeader
-        title={evento.nome}
+        title={evento?.nome || 'Evento'}
         subtitle={nomeIgreja}
         showBackButton={true}
         backUrl={`/catalogo/igrejas/${params.cidade}/${params.igreja}`}
-        sticky={true}
       />
 
       {/* Informações do Evento */}
