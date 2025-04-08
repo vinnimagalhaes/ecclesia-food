@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Home } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CatalogoLayout({
@@ -29,13 +29,9 @@ export default function CatalogoLayout({
       <header className="bg-white shadow-sm">
         <div className="container-app py-4">
           <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center">
-              <span className="text-xl font-bold text-primary-500">Ecclesia Food</span>
-            </Link>
-
-            {/* Indicador de usuário logado */}
-            {session?.user ? (
-              <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4">
+              {/* Botão de login ou perfil do usuário */}
+              {session?.user ? (
                 <div className="flex items-center">
                   {session.user.image ? (
                     <img 
@@ -52,21 +48,39 @@ export default function CatalogoLayout({
                     {session.user.name || 'Usuário'}
                   </span>
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-                  title="Sair"
+              ) : (
+                <Link 
+                  href="/login" 
+                  className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition"
                 >
-                  <LogOut size={16} />
-                </button>
-              </div>
-            ) : (
+                  Entrar
+                </Link>
+              )}
+
+              {/* Link para o catálogo de igrejas */}
               <Link 
-                href="/login" 
-                className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition"
+                href="/catalogo/igrejas" 
+                className="flex items-center text-gray-600 hover:text-primary-500"
               >
-                Entrar
+                <Home size={20} className="mr-1" />
+                <span>Catálogo</span>
               </Link>
+            </div>
+
+            {/* Logo */}
+            <Link href="/" className="flex items-center">
+              <span className="text-xl font-bold text-primary-500">Ecclesia Food</span>
+            </Link>
+
+            {/* Botão de logout (se estiver logado) */}
+            {session?.user && (
+              <button
+                onClick={handleSignOut}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                title="Sair"
+              >
+                <LogOut size={16} />
+              </button>
             )}
           </div>
         </div>
