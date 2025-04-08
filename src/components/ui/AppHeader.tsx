@@ -10,7 +10,6 @@ interface AppHeaderProps {
   showHomeButton?: boolean;
   children?: ReactNode;
   gradient?: boolean;
-  sticky?: boolean;
 }
 
 export function AppHeader({
@@ -21,7 +20,6 @@ export function AppHeader({
   showHomeButton = false,
   children,
   gradient = true,
-  sticky = false,
 }: AppHeaderProps) {
   const backgroundClass = gradient 
     ? 'bg-gradient-to-r from-primary-600 to-primary-500' 
