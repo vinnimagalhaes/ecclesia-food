@@ -27,31 +27,11 @@ export function AppHeader({
     ? 'bg-gradient-to-r from-primary-600 to-primary-500' 
     : 'bg-primary-500';
 
-  // Aplicar sticky usando posição fixed
-  const positionStyle: CSSProperties = sticky
-    ? {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        width: '100%'
-      }
-    : {};
+  const positionStyle: CSSProperties = {
+    position: 'relative',
+    zIndex: 40,
+  };
     
-  // Adicionar padding ao body quando sticky para compensar o espaço do header
-  React.useEffect(() => {
-    if (sticky) {
-      // Obter a altura do header após renderização
-      const headerHeight = document.getElementById('app-header')?.offsetHeight || 0;
-      document.body.style.paddingTop = `${headerHeight}px`;
-      
-      return () => {
-        document.body.style.paddingTop = '0px';
-      };
-    }
-  }, [sticky]);
-
   const headerStyle: CSSProperties = {
     width: '100vw',
     marginLeft: 'calc(50% - 50vw)',

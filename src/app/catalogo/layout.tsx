@@ -25,8 +25,8 @@ export default function CatalogoLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header para área de catálogo */}
-      <header className="bg-white shadow-sm">
+      {/* Header para área de catálogo - fixo no topo */}
+      <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50 w-full">
         <div className="container-app py-4">
           <div className="flex justify-between items-center">
             <Link href="/" className="flex items-center">
@@ -71,6 +71,9 @@ export default function CatalogoLayout({
           </div>
         </div>
       </header>
+
+      {/* Adicionar espaço para compensar o header fixo */}
+      <div className="pt-20"></div>
 
       {/* Conteúdo principal */}
       <main className="w-full">
