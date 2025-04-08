@@ -60,7 +60,7 @@ function LoginForm() {
     const password = formData.get('password') as string;
 
     try {
-      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+      const callbackUrl = searchParams.get('callbackUrl') || '/catalogo';
       const result = await signIn('credentials', {
         email,
         password,
@@ -91,7 +91,7 @@ function LoginForm() {
   const handleGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true);
-      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+      const callbackUrl = searchParams.get('callbackUrl') || '/catalogo';
       await signIn('google', { callbackUrl });
     } catch (error) {
       console.error('Erro no login com Google:', error);

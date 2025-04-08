@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { UserRole } from '@prisma/client';
 // Removendo a importação do db, pois não funciona no Edge Runtime
 // import { db } from '@/lib/db';
 
@@ -131,7 +132,7 @@ export async function middleware(request: NextRequest) {
       hasToken: !!token
     });
 
-    // Se for uma rota protegida ou API protegida e não tiver token, bloqueia o acesso
+    // Verifica se é uma rota protegida ou API protegida e não tiver token, bloqueia o acesso
     if ((isProtectedPath || isProtectedApi || isSuperAdminPath) && !token) {
       console.log('[Middleware] Acesso negado - redirecionando para login');
       
@@ -150,6 +151,12 @@ export async function middleware(request: NextRequest) {
       const url = new URL('/login', request.url);
       url.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(url);
+    }
+    
+    // Verificar se o usuário é CLIENT e tenta acessar rotas administrativas
+    if (token?.role === 'USER' as UserRole && (isProtectedPath || isSuperAdminPath)) {
+      console.log('[Middleware] Usuário comum tentando acessar área administrativa - redirecionando');
+      return NextResponse.redirect(new URL('/catalogo', request.url));
     }
 
     // Verificar se o usuário tem acesso à rota SUPER_ADMIN
