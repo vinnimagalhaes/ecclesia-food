@@ -122,7 +122,6 @@ export default function CarrinhoPage() {
         title="Seu Carrinho"
         showBackButton={true}
         backUrl="/catalogo/igrejas"
-        sticky={true}
       />
 
       {/* Conteúdo */}
