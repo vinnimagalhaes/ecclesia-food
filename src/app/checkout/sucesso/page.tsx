@@ -60,7 +60,6 @@ export default function SucessoPage() {
       <AppHeader
         title="Pedido Confirmado"
         showBackButton={false}
-        sticky={true}
       />
 
       <div className="flex-1 p-4">
