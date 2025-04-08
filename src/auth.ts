@@ -60,53 +60,6 @@ export const authOptions: NextAuthOptions = {
           emailVerified: new Date()
         }
       }
-    }),
-    CredentialsProvider({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'text' },
-        password: { label: 'Password', type: 'password' }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email e senha são obrigatórios');
-        }
-
-        const user = await db.user.findUnique({
-          where: { email: credentials.email }
-        });
-
-        if (!user || !user.password) {
-          throw new Error('Usuário não encontrado ou sem senha');
-        }
-
-        const isPasswordValid = await compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          throw new Error('Senha inválida');
-        }
-
-        if (user.isActive === false) {
-          throw new Error('Usuário inativo');
-        }
-        
-        // Verificar se o email foi confirmado
-        if (!user.emailVerified) {
-          throw new Error('Email não verificado. Por favor, verifique seu email antes de fazer login.');
-        }
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isActive: user.isActive,
-          emailVerified: user.emailVerified
-        };
-      }
     })
   ],
   callbacks: {
