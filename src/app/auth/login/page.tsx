@@ -12,7 +12,7 @@ function LoginContent() {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
-      const callbackUrl = searchParams.get('callbackUrl') || '/catalogo';
+      const callbackUrl = searchParams.get('callbackUrl') || '/catalogo/igrejas';
       await signIn('google', { callbackUrl });
     } catch (error) {
       console.error('Erro no login com Google:', error);

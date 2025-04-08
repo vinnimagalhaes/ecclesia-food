@@ -1,12 +1,28 @@
 'use client';
 
 import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
+import { User, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function CatalogoLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut({ redirect: false });
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header para área de catálogo */}
@@ -16,6 +32,42 @@ export default function CatalogoLayout({
             <Link href="/" className="flex items-center">
               <span className="text-xl font-bold text-primary-500">Ecclesia Food</span>
             </Link>
+
+            {/* Indicador de usuário logado */}
+            {session?.user ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  {session.user.image ? (
+                    <img 
+                      src={session.user.image} 
+                      alt={session.user.name || 'Avatar'} 
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mr-2">
+                      <User size={18} />
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-gray-700">
+                    {session.user.name || 'Usuário'}
+                  </span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                  title="Sair"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <Link 
+                href="/login" 
+                className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition"
+              >
+                Entrar
+              </Link>
+            )}
           </div>
         </div>
       </header>
