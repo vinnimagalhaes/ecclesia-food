@@ -84,7 +84,6 @@ export default function TestePIXPage() {
       <AppHeader 
         title="Teste de PIX" 
         showBackButton={true}
-        sticky={true}
       />
       
       <div className="flex-1 p-4">
