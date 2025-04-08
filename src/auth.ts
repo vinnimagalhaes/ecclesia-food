@@ -2,6 +2,7 @@ import { UserRole } from '@prisma/client';
 import { compare } from 'bcrypt';
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import { db } from '@/lib/db';
 
 declare module 'next-auth' {
@@ -38,6 +39,28 @@ declare module 'next-auth/jwt' {
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      },
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          role: 'USER' as UserRole,
+          isActive: true,
+          emailVerified: new Date()
+        }
+      }
+    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -87,12 +110,32 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      console.log('[Auth] JWT Callback:', {
+        hasUser: !!user,
+        hasAccount: !!account,
+        accountProvider: account?.provider,
+        userRole: user?.role,
+        userEmailVerified: user?.emailVerified
+      });
+
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.isActive = user.isActive;
         token.emailVerified = user.emailVerified;
+        
+        if (account && account.provider === 'google') {
+          console.log('[Auth] Login com Google detectado');
+          if (!user.emailVerified) {
+            console.log('[Auth] Atualizando emailVerified para usuário do Google');
+            await db.user.update({
+              where: { id: user.id },
+              data: { emailVerified: new Date() }
+            });
+            token.emailVerified = new Date();
+          }
+        }
       }
       return token;
     },

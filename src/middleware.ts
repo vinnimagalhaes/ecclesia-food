@@ -20,7 +20,13 @@ export async function middleware(request: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
     
-    console.log(`[Middleware] Token:`, token);
+    console.log(`[Middleware] Token:`, {
+      hasToken: !!token,
+      tokenRole: token?.role,
+      tokenIsActive: token?.isActive,
+      tokenEmailVerified: token?.emailVerified,
+      pathname
+    });
 
     // Lista de rotas protegidas (administrativas)
     const protectedPaths = [
@@ -192,18 +198,21 @@ export async function middleware(request: NextRequest) {
     if (token?.sub && !isBypassPath) {
       console.log('[Middleware] Verificando perfil da igreja para o usuário:', token.sub);
       
-      const hasChurchProfile = request.cookies.get('has_church_profile')?.value === 'true';
-      
-      if (!hasChurchProfile) {
-        console.log('[Middleware] Status do perfil da igreja desconhecido - verificando');
+      // Apenas verificar o perfil da igreja se o usuário for administrador
+      if (token.role === 'ADMIN' || token.role === 'SUPER_ADMIN') {
+        const hasChurchProfile = request.cookies.get('has_church_profile')?.value === 'true';
         
-        if (pathname === '/onboarding') {
-          return NextResponse.next();
+        if (!hasChurchProfile) {
+          console.log('[Middleware] Status do perfil da igreja desconhecido - verificando');
+          
+          if (pathname === '/onboarding') {
+            return NextResponse.next();
+          }
+          
+          const url = new URL('/api/check-church-profile', request.url);
+          url.searchParams.set('callbackUrl', pathname);
+          return NextResponse.redirect(url);
         }
-        
-        const url = new URL('/api/check-church-profile', request.url);
-        url.searchParams.set('callbackUrl', pathname);
-        return NextResponse.redirect(url);
       }
     }
 
