@@ -374,10 +374,9 @@ export default function CheckoutPage() {
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Cabeçalho */}
       <AppHeader
-        title="Finalizar Pedido"
+        title="Checkout"
         showBackButton={true}
         backUrl="/carrinho"
-        sticky={true}
       />
 
       {/* Formulário e resumo */}
