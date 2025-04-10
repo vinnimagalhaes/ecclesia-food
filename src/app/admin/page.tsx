@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { compare } from 'bcrypt';
 
 export default function AdminLogin() {
   const router = useRouter();
