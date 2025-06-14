@@ -156,7 +156,7 @@ export default function SeuPedidoPage() {
     setCodigo(prev => prev.slice(0, -1));
   };
 
-  const limparCodigo = () => {
+  const limparTodoCodigo = () => {
     setCodigo('');
   };
 
@@ -370,7 +370,7 @@ export default function SeuPedidoPage() {
             </button>
             
             <button
-              onClick={limparCodigo}
+              onClick={limparTodoCodigo}
               className="bg-red-500 hover:bg-red-600 text-white text-xl font-bold py-4 rounded-xl flex items-center justify-center gap-2"
             >
               <X size={24} />

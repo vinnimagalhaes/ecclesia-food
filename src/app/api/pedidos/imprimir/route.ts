@@ -17,10 +17,38 @@ interface PrinterConfig {
   };
 }
 
+// Função para detectar o sistema operacional e configurar interface
+function getPrinterInterface() {
+  // Se definido manualmente nas variáveis de ambiente, use
+  if (process.env.PRINTER_INTERFACE) {
+    return process.env.PRINTER_INTERFACE;
+  }
+  
+  // Se IP for definido, use TCP
+  if (process.env.PRINTER_IP) {
+    return `tcp://${process.env.PRINTER_IP}:${process.env.PRINTER_PORT || 9100}`;
+  }
+  
+  // Detectar SO automaticamente
+  const platform = process.platform;
+  
+  if (platform === 'darwin') {
+    // macOS - Usar printer name diretamente
+    return 'Printer_POS_80'; // Nome da impressora no macOS
+  } else if (platform === 'linux') {
+    return '/dev/usb/lp0';
+  } else if (platform === 'win32') {
+    return 'LPT1';
+  }
+  
+  // Fallback
+  return '/dev/usb/lp0';
+}
+
 // Configuração da impressora
 const printerConfig: PrinterConfig = {
   type: PrinterTypes.EPSON, // Tomate MDK081 é compatível com comandos EPSON
-  interface: process.env.PRINTER_INTERFACE || '/dev/usb/lp0', // USB por padrão
+  interface: getPrinterInterface(),
   removeSpecialCharacters: true,
   lineCharacter: '=',
   options: {
@@ -68,15 +96,29 @@ export async function POST(request: Request) {
       );
     }
 
+    // Log da configuração
+    console.log('Configuração da impressora:', {
+      platform: process.platform,
+      interface: printerConfig.interface,
+      type: printerConfig.type
+    });
+
     // Inicializar impressora
     const printer = new ThermalPrinter(printerConfig);
 
     // Verificar se a impressora está conectada
+    console.log('Testando conexão com a impressora...');
     const isConnected = await printer.isPrinterConnected();
+    console.log('Status da conexão:', isConnected);
+    
     if (!isConnected) {
-      console.error('Impressora não conectada');
+      console.error('Impressora não conectada. Interface configurada:', printerConfig.interface);
       return NextResponse.json(
-        { error: 'Impressora não conectada. Verifique a conexão.' },
+        { 
+          error: 'Impressora não conectada. Verifique a conexão.',
+          interface: printerConfig.interface,
+          platform: process.platform
+        },
         { status: 500 }
       );
     }
