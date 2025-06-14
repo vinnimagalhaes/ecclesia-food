@@ -33,8 +33,11 @@ function getPrinterInterface() {
   const platform = process.platform;
   
   if (platform === 'darwin') {
-    // macOS - Usar printer name diretamente
-    return 'Printer_POS_80'; // Nome da impressora no macOS
+    // macOS - Tentar primeiro o nome simples, depois serial
+    // Em desenvolvimento, você pode usar PRINTER_INTERFACE para forçar
+    return process.env.NODE_ENV === 'development' 
+      ? 'printer' // Modo simulação para desenvolvimento
+      : 'Printer_POS_80'; // Nome da impressora no macOS
   } else if (platform === 'linux') {
     return '/dev/usb/lp0';
   } else if (platform === 'win32') {
@@ -103,27 +106,7 @@ export async function POST(request: Request) {
       type: printerConfig.type
     });
 
-    // Inicializar impressora
-    const printer = new ThermalPrinter(printerConfig);
-
-    // Verificar se a impressora está conectada
-    console.log('Testando conexão com a impressora...');
-    const isConnected = await printer.isPrinterConnected();
-    console.log('Status da conexão:', isConnected);
-    
-    if (!isConnected) {
-      console.error('Impressora não conectada. Interface configurada:', printerConfig.interface);
-      return NextResponse.json(
-        { 
-          error: 'Impressora não conectada. Verifique a conexão.',
-          interface: printerConfig.interface,
-          platform: process.platform
-        },
-        { status: 500 }
-      );
-    }
-
-    // Preparar dados da impressão
+    // Preparar dados da impressão primeiro
     const dataAtual = new Date().toLocaleString('pt-BR');
     const nomeEvento = sale.event?.nome || 'Evento';
     
@@ -139,6 +122,64 @@ export async function POST(request: Request) {
           totalItens: item.quantidade,
         });
       }
+    }
+
+    console.log(`Preparando impressão de ${itensParaImprimir.length} tickets para o pedido ${pedidoId}`);
+
+    // Modo simulação para desenvolvimento
+    if (process.env.NODE_ENV === 'development' && printerConfig.interface === 'printer') {
+      console.log('🎭 MODO SIMULAÇÃO ATIVADO - Impressão será simulada');
+      
+      // Simular a impressão
+      console.log(`📄 Simulando impressão de ${itensParaImprimir.length} tickets...`);
+      for (let i = 0; i < itensParaImprimir.length; i++) {
+        const item = itensParaImprimir[i];
+        console.log(`🎫 Ticket ${i + 1}/${itensParaImprimir.length}: ${item.nome} - R$ ${item.preco.toFixed(2)}`);
+      }
+      
+      // Atualizar status do pedido
+      if (sale.status === 'PENDENTE') {
+        await db.sale.update({
+          where: { id: pedidoId },
+          data: { 
+            status: 'FINALIZADA',
+            dataFinalizacao: new Date()
+          }
+        });
+      }
+      
+      return NextResponse.json({
+        success: true,
+        mode: 'simulation',
+        message: `✅ ${itensParaImprimir.length} tickets simulados com sucesso!`,
+        ticketsImpressos: itensParaImprimir.length,
+        pedidoId: pedidoId,
+        items: itensParaImprimir.map((item, i) => `Ticket ${i+1}: ${item.nome}`)
+      });
+    }
+
+    // Inicializar impressora
+    const printer = new ThermalPrinter(printerConfig);
+
+    // Verificar se a impressora está conectada
+    console.log('Testando conexão com a impressora...');
+    
+    const isConnected = await printer.isPrinterConnected();
+    console.log('Status da conexão:', isConnected);
+    
+    if (!isConnected) {
+      console.error('Impressora não conectada. Interface configurada:', printerConfig.interface);
+      return NextResponse.json(
+        { 
+          error: 'Impressora não conectada. Verifique a conexão.',
+          interface: printerConfig.interface,
+          platform: process.platform,
+          suggestion: process.platform === 'darwin' 
+            ? 'Para macOS: Tente definir PRINTER_INTERFACE=Printer_POS_80 no .env.local'
+            : 'Verifique a conexão USB ou configure PRINTER_IP no .env.local'
+        },
+        { status: 500 }
+      );
     }
 
     console.log(`Imprimindo ${itensParaImprimir.length} tickets para o pedido ${pedidoId}`);
