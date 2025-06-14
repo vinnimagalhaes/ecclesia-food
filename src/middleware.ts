@@ -71,7 +71,9 @@ export async function middleware(request: NextRequest) {
       '/api/pix',
       '/api/webhooks',
       '/api/payment-events',
-      '/api/payments'
+      '/api/payments',
+      '/api/pedidos/buscar',
+      '/api/pedidos/imprimir'
     ];
 
     // Lista de rotas que não precisam de verificação de perfil de igreja

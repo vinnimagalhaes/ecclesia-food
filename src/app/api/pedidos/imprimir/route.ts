@@ -21,8 +21,7 @@ interface PrinterConfig {
 const printerConfig: PrinterConfig = {
   type: PrinterTypes.EPSON, // Tomate MDK081 é compatível com comandos EPSON
   interface: process.env.PRINTER_INTERFACE || '/dev/usb/lp0', // USB por padrão
-  characterSet: 'PC858_TURKISH',
-  removeSpecialCharacters: false,
+  removeSpecialCharacters: true,
   lineCharacter: '=',
   options: {
     timeout: 5000,
