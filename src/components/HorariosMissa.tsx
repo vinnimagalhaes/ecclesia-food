@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, AlertCircle } from 'lucide-react';
+import { Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 // Constantes para os dias da semana
@@ -156,7 +156,7 @@ export function HorariosMissa({ igreja, filtros }: HorariosMissaProps) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex items-center text-red-600 mb-4">
-          <AlertCircle size={20} className="mr-2" />
+          <AlertTriangle size={20} className="mr-2" />
           <p>{error}</p>
         </div>
         <Button 

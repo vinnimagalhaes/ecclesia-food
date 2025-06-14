@@ -14,7 +14,7 @@ import {
   Tag, 
   Clock, 
   CheckCircle, 
-  XCircle,
+  X,
   Truck,
   MessageSquare
 } from 'lucide-react';
@@ -188,7 +188,7 @@ export default function VendaDetalhesPage({ params }: { params: { id: string } }
       case 'CANCELADA':
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-            <XCircle size={16} className="mr-1" />
+            <X size={16} className="mr-1" />
             Cancelada
           </span>
         );
@@ -321,7 +321,7 @@ export default function VendaDetalhesPage({ params }: { params: { id: string } }
                 disabled={atualizando}
                 className="text-red-600 hover:text-red-700"
               >
-                <XCircle size={16} className="mr-1" />
+                <X size={16} className="mr-1" />
                 Cancelar
               </Button>
             </>

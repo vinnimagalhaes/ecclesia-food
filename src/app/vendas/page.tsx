@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { Search, Download, DollarSign, Calendar, Tag, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Search, Download, DollarSign, Calendar, Tag, CheckCircle, X, Clock } from 'lucide-react';
 import axios from 'axios';
 import React from 'react';
 
@@ -338,7 +338,7 @@ export default function VendasPage() {
       case 'CANCELADA':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <XCircle size={12} className="mr-1" />
+            <X size={12} className="mr-1" />
             Cancelada
           </span>
         );

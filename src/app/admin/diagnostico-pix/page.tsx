@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { AppHeader } from '@/components/ui/AppHeader';
-import { CheckCircle, XCircle, AlertTriangle, ArrowRight } from 'lucide-react';
+import { CheckCircle, X, AlertTriangle, ArrowRight } from 'lucide-react';
 
 export default function DiagnosticoPIXPage() {
   const router = useRouter();
@@ -59,7 +59,7 @@ export default function DiagnosticoPIXPage() {
               <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <XCircle className="h-5 w-5 text-red-500" />
+                    <X className="h-5 w-5 text-red-500" />
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-red-700">{erro}</p>
@@ -81,7 +81,7 @@ export default function DiagnosticoPIXPage() {
                       ) : diagnostico.status === 'WARNING' ? (
                         <AlertTriangle className="h-5 w-5 text-yellow-500" />
                       ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
+                        <X className="h-5 w-5 text-red-500" />
                       )}
                     </div>
                     <div className="ml-3">
@@ -106,7 +106,7 @@ export default function DiagnosticoPIXPage() {
                       {diagnostico.configExiste ? (
                         <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                       ) : (
-                        <XCircle className="h-5 w-5 text-red-500 mr-2" />
+                        <X className="h-5 w-5 text-red-500 mr-2" />
                       )}
                       <span>Configuração de pagamento existe</span>
                     </div>
@@ -117,7 +117,7 @@ export default function DiagnosticoPIXPage() {
                         {diagnostico.aceitaPix ? (
                           <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                         ) : (
-                          <XCircle className="h-5 w-5 text-red-500 mr-2" />
+                          <X className="h-5 w-5 text-red-500 mr-2" />
                         )}
                         <span>Pagamento PIX habilitado</span>
                       </div>
@@ -129,7 +129,7 @@ export default function DiagnosticoPIXPage() {
                         {diagnostico.chaveConfigured ? (
                           <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                         ) : (
-                          <XCircle className="h-5 w-5 text-red-500 mr-2" />
+                          <X className="h-5 w-5 text-red-500 mr-2" />
                         )}
                         <span>Chave PIX configurada</span>
                       </div>

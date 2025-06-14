@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Church, MapPin, AlertCircle } from 'lucide-react';
+import { Church, MapPin, AlertTriangle } from 'lucide-react';
 import { getUserLocation, LocationData } from '@/lib/geolocation';
 import { Button } from '@/components/ui/Button';
 
@@ -102,7 +102,7 @@ export function IgrejasProximas({ igrejas, onLocationChange }: IgrejasProximasPr
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded-md">
             <div className="flex">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+              <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
               <span className="text-sm text-red-700">{error}</span>
             </div>
             
