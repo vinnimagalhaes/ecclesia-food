@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { Prisma } from '@prisma/client';
+import { gerarCodigoPedido } from '@/lib/codigo-generator';
 
 // POST: Criar uma nova venda (rota pública)
 export async function POST(request: Request) {
@@ -30,8 +31,34 @@ export async function POST(request: Request) {
     // Associar a venda ao criador do evento
     const userId = evento.creatorId;
     
+    // Gerar código único para o pedido
+    let codigoUnico = gerarCodigoPedido();
+    
+    // Verificar se o código já existe (muito improvável, mas por segurança)
+    let tentativas = 0;
+    while (tentativas < 5) {
+      const codigoExistente = await db.sale.findUnique({
+        where: { id: codigoUnico }
+      });
+      
+      if (!codigoExistente) {
+        break; // Código único encontrado
+      }
+      
+      codigoUnico = gerarCodigoPedido();
+      tentativas++;
+    }
+    
+    if (tentativas >= 5) {
+      return NextResponse.json(
+        { error: 'Erro ao gerar código único. Tente novamente.' },
+        { status: 500 }
+      );
+    }
+
     // Preparar dados da venda
     const dadosVenda: any = {
+      id: codigoUnico, // Usar o código gerado como ID
       cliente: body.cliente,
       email: body.email || '',
       telefone: body.telefone,

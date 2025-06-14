@@ -33,11 +33,9 @@ function getPrinterInterface() {
   const platform = process.platform;
   
   if (platform === 'darwin') {
-    // macOS - Tentar primeiro o nome simples, depois serial
-    // Em desenvolvimento, você pode usar PRINTER_INTERFACE para forçar
-    return process.env.NODE_ENV === 'development' 
-      ? 'printer' // Modo simulação para desenvolvimento
-      : 'Printer_POS_80'; // Nome da impressora no macOS
+    // macOS - Tentar diferentes interfaces
+    // Primeiro tentar o nome da impressora, depois fallback para USB
+    return process.env.PRINTER_INTERFACE || '/dev/usb/lp0';
   } else if (platform === 'linux') {
     return '/dev/usb/lp0';
   } else if (platform === 'win32') {
@@ -107,7 +105,6 @@ export async function POST(request: Request) {
     });
 
     // Preparar dados da impressão primeiro
-    const dataAtual = new Date().toLocaleString('pt-BR');
     const nomeEvento = sale.event?.nome || 'Evento';
     
     // Expandir itens para impressão individual
@@ -126,60 +123,164 @@ export async function POST(request: Request) {
 
     console.log(`Preparando impressão de ${itensParaImprimir.length} tickets para o pedido ${pedidoId}`);
 
-    // Modo simulação para desenvolvimento
-    if (process.env.NODE_ENV === 'development' && printerConfig.interface === 'printer') {
-      console.log('🎭 MODO SIMULAÇÃO ATIVADO - Impressão será simulada');
-      
-      // Simular a impressão
-      console.log(`📄 Simulando impressão de ${itensParaImprimir.length} tickets...`);
-      for (let i = 0; i < itensParaImprimir.length; i++) {
-        const item = itensParaImprimir[i];
-        console.log(`🎫 Ticket ${i + 1}/${itensParaImprimir.length}: ${item.nome} - R$ ${item.preco.toFixed(2)}`);
+    // Tentar diferentes interfaces para macOS
+    const possibleInterfaces = process.platform === 'darwin' 
+      ? ['Printer_POS_80', '/dev/usb/lp0', '/dev/tty.usbserial', 'printer']
+      : [printerConfig.interface];
+
+    let printer = null;
+    let isConnected = false;
+    let workingInterface = null;
+
+    console.log('Testando conexão com diferentes interfaces...');
+    
+    for (const testInterface of possibleInterfaces) {
+      try {
+        console.log(`Tentando interface: ${testInterface}`);
+        
+        const testConfig = {
+          ...printerConfig,
+          interface: testInterface
+        };
+        
+        const testPrinter = new ThermalPrinter(testConfig);
+        const connected = await testPrinter.isPrinterConnected();
+        
+        console.log(`Interface ${testInterface}: ${connected ? 'CONECTADA' : 'não conectada'}`);
+        
+        if (connected) {
+          printer = testPrinter;
+          isConnected = true;
+          workingInterface = testInterface;
+          break;
+        }
+      } catch (error) {
+        console.log(`Erro ao testar interface ${testInterface}:`, error instanceof Error ? error.message : String(error));
       }
-      
-      // Atualizar status do pedido
-      if (sale.status === 'PENDENTE') {
-        await db.sale.update({
-          where: { id: pedidoId },
-          data: { 
-            status: 'FINALIZADA',
-            dataFinalizacao: new Date()
-          }
-        });
-      }
-      
-      return NextResponse.json({
-        success: true,
-        mode: 'simulation',
-        message: `✅ ${itensParaImprimir.length} tickets simulados com sucesso!`,
-        ticketsImpressos: itensParaImprimir.length,
-        pedidoId: pedidoId,
-        items: itensParaImprimir.map((item, i) => `Ticket ${i+1}: ${item.nome}`)
-      });
     }
 
-    // Inicializar impressora
-    const printer = new ThermalPrinter(printerConfig);
+    console.log('Resultado final:', { isConnected, workingInterface });
+    
+    // Se não estiver conectada, tentar impressão direta via sistema (macOS)
+    if (!isConnected && process.platform === 'darwin') {
+      console.log('🖨️ Tentando impressão direta via sistema macOS...');
+      
+      try {
+        const { exec } = require('child_process');
+        const util = require('util');
+        const execAsync = util.promisify(exec);
+        
+        // Verificar se a impressora está disponível no sistema
+        const { stdout } = await execAsync('lpstat -p Printer_POS_80');
+        
+        if (stdout.includes('ociosa') || stdout.includes('idle')) {
+          console.log('✅ Impressora detectada via sistema - usando impressão direta');
+          
+          // Imprimir cada ticket via comando do sistema
+          for (let i = 0; i < itensParaImprimir.length; i++) {
+            const item = itensParaImprimir[i];
+            
+                        // Criar nome do item GRANDE com espaçamento entre letras
+            const nomeItem = item.nome.toUpperCase();
+            const nomeGrande = nomeItem.split('').join(' ');
+            
+            const ticketContent = `
 
-    // Verificar se a impressora está conectada
-    console.log('Testando conexão com a impressora...');
+(${nomeEvento})
+
+
+
+${nomeGrande}
+
+(${sale.id})
+
+
+
+ECCLESIA FOOD
+
+
+`;
+            
+            // Enviar para impressora via lp
+            await execAsync(`echo "${ticketContent}" | lp -d Printer_POS_80`);
+            console.log(`✅ Ticket ${i + 1}/${itensParaImprimir.length} enviado via sistema: ${item.nome}`);
+            
+            // Pausa entre impressões
+            if (i < itensParaImprimir.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+          
+          // Atualizar status do pedido
+          if (sale.status === 'PENDENTE') {
+            await db.sale.update({
+              where: { id: pedidoId },
+              data: { 
+                status: 'FINALIZADA',
+                dataFinalizacao: new Date()
+              }
+            });
+          }
+          
+          return NextResponse.json({
+            success: true,
+            mode: 'system_direct',
+            message: `✅ ${itensParaImprimir.length} tickets impressos via sistema!`,
+            ticketsImpressos: itensParaImprimir.length,
+            pedidoId: pedidoId,
+            method: 'macOS lp command'
+          });
+        }
+      } catch (systemError) {
+        console.log('❌ Erro na impressão direta via sistema:', systemError instanceof Error ? systemError.message : String(systemError));
+      }
+    }
     
-    const isConnected = await printer.isPrinterConnected();
-    console.log('Status da conexão:', isConnected);
-    
+    // Se não estiver conectada, usar modo simulação apenas em desenvolvimento
     if (!isConnected) {
-      console.error('Impressora não conectada. Interface configurada:', printerConfig.interface);
-      return NextResponse.json(
-        { 
-          error: 'Impressora não conectada. Verifique a conexão.',
-          interface: printerConfig.interface,
-          platform: process.platform,
-          suggestion: process.platform === 'darwin' 
-            ? 'Para macOS: Tente definir PRINTER_INTERFACE=Printer_POS_80 no .env.local'
-            : 'Verifique a conexão USB ou configure PRINTER_IP no .env.local'
-        },
-        { status: 500 }
-      );
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🎭 IMPRESSORA NÃO CONECTADA - Ativando modo simulação');
+        
+        // Simular a impressão
+        console.log(`📄 Simulando impressão de ${itensParaImprimir.length} tickets...`);
+        for (let i = 0; i < itensParaImprimir.length; i++) {
+          const item = itensParaImprimir[i];
+          console.log(`🎫 Ticket ${i + 1}/${itensParaImprimir.length}: ${item.nome} - R$ ${item.preco.toFixed(2)}`);
+        }
+        
+        // Atualizar status do pedido
+        if (sale.status === 'PENDENTE') {
+          await db.sale.update({
+            where: { id: pedidoId },
+            data: { 
+              status: 'FINALIZADA',
+              dataFinalizacao: new Date()
+            }
+          });
+        }
+        
+        return NextResponse.json({
+          success: true,
+          mode: 'simulation',
+          message: `✅ ${itensParaImprimir.length} tickets simulados com sucesso! (Impressora não conectada)`,
+          ticketsImpressos: itensParaImprimir.length,
+          pedidoId: pedidoId,
+          items: itensParaImprimir.map((item, i) => `Ticket ${i+1}: ${item.nome}`)
+        });
+      } else {
+        console.error('Impressora não conectada. Interface configurada:', printerConfig.interface);
+        return NextResponse.json(
+          { 
+            error: 'Impressora não conectada. Verifique a conexão.',
+            interface: printerConfig.interface,
+            platform: process.platform,
+            suggestion: process.platform === 'darwin' 
+              ? 'Para macOS: Tente definir PRINTER_INTERFACE=Printer_POS_80 no .env.local'
+              : 'Verifique a conexão USB ou configure PRINTER_IP no .env.local'
+          },
+          { status: 500 }
+        );
+      }
     }
 
     console.log(`Imprimindo ${itensParaImprimir.length} tickets para o pedido ${pedidoId}`);
@@ -192,49 +293,46 @@ export async function POST(request: Request) {
         // Limpar buffer da impressora
         printer.clear();
         
-        // Configurar alinhamento
+        // Tudo centralizado
         printer.alignCenter();
         
-        // Cabeçalho
-        printer.setTextSize(1, 1);
+        // Espaço inicial
+        printer.newLine();
+        
+        // Nome do evento (entre parênteses)
+        printer.setTextSize(0, 0);
+        printer.println(`(${nomeEvento})`);
+        
+        // Espaços
+        printer.newLine();
+        printer.newLine();
+        printer.newLine();
+        
+        // Nome do item (fonte maior e negrito) - usando comandos diretos
+        const nomeItemBiblioteca = item.nome.toUpperCase();
+        const nomeEspacado = nomeItemBiblioteca.split('').join(' ');
+        
+        printer.setTextSize(2, 2); // Tamanho ainda maior
         printer.bold(true);
+        printer.println(nomeEspacado);
+        printer.bold(false);
+        printer.setTextSize(0, 0); // Voltar ao normal
+        
+        // Espaço
+        printer.newLine();
+        
+        // Código do pedido (entre parênteses)
+        printer.setTextSize(0, 0);
+        printer.println(`(${sale.id})`);
+        
+        // Espaços
+        printer.newLine();
+        printer.newLine();
+        printer.newLine();
+        
+        // Logo/Rodapé
+        printer.setTextSize(0, 0);
         printer.println('ECCLESIA FOOD');
-        printer.bold(false);
-        printer.println(nomeEvento);
-        printer.drawLine();
-        
-        // Informações do pedido
-        printer.alignLeft();
-        printer.setTextSize(0, 0);
-        printer.println(`Pedido: ${sale.id}`);
-        printer.println(`Cliente: ${sale.cliente}`);
-        printer.println(`Data: ${dataAtual}`);
-        printer.drawLine();
-        
-        // Item (cada ticket tem apenas 1 item)
-        printer.alignCenter();
-        printer.setTextSize(1, 1);
-        printer.bold(true);
-        printer.println(item.nome);
-        printer.bold(false);
-        
-        // Preço
-        printer.setTextSize(0, 1);
-        printer.println(`R$ ${item.preco.toFixed(2)}`);
-        
-        // Informação de quantidade se necessário
-        if (item.totalItens > 1) {
-          printer.setTextSize(0, 0);
-          printer.println(`Item ${item.numeroItem} de ${item.totalItens}`);
-        }
-        
-        printer.drawLine();
-        
-        // Rodapé
-        printer.alignCenter();
-        printer.setTextSize(0, 0);
-        printer.println('Obrigado pela preferencia!');
-        printer.println('Ecclesia Food - Alimentando com amor');
         
         // Espaçamento final
         printer.newLine();

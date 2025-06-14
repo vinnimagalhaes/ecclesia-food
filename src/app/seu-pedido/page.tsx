@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Search, Printer, Check, X, ArrowLeft } from 'lucide-react';
+import { normalizarCodigoPedido, validarCodigoPedido } from '@/lib/codigo-generator';
 
 interface ItemPedido {
   id: string;
@@ -139,17 +140,27 @@ export default function SeuPedidoPage() {
     }
   };
 
-  // Números do teclado virtual
+  // Caracteres do teclado virtual (números + letras A-J)
   const numeros = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+  const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
-  const adicionarNumero = (num: string) => {
-    setCodigo(prev => prev + num);
+  const adicionarCaractere = (char: string) => {
+    if (codigo.length < 6) { // Limitar a 6 caracteres
+      setCodigo(prev => prev + char);
+    }
   };
 
   // Função para limpar e validar o código
   const processarCodigo = (codigoRaw: string) => {
-    // Remove espaços, # e outros caracteres especiais, mantém apenas letras e números
-    return codigoRaw.trim().replace(/^#/, '').replace(/[^a-zA-Z0-9]/g, '');
+    // Normalizar usando a biblioteca de códigos
+    const codigoNormalizado = normalizarCodigoPedido(codigoRaw.trim().replace(/^#/, ''));
+    
+    // Validar formato
+    if (!validarCodigoPedido(codigoNormalizado)) {
+      console.warn('Código em formato inválido:', codigoNormalizado);
+    }
+    
+    return codigoNormalizado;
   };
 
   const apagarUltimo = () => {
@@ -269,22 +280,83 @@ export default function SeuPedidoPage() {
               </div>
             )}
 
-            {/* Botão de confirmação */}
-            <div className="text-center">
+            {/* Botões de ação */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {/* Botão de Etiquetas com Impressão Automática */}
               <button
-                onClick={confirmarImpressao}
+                onClick={async () => {
+                  const evento = pedido.event?.nome || 'Festa Paroquial';
+                  const igreja = 'Nossa Senhora Aparecida'; // Você pode pegar isso do banco de dados depois
+                  const codigo = pedido.id;
+                  const itens = pedido.items.flatMap(item => 
+                    Array(item.quantidade).fill(item.nome)
+                  ).join(',');
+                  
+                  try {
+                    setImprimindo(true);
+                    setErro('');
+                    
+                    // Chamar API com impressão automática
+                    const url = `/api/etiqueta?evento=${encodeURIComponent(evento)}&igreja=${encodeURIComponent(igreja)}&codigo=${encodeURIComponent(codigo)}&itens=${encodeURIComponent(itens)}&imprimir=true`;
+                    
+                    const response = await fetch(url);
+                    
+                    if (response.headers.get('content-type')?.includes('application/json')) {
+                      // Resposta JSON = impressão automática funcionou
+                      const result = await response.json();
+                      console.log('✅ Impressão automática:', result);
+                      
+                      setImpressaoSucesso(true);
+                      setTimeout(() => {
+                        voltarInicio();
+                      }, 3000);
+                      
+                    } else {
+                      // Resposta PDF = impressão falhou, abrir PDF
+                      console.log('📄 Abrindo PDF (impressão não disponível)');
+                      window.open(url.replace('&imprimir=true', ''), '_blank');
+                    }
+                    
+                  } catch (error) {
+                    console.error('❌ Erro:', error);
+                    setErro('Erro ao processar etiquetas. Tente novamente.');
+                  } finally {
+                    setImprimindo(false);
+                  }
+                }}
                 disabled={imprimindo}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-12 py-6 rounded-2xl text-2xl font-bold flex items-center gap-4 mx-auto"
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-8 py-4 rounded-2xl text-xl font-bold flex items-center gap-3"
               >
                 {imprimindo ? (
                   <>
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    Gerando e Imprimindo...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Imprimir Etiquetas
+                  </>
+                )}
+              </button>
+
+              {/* Botão de impressão térmica */}
+              <button
+                onClick={confirmarImpressao}
+                disabled={imprimindo}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-8 py-4 rounded-2xl text-xl font-bold flex items-center gap-3"
+              >
+                {imprimindo ? (
+                  <>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
                     Imprimindo...
                   </>
                 ) : (
                   <>
-                    <Printer size={32} />
-                    Confirmar e Imprimir
+                    <Printer size={24} />
+                    Impressão Térmica
                   </>
                 )}
               </button>
@@ -304,7 +376,7 @@ export default function SeuPedidoPage() {
           <h1 className="text-5xl font-bold text-indigo-600 mb-4">Ecclesia Food</h1>
           <h2 className="text-3xl text-gray-700">Retire seu Pedido</h2>
           <p className="text-xl text-gray-600 mt-4">
-            Digite o código do seu pedido abaixo
+            Digite o código do seu pedido (6 caracteres: números + letras A-J)
           </p>
         </div>
 
@@ -320,7 +392,7 @@ export default function SeuPedidoPage() {
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Digite ou use o teclado abaixo"
+                placeholder="Ex: A3B7F2 (6 caracteres)"
                 className="w-full px-8 py-6 text-4xl text-center border-4 border-gray-300 rounded-2xl focus:border-indigo-500 focus:outline-none"
                 autoFocus
               />
@@ -328,15 +400,28 @@ export default function SeuPedidoPage() {
             </div>
           </div>
 
-          {/* Teclado Virtual */}
-          <div className="grid grid-cols-5 gap-4 mb-8">
+          {/* Teclado Virtual - Números */}
+          <div className="grid grid-cols-5 gap-4 mb-6">
             {numeros.map((num) => (
               <button
                 key={num}
-                onClick={() => adicionarNumero(num)}
+                onClick={() => adicionarCaractere(num)}
                 className="bg-gray-100 hover:bg-gray-200 text-3xl font-bold py-6 rounded-xl border-2 border-gray-300 transition-colors"
               >
                 {num}
+              </button>
+            ))}
+          </div>
+
+          {/* Teclado Virtual - Letras A-J */}
+          <div className="grid grid-cols-5 gap-4 mb-8">
+            {letras.map((letra) => (
+              <button
+                key={letra}
+                onClick={() => adicionarCaractere(letra)}
+                className="bg-blue-100 hover:bg-blue-200 text-3xl font-bold py-6 rounded-xl border-2 border-blue-300 transition-colors text-blue-800"
+              >
+                {letra}
               </button>
             ))}
           </div>
