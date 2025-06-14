@@ -46,18 +46,28 @@ export default function SeuPedidoPage() {
     setPedido(null);
 
     try {
-      const response = await fetch(`/api/pedidos/buscar?codigo=${codigo.trim()}`);
+      // Limpar o código removendo qualquer caractere especial como #
+      const codigoLimpo = processarCodigo(codigo);
+      
+      console.log('Código original:', codigo);
+      console.log('Código limpo:', codigoLimpo);
+      
+      const response = await fetch(`/api/pedidos/buscar?codigo=${encodeURIComponent(codigoLimpo)}`);
       
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Erro na API de busca:', errorData);
+        
         if (response.status === 404) {
           setErro('Pedido não encontrado. Verifique o código digitado.');
         } else {
-          setErro('Erro ao buscar pedido. Tente novamente.');
+          setErro(`Erro ao buscar pedido: ${errorData.error || 'Tente novamente.'}`);
         }
         return;
       }
 
       const dados = await response.json();
+      console.log('Pedido encontrado:', dados);
       setPedido(dados);
       
     } catch (error) {
@@ -75,6 +85,8 @@ export default function SeuPedidoPage() {
     setErro('');
 
     try {
+      console.log('Iniciando impressão para pedido:', pedido.id);
+      
       const response = await fetch('/api/pedidos/imprimir', {
         method: 'POST',
         headers: {
@@ -85,11 +97,20 @@ export default function SeuPedidoPage() {
         }),
       });
 
+      const responseData = await response.json();
+      console.log('Resposta da impressão:', responseData);
+
       if (!response.ok) {
-        setErro('Erro ao imprimir. Tente novamente.');
+        // Tratamento específico para impressora não conectada
+        if (responseData.error && responseData.error.includes('não conectada')) {
+          setErro('⚠️ Impressora não conectada. Verifique a conexão USB ou rede e tente novamente.');
+        } else {
+          setErro(`Erro ao imprimir: ${responseData.error || responseData.details || 'Tente novamente.'}`);
+        }
         return;
       }
 
+      console.log('Impressão realizada com sucesso!');
       setImpressaoSucesso(true);
       
       // Voltar para tela inicial após 3 segundos
@@ -123,6 +144,12 @@ export default function SeuPedidoPage() {
 
   const adicionarNumero = (num: string) => {
     setCodigo(prev => prev + num);
+  };
+
+  // Função para limpar e validar o código
+  const processarCodigo = (codigoRaw: string) => {
+    // Remove espaços, # e outros caracteres especiais, mantém apenas letras e números
+    return codigoRaw.trim().replace(/^#/, '').replace(/[^a-zA-Z0-9]/g, '');
   };
 
   const apagarUltimo = () => {
