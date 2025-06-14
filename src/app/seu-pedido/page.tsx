@@ -204,7 +204,7 @@ export default function SeuPedidoPage() {
             <div className="mb-8">
               <h3 className="text-2xl font-semibold mb-6">Itens do Pedido</h3>
               <div className="grid gap-4">
-                {pedido.items.map((item, index) => (
+                {pedido.items.map((item) => (
                   <div key={item.id} className="bg-gray-50 p-6 rounded-xl border border-gray-200">
                     <div className="flex justify-between items-center">
                       <div>
