@@ -72,7 +72,7 @@ export default function RegisterPage() {
             
             <div className="mt-6">
               <Link 
-                href="/login" 
+                href="/auth/login" 
                 className="font-medium text-primary-600 hover:text-primary-500 focus:outline-none"
               >
                 Voltar para login
@@ -153,7 +153,7 @@ export default function RegisterPage() {
           <p className="text-sm text-gray-600">
             Já tem uma conta?{' '}
             <Link 
-              href="/login" 
+              href="/auth/login" 
               className="font-medium text-primary-600 hover:text-primary-500 focus:outline-none"
             >
               Faça login

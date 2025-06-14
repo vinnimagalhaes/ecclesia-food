@@ -33,7 +33,7 @@ export default function ContaDesativadaPage() {
               certifique-se de configurar corretamente as permissões de usuário.
             </p>
             <Link 
-              href="/login"
+              href="/auth/login"
               className="block w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
             >
               Voltar para o login

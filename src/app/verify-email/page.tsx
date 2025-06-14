@@ -89,7 +89,7 @@ function VerifyEmailContent() {
           <p className="mt-4 text-lg text-gray-600">{message}</p>
           <div className="mt-6">
             <Link 
-              href="/login" 
+              href="/auth/login" 
               className="font-medium text-primary-600 hover:text-primary-500 focus:outline-none"
             >
               Voltar para login

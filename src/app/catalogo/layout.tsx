@@ -62,7 +62,7 @@ export default function CatalogoLayout({
               </div>
             ) : (
               <Link 
-                href="/login" 
+                href="/auth/login" 
                 className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition"
               >
                 Entrar

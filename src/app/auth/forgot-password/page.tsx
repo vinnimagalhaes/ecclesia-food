@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
       }
 
       toast.success('Email de recuperação enviado com sucesso!');
-      router.push('/login');
+      router.push('/auth/login');
     } catch (error) {
       console.error('Erro:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao enviar email de recuperação');
@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
           </div>
 
           <div className="text-sm text-center">
-            <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
               Voltar para o login
             </Link>
           </div>

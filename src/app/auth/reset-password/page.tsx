@@ -62,7 +62,7 @@ function ResetPasswordContent() {
       }
 
       toast.success('Senha redefinida com sucesso!');
-      router.push('/login');
+      router.push('/auth/login');
     } catch (error) {
       console.error('Erro:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao redefinir senha');
@@ -84,7 +84,7 @@ function ResetPasswordContent() {
             </p>
           </div>
           <div className="text-center">
-            <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
               Voltar para o login
             </Link>
           </div>
@@ -171,7 +171,7 @@ function ResetPasswordContent() {
           </div>
 
           <div className="text-sm text-center">
-            <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
               Voltar para o login
             </Link>
           </div>

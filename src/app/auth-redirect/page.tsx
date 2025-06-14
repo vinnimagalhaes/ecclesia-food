@@ -50,7 +50,7 @@ export default function AuthRedirectPage() {
         // Se não há autenticação disponível, mostrar erro
         setError('Nenhuma informação de autenticação encontrada');
         setTimeout(() => {
-          router.push('/login');
+          router.push('/auth/login');
         }, 3000);
       } catch (e) {
         console.error('Erro ao configurar redirecionamento:', e);
@@ -58,7 +58,7 @@ export default function AuthRedirectPage() {
         
         // Fallback para redirecionamento direto em caso de erro
         setTimeout(() => {
-          window.location.href = '/login';
+          window.location.href = '/auth/login';
         }, 3000);
       }
     };
