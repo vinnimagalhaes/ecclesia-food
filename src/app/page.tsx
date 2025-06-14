@@ -36,7 +36,7 @@ export default function Home() {
                     <p className="text-gray-600 text-sm mb-4">
                       Acesse para gerenciar eventos e relatórios da sua igreja.
                     </p>
-                    <a href="/login" className="inline-block w-full">
+                    <a href="/auth/login" className="inline-block w-full">
                       <button 
                         className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg text-center transition-colors"
                       >
