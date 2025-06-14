@@ -1,0 +1,15 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo azul com bordas arredondadas -->
+  <rect width="512" height="512" fill="#3b82f6" rx="64"/>
+  
+  <!-- Círculo branco central -->
+  <circle cx="256" cy="256" r="160" fill="white"/>
+  
+  <!-- Letra E estilizada -->
+  <text x="256" y="300" text-anchor="middle" fill="#3b82f6" font-family="Arial, sans-serif" font-size="180" font-weight="bold">E</text>
+  
+  <!-- Pequeno símbolo de comida -->
+  <circle cx="256" cy="180" r="8" fill="#3b82f6"/>
+  <circle cx="240" cy="180" r="6" fill="#3b82f6"/>
+  <circle cx="272" cy="180" r="6" fill="#3b82f6"/>
+</svg> 

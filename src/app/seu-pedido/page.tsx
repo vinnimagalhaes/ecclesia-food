@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Search, Printer, Check, X, ArrowLeft } from 'lucide-react';
 import { normalizarCodigoPedido, validarCodigoPedido } from '@/lib/codigo-generator';
+import KioskMode from '@/components/KioskMode';
 
 interface ItemPedido {
   id: string;
@@ -174,33 +175,36 @@ export default function SeuPedidoPage() {
   // Se impressão foi bem sucedida
   if (impressaoSucesso) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center p-8">
-        <div className="bg-white rounded-2xl shadow-2xl p-12 text-center max-w-2xl w-full">
-          <div className="mb-8">
-            <div className="mx-auto w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
-              <Check size={48} className="text-green-600" />
+      <KioskMode enableKiosk={true}>
+        <div className="min-h-screen bg-green-50 flex items-center justify-center p-8">
+          <div className="bg-white rounded-2xl shadow-2xl p-12 text-center max-w-2xl w-full">
+            <div className="mb-8">
+              <div className="mx-auto w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                <Check size={48} className="text-green-600" />
+              </div>
+              <h1 className="text-4xl font-bold text-green-600 mb-4">Impressão Realizada!</h1>
+              <p className="text-xl text-gray-600">
+                Seus itens foram enviados para impressão.
+              </p>
+              <p className="text-lg text-gray-500 mt-2">
+                Retirando os tickets impressos...
+              </p>
             </div>
-            <h1 className="text-4xl font-bold text-green-600 mb-4">Impressão Realizada!</h1>
-            <p className="text-xl text-gray-600">
-              Seus itens foram enviados para impressão.
-            </p>
-            <p className="text-lg text-gray-500 mt-2">
-              Retirando os tickets impressos...
-            </p>
-          </div>
-          
-          <div className="text-sm text-gray-400">
-            Voltando ao início automaticamente...
+            
+            <div className="text-sm text-gray-400">
+              Voltando ao início automaticamente...
+            </div>
           </div>
         </div>
-      </div>
+      </KioskMode>
     );
   }
 
   // Se tem pedido carregado
   if (pedido) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <KioskMode enableKiosk={true}>
+        <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-4xl mx-auto">
           {/* Cabeçalho */}
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
@@ -364,12 +368,14 @@ export default function SeuPedidoPage() {
           </div>
         </div>
       </div>
+      </KioskMode>
     );
   }
 
   // Tela inicial de busca
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <KioskMode enableKiosk={true}>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
       <div className="max-w-4xl mx-auto">
         {/* Logo/Cabeçalho */}
         <div className="text-center mb-12">
@@ -480,5 +486,6 @@ export default function SeuPedidoPage() {
         </div>
       </div>
     </div>
+    </KioskMode>
   );
 } 
