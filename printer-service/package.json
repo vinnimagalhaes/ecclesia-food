@@ -1,0 +1,35 @@
+{
+  "name": "ecclesia-printer-service",
+  "version": "1.0.0",
+  "description": "Serviço local de impressão para Ecclesia Food",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "install-service": "node install-service.js",
+    "build": "pkg . --out-path dist"
+  },
+  "keywords": ["impressora", "thermal", "ecclesia", "local"],
+  "author": "Ecclesia Food",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "node-thermal-printer": "^4.5.0",
+    "pdf-poppler": "^0.2.1",
+    "sharp": "^0.33.0",
+    "qrcode": "^1.5.4",
+    "fs-extra": "^11.2.0",
+    "open": "^10.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "scripts": "server.js",
+    "assets": ["public/**/*", "views/**/*"],
+    "targets": ["node18-win-x64", "node18-macos-x64", "node18-linux-x64"]
+  }
+} 
