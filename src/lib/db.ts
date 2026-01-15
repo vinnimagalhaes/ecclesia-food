@@ -20,9 +20,9 @@ if (!connectionString) {
 // Configuração do pool para o Neon
 const pool = new Pool({ connectionString });
 
-// Adapter com cast explícito se necessário, mas primeiro vamos tentar a inicialização padrão
-// O erro anterior reclamava de compatibilidade de tipos, então vamos simplificar a instanciação
-const adapter = new PrismaNeon(pool);
+// Adapter com cast explícito para any para evitar erro de build na Vercel
+// O tipo Pool do @neondatabase/serverless às vezes conflita com o esperado pelo PrismaNeon
+const adapter = new PrismaNeon(pool as any);
 
 export const db = global.prisma || new PrismaClient({ 
   adapter,
