@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { AppHeader } from '@/components/ui/AppHeader';
 import Link from 'next/link';
 
 type DiagnosticoPix = {
@@ -46,26 +47,27 @@ export default function DiagnosticoPixPage() {
   }, []);
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Diagnóstico do Sistema PIX</h1>
-      
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="w-16 h-16 border-t-4 border-primary-500 border-solid rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-600">Analisando seu sistema PIX...</p>
-        </div>
-      ) : erro ? (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
-          <p className="text-red-700">{erro}</p>
-          <Button 
-            onClick={() => window.location.reload()}
-            className="mt-4"
-          >
-            Tentar Novamente
-          </Button>
-        </div>
-      ) : diagnostico ? (
-        <div className="space-y-6">
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <AppHeader title="Diagnóstico PIX" showBackButton={true} backUrl="/configuracoes" />
+      <div className="flex-1 p-4">
+        <div className="max-w-3xl mx-auto">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-16 h-16 border-t-4 border-primary-500 border-solid rounded-full animate-spin"></div>
+              <p className="mt-4 text-gray-600">Analisando seu sistema PIX...</p>
+            </div>
+          ) : erro ? (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
+              <p className="text-red-700">{erro}</p>
+              <Button 
+                onClick={() => window.location.reload()}
+                className="mt-4"
+              >
+                Tentar Novamente
+              </Button>
+            </div>
+          ) : diagnostico ? (
+            <div className="space-y-6">
           {/* Resumo */}
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <h2 className="text-lg font-semibold mb-4">Resumo</h2>
@@ -124,11 +126,13 @@ export default function DiagnosticoPixPage() {
             </div>
           </div>
         </div>
-      ) : (
-        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
-          <p>Nenhum dado disponível.</p>
+          ) : (
+            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
+              <p>Nenhum dado disponível.</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 } 
