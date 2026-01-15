@@ -1,16 +1,18 @@
 import { PrismaClient } from '@prisma/client';
+import { Pool } from '@neondatabase/serverless';
+import { PrismaNeon } from '@prisma/adapter-neon';
 
 declare global {
-  var cachedPrisma: PrismaClient;
+  var prisma: PrismaClient | undefined;
 }
 
-export let db: PrismaClient;
+const connectionString = process.env.DATABASE_URL;
 
-if (process.env.NODE_ENV === 'production') {
-  db = new PrismaClient();
-} else {
-  if (!global.cachedPrisma) {
-    global.cachedPrisma = new PrismaClient();
-  }
-  db = global.cachedPrisma;
-} 
+const pool = new Pool({ connectionString });
+const adapter = new PrismaNeon(pool);
+
+export const db = global.prisma || new PrismaClient({ adapter });
+
+if (process.env.NODE_ENV !== 'production') {
+  global.prisma = db;
+}
