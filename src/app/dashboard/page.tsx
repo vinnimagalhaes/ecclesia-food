@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Calendar, DollarSign, Clock, CheckCircle, Shield } from 'lucide-react';
+import { Calendar, DollarSign, Clock, CheckCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 // Tipos
 type Evento = {
@@ -35,50 +35,32 @@ type AtividadeRecente = {
 };
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [atividades, setAtividades] = useState<AtividadeRecente[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  
   const [totalVendasMes, setTotalVendasMes] = useState(0);
   const [vendasPendentes, setVendasPendentes] = useState(0);
   const [vendasFinalizadas, setVendasFinalizadas] = useState(0);
 
-  // Buscar dados do sistema
+  // Proteger rota
   useEffect(() => {
-    async function fetchDados() {
-      try {
-        setLoading(true);
-        setError('');
-        
-        // Buscar todos os dados do dashboard em uma única chamada
-        const dashboardResponse = await fetch('/api/dashboard');
-        
-        if (!dashboardResponse.ok) {
-          throw new Error('Falha ao carregar dados do dashboard');
-        }
-        
-        const dashboardData = await dashboardResponse.json();
-        
-        // Atualizar todos os estados com os dados recebidos
-        setEventos(dashboardData.eventosRecentes || []);
-        setProdutos(dashboardData.produtosRecentes || []);
-        setTotalVendasMes(dashboardData.totalVendasMes || 0);
-        setVendasPendentes(dashboardData.vendasPendentes || 0);
-        setVendasFinalizadas(dashboardData.vendasFinalizadas || 0);
-        setAtividades(dashboardData.atividades || []);
-        
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        setError('Não foi possível carregar os dados. Tente novamente mais tarde.');
-      } finally {
-        setLoading(false);
-      }
+    if (!authLoading && !user) {
+      router.push('/auth/login');
     }
-    
-    fetchDados();
-  }, []);
+  }, [user, authLoading, router]);
+
+  // Simular busca de dados (Depois vamos conectar com Firebase)
+  useEffect(() => {
+    if (user) {
+      // Aqui vamos buscar do Firestore
+      setLoading(false);
+    }
+  }, [user]);
 
   // Função para formatar preço
   function formatarPreco(preco: number) {
@@ -96,7 +78,7 @@ export default function DashboardPage() {
     });
   }
   
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex justify-center py-12">
         <div className="animate-pulse text-gray-500">Carregando dados do dashboard...</div>
@@ -104,30 +86,13 @@ export default function DashboardPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-md">
-        <h2 className="text-lg font-medium mb-2">Erro</h2>
-        <p>{error}</p>
-      </div>
-    );
-  }
+  if (!user) return null;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        
-        {/* Link para o painel master - apenas para SUPER_ADMIN */}
-        {session?.user?.role === 'SUPER_ADMIN' && (
-          <Link 
-            href="/master" 
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md text-sm font-medium"
-          >
-            <Shield size={16} />
-            Painel Master
-          </Link>
-        )}
+        <p className="text-gray-600">Bem-vindo, {user.displayName || user.email}</p>
       </div>
       
       {/* Cards de estatísticas */}
@@ -181,96 +146,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl shadow-sm">
-        <div className="p-6">
-          <h3 className="text-lg font-medium text-gray-900">Atividades Recentes</h3>
-          
-          {atividades.length === 0 ? (
-            <div className="mt-6 text-center py-8 text-gray-500">
-              Nenhuma atividade recente encontrada
-            </div>
-          ) : (
-            <div className="mt-6 space-y-4">
-              {atividades.map((atividade) => (
-                <div key={`${atividade.tipo}-${atividade.id}`} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className={`w-2 h-2 rounded-full ${
-                      atividade.tipo === 'evento' 
-                        ? 'bg-green-500' 
-                        : atividade.tipo === 'produto' 
-                          ? 'bg-blue-500' 
-                          : 'bg-yellow-500'
-                    }`}></div>
-                    <p className="ml-3 text-sm text-gray-500">{atividade.descricao}</p>
-                  </div>
-                  <span className="text-sm text-gray-400">{formatarDataRelativa(atividade.data)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Placeholder para quando tiver dados */}
+      <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+        <p className="text-gray-500">Seus dados aparecerão aqui assim que você criar eventos e produtos.</p>
       </div>
-      
-      {/* Próximos Eventos */}
-      {eventos.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm">
-          <div className="p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Próximos Eventos</h3>
-            
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nome
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Local
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Data
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Produtos
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {eventos
-                    .filter(evento => new Date(evento.data) >= new Date())
-                    .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
-                    .slice(0, 5)
-                    .map((evento) => {
-                      const produtosDoEvento = produtos.filter(p => p.eventId === evento.id);
-                      
-                      return (
-                        <tr key={evento.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{evento.nome}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">{evento.local}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">
-                              {new Date(evento.data).toLocaleDateString('pt-BR')}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">
-                              {produtosDoEvento.length} produtos
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
-} // Guarantee vendasEsteMes is removed
+}

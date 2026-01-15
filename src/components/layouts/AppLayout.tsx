@@ -1,28 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ReactNode } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { User, LogOut, CreditCard, Shield } from 'lucide-react';
 
 interface AppLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const { data: session } = useSession();
-  const router = useRouter();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut({ redirect: false });
-      router.push('/');
-      router.refresh();
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
-  };
+  const { user, signOut } = useAuth();
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -64,7 +51,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               href="/relatorios" 
               className="flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg"
             >
-              <span>Relatórios Rifas & Sorteios</span>
+              <span>Relatórios</span>
             </Link>
             <Link 
               href="/configuracoes" 
@@ -72,37 +59,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
             >
               <span>Configurações</span>
             </Link>
-            
-            {/* Link para diagnóstico Pagar.me - apenas para SUPER_ADMIN */}
-            {session?.user?.role === 'SUPER_ADMIN' && (
-              <Link 
-                href="/admin/pagarme-diagnostico" 
-                className="flex items-center gap-2 px-4 py-2.5 text-yellow-700 bg-yellow-50 hover:bg-yellow-100 rounded-lg mt-2"
-              >
-                <CreditCard size={16} />
-                <span>Diagnóstico Pagar.me</span>
-              </Link>
-            )}
-            
-            {/* Link para painel master - apenas para SUPER_ADMIN */}
-            {session?.user?.role === 'SUPER_ADMIN' && (
-              <Link 
-                href="/master" 
-                className="flex items-center gap-2 px-4 py-2.5 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg mt-2"
-              >
-                <Shield size={16} />
-                <span>Painel Master</span>
-              </Link>
-            )}
           </nav>
 
           {/* User Profile */}
           <div className="p-4 border-t">
             <div className="flex items-center">
-              {session?.user?.image ? (
+              {user?.photoURL ? (
                 <img 
-                  src={session.user.image} 
-                  alt={session.user.name || 'Avatar'} 
+                  src={user.photoURL} 
+                  alt={user.displayName || 'Avatar'} 
                   className="w-10 h-10 rounded-full"
                 />
               ) : (
@@ -112,14 +77,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
               )}
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-700 truncate">
-                  {session?.user?.name || 'Usuário'}
+                  {user?.displayName || 'Usuário'}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {session?.user?.email || 'Sem email'}
+                  {user?.email || 'Sem email'}
                 </p>
               </div>
               <button
-                onClick={handleSignOut}
+                onClick={signOut}
                 className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 flex-shrink-0 cursor-pointer"
                 title="Sair"
               >
@@ -136,4 +101,4 @@ export default function AppLayout({ children }: AppLayoutProps) {
       </main>
     </div>
   );
-} 
+}

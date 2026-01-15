@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { PlusCircle, Calendar, MapPin } from 'lucide-react';
 import { Switch } from '@/components/ui/Switch';
@@ -21,7 +21,7 @@ interface Evento {
 
 export default function EventosAdminPage() {
   const router = useRouter();
-  const { status } = useSession();
+  const { user, loading: authLoading } = useAuth();
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,27 +30,24 @@ export default function EventosAdminPage() {
 
   useEffect(() => {
     // Redirecionar para login se não estiver autenticado
-    if (status === 'unauthenticated') {
-      router.push('/login?callbackUrl=/eventos');
-    } else if (status === 'authenticated') {
+    if (!authLoading && !user) {
+      router.push('/auth/login');
+    } else if (user) {
       // Carregar dados de eventos quando autenticado
       fetchEventos();
     }
-  }, [router, status]);
+  }, [router, user, authLoading]);
 
   const fetchEventos = async () => {
     try {
       setIsLoading(true);
       setError('');
       
-      // Buscar dados da API real
-      const response = await fetch('/api/eventos');
-      if (!response.ok) {
-        throw new Error('Falha ao carregar eventos');
-      }
+      // TODO: Implementar busca no Firestore
+      // const snapshot = await getDocs(collection(db, 'eventos'));
+      // ...
       
-      const data = await response.json();
-      setEventos(data);
+      setEventos([]); // Dados vazios por enquanto
     } catch (error) {
       console.error('Erro ao carregar eventos:', error);
       setError('Não foi possível carregar os eventos. Por favor, tente novamente.');
@@ -62,20 +59,8 @@ export default function EventosAdminPage() {
   // Função para alternar o status do evento
   const toggleEventoStatus = async (eventoId: string, currentStatus: string) => {
     try {
-      const response = await fetch(`/api/eventos/${eventoId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: currentStatus === 'ATIVO' ? 'INATIVO' : 'ATIVO'
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao atualizar status do evento');
-      }
-
+      // TODO: Implementar update no Firestore
+      
       // Atualizar a lista de eventos localmente
       setEventos(eventos.map(evento => {
         if (evento.id === eventoId) {
@@ -109,7 +94,7 @@ export default function EventosAdminPage() {
     return true;
   });
 
-  if (status === 'loading') {
+  if (authLoading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="animate-pulse">Carregando...</div>
@@ -117,12 +102,8 @@ export default function EventosAdminPage() {
     );
   }
 
-  if (status === 'unauthenticated') {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <div>Redirecionando para o login...</div>
-      </div>
-    );
+  if (!user) {
+    return null; // Redirecionamento acontece no useEffect
   }
 
   return (
@@ -232,4 +213,4 @@ export default function EventosAdminPage() {
       )}
     </>
   );
-} 
+}

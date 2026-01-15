@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-function LoginContent() {
-  const searchParams = useSearchParams();
+export default function LoginPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,11 +16,16 @@ function LoginContent() {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
-      const callbackUrl = searchParams.get('callbackUrl') || '/catalogo/igrejas';
-      await signIn('google', { callbackUrl });
-    } catch (error) {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      
+      // Sucesso! Redirecionar para dashboard ou página de destino
+      router.push('/dashboard');
+      toast.success('Login realizado com sucesso!');
+    } catch (error: any) {
       console.error('Erro no login com Google:', error);
-      toast.error('Ocorreu um erro durante o login com Google');
+      setError('Erro ao conectar com Google. Tente novamente.');
+      toast.error('Falha no login com Google');
       setIsLoading(false);
     }
   };
@@ -35,25 +41,22 @@ function LoginContent() {
     
     try {
       setIsLoading(true);
-      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+      await signInWithEmailAndPassword(auth, email, password);
       
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
+      router.push('/dashboard');
+      toast.success('Login realizado com sucesso!');
+    } catch (error: any) {
+      console.error('Erro no login:', error);
       
-      if (result?.error) {
-        setError('Email ou senha inválidos');
-        setIsLoading(false);
-        return;
+      let msg = 'Erro ao realizar login.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        msg = 'Email ou senha incorretos.';
+      } else if (error.code === 'auth/too-many-requests') {
+        msg = 'Muitas tentativas falhas. Tente novamente mais tarde.';
       }
       
-      // Redirecionar após login bem-sucedido
-      window.location.href = callbackUrl;
-    } catch (error) {
-      console.error('Erro no login:', error);
-      setError('Ocorreu um erro durante o login');
+      setError(msg);
+      toast.error(msg);
       setIsLoading(false);
     }
   };
@@ -107,7 +110,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
             >
               {isLoading ? 'Processando...' : 'Entrar'}
             </button>
@@ -128,7 +131,7 @@ function LoginContent() {
             <button
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
             >
               {isLoading ? (
                 'Processando...'
@@ -152,11 +155,3 @@ function LoginContent() {
     </div>
   );
 }
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div>Carregando...</div>}>
-      <LoginContent />
-    </Suspense>
-  );
-} 

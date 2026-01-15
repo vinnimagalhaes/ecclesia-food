@@ -2,7 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
-import { AuthProvider } from '@/providers/auth-provider'
+import { AuthProvider } from '@/contexts/AuthContext'
 import { CarrinhoProvider } from '@/contexts/CarrinhoContext'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -71,4 +71,4 @@ export default function RootLayout({
       </body>
     </html>
   )
-} 
+}
