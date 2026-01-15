@@ -3,7 +3,7 @@ import { Pool, neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import ws from 'ws';
 
-// Configuração necessária para Neon Serverless em ambientes Edge/Node
+// Configuração necessária para Neon Serverless
 neonConfig.webSocketConstructor = ws;
 
 declare global {
@@ -12,16 +12,12 @@ declare global {
 
 const connectionString = process.env.DATABASE_URL;
 
-// Debug para ver se a string está chegando
 if (!connectionString) {
-  console.error('❌ ERRO CRÍTICO: DATABASE_URL não está definida!');
+  console.error('❌ ERRO CRÍTICO: DATABASE_URL não definida');
 }
 
-// Configuração do pool para o Neon
 const pool = new Pool({ connectionString });
-
-// Adapter com cast explícito para any para evitar erro de build na Vercel
-// O tipo Pool do @neondatabase/serverless às vezes conflita com o esperado pelo PrismaNeon
+// Cast para any para resolver conflito de tipos entre versões do driver
 const adapter = new PrismaNeon(pool as any);
 
 export const db = global.prisma || new PrismaClient({ 
