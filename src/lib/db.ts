@@ -17,9 +17,10 @@ if (!connectionString) {
 }
 
 const pool = new Pool({ connectionString });
-// Cast para any para resolver conflito de tipos entre versões do driver
 const adapter = new PrismaNeon(pool as any);
 
+// Usando ts-ignore para evitar erros de build relacionados a tipagem experimental do Prisma
+// @ts-ignore
 export const db = global.prisma || new PrismaClient({ 
   adapter,
   log: ['query', 'error', 'warn'],
